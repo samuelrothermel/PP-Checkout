@@ -67,12 +67,15 @@ app.post('/api/vault/setup-token', async (req, res) => {
       paymentSource,
     });
     res.json(vaultSetupToken);
+    console.log('vaultSetupToken', vaultSetupToken);
   } catch (err) {
     handleError(res, err);
   }
 });
 
 app.post('/api/vault/payment-token/:vaultSetupToken', async (req, res) => {
+  console.log('vaultSetupToken req.params', req.params);
+
   try {
     const { vaultSetupToken } = req.params;
     const paymentToken = await paypal.createVaultPaymentToken(vaultSetupToken);

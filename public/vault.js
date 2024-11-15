@@ -1,5 +1,6 @@
 const createVaultSetupToken = data => {
   let paymentSource;
+  console.log('data', data);
 
   if (!data) {
     paymentSource = 'card';
@@ -18,7 +19,7 @@ const createVaultSetupToken = data => {
   })
     .then(response => response.json())
     .then(vaultResponse => {
-      console.log(vaultResponse);
+      console.log(JSON.stringify({ vaultResponse }));
       const vaultSetupToken = vaultResponse.id;
       document.getElementById(
         'create-setup-info'

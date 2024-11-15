@@ -6,22 +6,27 @@
     <!-- To be replaced with your own stylesheet -->
     <link rel="stylesheet" type="text/css"
       href="https://www.paypalobjects.com/webstatic/en_US/developer/docs/css/cardfields.css" />
+      <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
     <!-- Express fills in the clientId and clientToken variables -->
     <script src="https://www.paypal.com/sdk/js?components=buttons,card-fields&client-id=<%= clientId %>"></script>
   </head>
 
   <body>
     <div id="paypal-button-container" class="paypal-button-container"></div>
-    <div id="card-name-field-container"></div>
-    <div id="card-number-field-container"></div>
-    <div id="card-expiry-field-container"></div>
-    <div id="card-cvv-field-container"></div>
-    <button id="multi-card-field-button" type="button">Save Card</button>
-    <div id="general-error"></div>
-    <h2>Create Vault Setup Token</h2>
-    <div id="create-setup-info"></div>
-    <h2>Create Vault Payment Token</h2>
-    <div id="create-payment-info"></div>
+
+    <div class="card-fields">
+      <div id="card-name-field-container"></div>
+      <div id="card-number-field-container"></div>
+      <div id="card-expiry-field-container"></div>
+      <div id="card-cvv-field-container"></div>
+      <button id="multi-card-field-button" type="button">Save Card</button>
+    </div>
+
+      <div id="general-error"></div>
+      <h2>Create Vault Setup Token</h2>
+      <div id="create-setup-info"></div>
+      <h2>Create Vault Payment Token</h2>
+      <div id="create-payment-info"></div>
     <script src="vault.js"></script>
   </body>
 
