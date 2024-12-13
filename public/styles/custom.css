@@ -71,5 +71,27 @@ ul li p {
 
 .card-fields {
   max-width: 400px;
+  min-width: 300px;
   margin: 0 auto;
+}
+
+.container {
+  width: 50%;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  /* align-items: center; */
+}
+
+.separator {
+  border-top: 1px solid #ccc;
+  margin: 20px 0;
+}
+
+.or-text {
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 20px 0;
 }
