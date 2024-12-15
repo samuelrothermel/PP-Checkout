@@ -11,12 +11,12 @@
   <div class="container">
     <header>
       <h1>PayPal Checkout Integrations</h1>
-      <p>Online and mobile payments solution using the PayPal JavaScript SDK and REST APIs</p>
+      <p>Online and mobile payments solutions using the PayPal JavaScript SDK and REST APIs</p>
     </header>
 
     <section class="description">
       <h2>Intention</h2>
-      <p>This page demonstrates the integration of PayPal-hosted card fields via the PayPal JS SDK for both first-time payer and returning payer flows.</p>
+      <p>This page demonstrates the integration of PayPal-hosted card fields via the PayPal JS SDK for both Save with Purchase and Save without Purchase integrations.</p>
     </section>
 
     <section class="apis">
@@ -24,8 +24,7 @@
       <ul>
         <li>
           <a href="https://developer.paypal.com/sdk/js/">JavaScript SDK</a>
-          <p>The JavaScript SDK displays PayPal-supported payment methods on your page to give your buyers a personalized and streamlined checkout experience.</p>
-          <p>You can use the JavaScript SDK to render buttons, payment method icons (marks), and credit and debit card form fields (card-fields). You can also use the JavaScript SDK to check the funding-eligibility of a given payment method.</p>
+          <p>The JavaScript SDK is used to render buttons, payment method icons (marks), and credit and debit card form fields (card-fields). You can also use the JavaScript SDK to check the funding-eligibility of a given payment method.</p>
         </li>
         <li>
           <a href="https://developer.paypal.com/docs/api/orders/v2/">Orders API</a> aka Orders v2
@@ -35,7 +34,7 @@
           <a href="https://developer.paypal.com/docs/api/payment-tokens/v3/">Payment Method Tokens API</a> aka Vault v3
           <p>The Payment Method Tokens API saves payment methods so payers don't have to enter details for future transactions. Payers can check out faster or pay without being present after they agree to save a payment method.</p>
           <p>The API associates a payment method with a temporary setup token. Pass the setup token to the API to exchange the setup token for a permanent token.</p>
-          <p>The permanent token represents a payment method that's saved to the vault. This token can be used repeatedly for checkout or recurring transactions such as subscriptions.</p>
+          <p>The permanent token represents a payment method that's saved to the merchant's vault. This token can be used repeatedly for checkout or recurring transactions such as subscriptions.</p>
         </li>
       </ul>
     </section>
@@ -44,12 +43,14 @@
       <h2>Advanced Checkout Examples</h2>
       <ul>
         <li>
-          <a href="/first-time-payer">First Time Payer</a>
-          <p>Customer's have the option of saving or "vaulting" their payment methods on checkout.</p>
+          <a href="/checkout">Save with Purchase</a>
+          <p>Customers have their payment method saved or "vaulted" on checkout.</p>
+          <p>Returning customers have the option of re-using a previously saved or "vaulted" payment method on checkout.</p>
         </li>
         <li>
-          <a href="/returning-user">Returning User</a>
-          <p>Use this flow to handle returning users by entering their Customer ID.</p>
+          <a href="/save-wo-purchase">Save without Purchase</a>
+          <p>Save payment methods to charge payers after a set amount of time. For example, you can offer a free trial and charge payers after the trial expires. Payers don't need to be present when charged. No checkout required.</p>
+
         </li>
       </ul>
     </section>

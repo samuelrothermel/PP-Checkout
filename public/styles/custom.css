@@ -7,7 +7,7 @@ body {
 }
 
 .container {
-  max-width: 800px;
+  max-width: 600px;
   margin: 0 auto;
   padding: 20px;
   background-color: #fff;
@@ -72,11 +72,11 @@ ul li p {
   color: #666;
 }
 
-.card-fields {
+/* .card-fields {
   max-width: 400px;
   min-width: 300px;
   margin: 0 auto;
-}
+} */
 
 .separator {
   border-top: 1px solid #ccc;
@@ -95,12 +95,21 @@ ul li p {
 }
 
 .paypal-button-container {
-  width: 70%;
-  display: flex;
-  justify-content: center;
+  /* ...existing code... */
 }
 
-/* .paypal-button-container iframe {
-  max-width: 100%;
-  width: auto !important;
-} */
+#multi-card-field-button {
+  background-color: #0070ba;
+  color: white;
+  font-size: 1.2em;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}
+
+#multi-card-field-button:hover {
+  background-color: #005ea6;
+}

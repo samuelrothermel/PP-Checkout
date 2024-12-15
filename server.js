@@ -33,30 +33,12 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.get('/purchase', async (req, res) => {
-  const clientId = process.env.CLIENT_ID;
-  try {
-    res.render('purchase', { clientId });
-  } catch (err) {
-    handleError(res, err);
-  }
-});
-
-app.get('/vault', async (req, res) => {
-  const clientId = process.env.CLIENT_ID;
-  try {
-    res.render('vault', { clientId });
-  } catch (err) {
-    handleError(res, err);
-  }
-});
-
-app.get('/returning-user', async (req, res) => {
+app.get('/checkout', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
   const hardCodedCustomerId = 'vLOMLitZuN';
   try {
     // const idToken = await paypal.returningAccessToken(hardCodedCustomerId);
-    res.render('returning-user', {
+    res.render('checkout', {
       clientId,
       // idToken,
     });
@@ -65,11 +47,11 @@ app.get('/returning-user', async (req, res) => {
   }
 });
 
-app.get('/first-time-payer', async (req, res) => {
+app.get('/save-wo-purchase', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
   // const idToken = req.query['data-user-id-token'];
   try {
-    res.render('first-time-payer', { clientId });
+    res.render('save-wo-purchase', { clientId });
   } catch (err) {
     handleError(res, err);
   }
@@ -143,12 +125,8 @@ app.post('/api/vault/payment-token', async (req, res) => {
 app.get('/api/payment-tokens', async (req, res) => {
   console.log('get payment tokens req.body: ', req.body);
   const customerId = req.query.customer_id;
-  // console.log('customer id to be sent to payment-token endpoint: ', customerId);
-
   try {
     const paymentTokens = await paypal.fetchPaymentTokens(customerId);
-    const stringyTokens = JSON.stringify(paymentTokens);
-    // console.log('payment-token get response: ', paymentTokens);
     res.json(paymentTokens);
   } catch (err) {
     handleError(res, err);
@@ -161,7 +139,9 @@ app.post('/api/orders/:orderID/capture', async (req, res) => {
   const { orderID } = req.params;
   try {
     const captureData = await paypal.capturePayment(orderID);
+    const vaultResponse = JSON.stringify(captureData.payment_source);
     console.log('captureData: ', captureData);
+    console.log('vaultResponse: ', vaultResponse);
 
     // const vaultResponse = JSON.stringify(captureData.paymentSource);
     res.json(captureData);
