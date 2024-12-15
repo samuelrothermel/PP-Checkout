@@ -53,14 +53,23 @@ app.get('/vault', async (req, res) => {
 
 app.get('/returning-user', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
-  res.render('returning-user', { clientId });
+  const hardCodedCustomerId = 'vLOMLitZuN';
+  try {
+    // const idToken = await paypal.returningAccessToken(hardCodedCustomerId);
+    res.render('returning-user', {
+      clientId,
+      // idToken,
+    });
+  } catch (err) {
+    handleError(res, err);
+  }
 });
 
-app.get('/checkout', async (req, res) => {
+app.get('/first-time-payer', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
-  const idToken = req.query['data-user-id-token'];
+  // const idToken = req.query['data-user-id-token'];
   try {
-    res.render('checkout', { clientId, idToken });
+    res.render('first-time-payer', { clientId });
   } catch (err) {
     handleError(res, err);
   }
@@ -78,13 +87,14 @@ app.post('/api/orders', async (req, res) => {
 
 // vault setup token request
 app.post('/api/vault/setup-token', async (req, res) => {
+  console.log('create vault setup token req.body: ', req.body);
   try {
     const { paymentSource } = req.body;
     const vaultSetupToken = await paypal.createVaultSetupToken({
       paymentSource,
     });
     res.json(vaultSetupToken);
-    console.log('vaultSetupToken', vaultSetupToken);
+    // console.log('vaultSetupToken', vaultSetupToken);
   } catch (err) {
     handleError(res, err);
   }
@@ -92,7 +102,7 @@ app.post('/api/vault/setup-token', async (req, res) => {
 
 // create vault payment token
 app.post('/api/vault/payment-token/:vaultSetupToken', async (req, res) => {
-  console.log('vaultSetupToken req.params', req.params);
+  console.log('create vault payment token req.body: ', req.body);
   try {
     const { vaultSetupToken } = req.params;
     const paymentToken = await paypal.createVaultPaymentToken(vaultSetupToken);
@@ -104,10 +114,11 @@ app.post('/api/vault/payment-token/:vaultSetupToken', async (req, res) => {
 
 // returning payer access token request
 app.post('/api/returning-user-token', async (req, res) => {
+  console.log('create returning user access token req.body: ', req.body);
   try {
     const { customerId } = req.body; // Changed from req.params to req.body
     const idToken = await paypal.returningAccessToken(customerId);
-    console.log('returning user access token id: ', idToken);
+    // console.log('returning user access token id: ', idToken);
     res.json({ idToken }); // Ensure the response is in the correct format
   } catch (err) {
     handleError(res, err);
@@ -116,6 +127,7 @@ app.post('/api/returning-user-token', async (req, res) => {
 
 // create payment token from customer ID
 app.post('/api/vault/payment-token', async (req, res) => {
+  console.log('create vault payment token from customer ID req.body: ', req);
   const { customerId } = req.body;
   try {
     const paymentToken = await paypal.createPaymentTokenFromCustomerId(
@@ -129,13 +141,14 @@ app.post('/api/vault/payment-token', async (req, res) => {
 
 // get payment tokens from customer ID
 app.get('/api/payment-tokens', async (req, res) => {
+  console.log('get payment tokens req.body: ', req.body);
   const customerId = req.query.customer_id;
-  console.log('customer id to be sent to payment-token endpoint: ', customerId);
+  // console.log('customer id to be sent to payment-token endpoint: ', customerId);
 
   try {
     const paymentTokens = await paypal.fetchPaymentTokens(customerId);
     const stringyTokens = JSON.stringify(paymentTokens);
-    console.log('payment-token get response: ', paymentTokens);
+    // console.log('payment-token get response: ', paymentTokens);
     res.json(paymentTokens);
   } catch (err) {
     handleError(res, err);
@@ -144,9 +157,13 @@ app.get('/api/payment-tokens', async (req, res) => {
 
 // capture payment
 app.post('/api/orders/:orderID/capture', async (req, res) => {
+  console.log('capture order payment req.body: ', req.body);
   const { orderID } = req.params;
   try {
     const captureData = await paypal.capturePayment(orderID);
+    console.log('captureData: ', captureData);
+
+    // const vaultResponse = JSON.stringify(captureData.paymentSource);
     res.json(captureData);
   } catch (err) {
     handleError(res, err);

@@ -1,0 +1,56 @@
+<html>
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- To be replaced with your own stylesheet -->
+    <link rel="stylesheet" type="text/css"
+      href="https://www.paypalobjects.com/webstatic/en_US/developer/docs/css/cardfields.css" />
+    <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
+    <!-- Express fills in the clientId and clientToken variables -->
+    <script>
+      var clientId = "<%= clientId %>";
+    </script>
+    <script src="https://www.paypal.com/sdk/js?components=buttons,card-fields&client-id=<%= clientId %>&enable-funding=venmo"></script>
+  </head>
+
+  <body>
+    <h2>Order ID</h2>
+      <div id="create-order-info"></div>
+      <h2>Payment Source in Capture Response</h2>
+      <div id="create-payment-info"></div>
+    <!-- <div id="general-error"></div>
+      <h2>Create Vault Setup Token</h2>
+      <div id="create-setup-info"></div>
+      <h2>Capture Order</h2>
+      <div id="capture-order-info"></div> -->
+    <div class="container">
+      <div class="or-text">SAVE DURING CHECKOUT</div>
+      <div class="separator"></div>
+      <!-- <div class="checkbox">
+        <input type="checkbox" id="returning-user" />
+        <label for="returning-user">Returning User</label>
+        <input type="text" id="customer-id" placeholder="Enter Customer ID" style="display:none; margin-left: 10px;" />
+        <button id="submit-customer-id" style="display:none; margin-left: 10px;">Submit</button>
+      </div>
+      <div class="separator"></div> -->
+      <div id="paypal-button-container" class="paypal-button-container"></div>
+      <!-- <div class="or-text">OR PAY WITH NEW CARD</div> -->
+      <div class="separator"></div>
+      <div class="card-fields">
+      <div id="card-name-field-container"></div>
+      <div id="card-number-field-container"></div>
+      <div id="card-expiry-field-container"></div>
+      <div id="card-cvv-field-container"></div>
+        <!-- <div class="checkbox vault-checkbox">
+          <input type="checkbox" id="save" name="same" value="vLOMLitZuN"/>
+          <label for="vault-card">Save your Card</label>
+        </div> -->
+      <button id="multi-card-field-button" type="button">Checkout</button>
+    </div>
+    </div>
+      
+    <script src="first-time-payer.js"></script>
+  </body>
+
+</html>

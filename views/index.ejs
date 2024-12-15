@@ -1,50 +1,58 @@
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css"
-      href="https://www.paypalobjects.com/webstatic/en_US/developer/docs/css/cardfields.css" />
-    <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
-  </head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://www.paypalobjects.com/webstatic/en_US/developer/docs/css/cardfields.css">
+  <link rel="stylesheet" href="/styles/custom.css">
+  <title>PayPal Checkout Integrations</title>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>PayPal Checkout Integrations</h1>
+      <p>Online and mobile payments solution using the PayPal JavaScript SDK and REST APIs</p>
+    </header>
 
-  <body>
-    <div class="container">
-      <header>
-        <h1>Checkout Advanced Integration</h1>
-        <p>Integrate PayPal-hosted card fields into your checkout flow.</p>
-      </header>
+    <section class="description">
+      <h2>Intention</h2>
+      <p>This page demonstrates the integration of PayPal-hosted card fields via the PayPal JS SDK for both first-time payer and returning payer flows.</p>
+    </section>
 
-      <section class="description">
-        <h2>Intention</h2>
-        <p>This page demonstrates the integration of PayPal-hosted card fields via the PayPal JS SDK for both purchase and vault flows.</p>
-      </section>
+    <section class="apis">
+      <h2>REST APIs & JavaScript SDK Used</h2>
+      <ul>
+        <li>
+          <a href="https://developer.paypal.com/sdk/js/">JavaScript SDK</a>
+          <p>The JavaScript SDK displays PayPal-supported payment methods on your page to give your buyers a personalized and streamlined checkout experience.</p>
+          <p>You can use the JavaScript SDK to render buttons, payment method icons (marks), and credit and debit card form fields (card-fields). You can also use the JavaScript SDK to check the funding-eligibility of a given payment method.</p>
+        </li>
+        <li>
+          <a href="https://developer.paypal.com/docs/api/orders/v2/">Orders API</a> aka Orders v2
+          <p>An order represents a payment between two or more parties. Use the Orders API to create, update, retrieve, authorize, and capture orders.</p>
+        </li>
+        <li>
+          <a href="https://developer.paypal.com/docs/api/payment-tokens/v3/">Payment Method Tokens API</a> aka Vault v3
+          <p>The Payment Method Tokens API saves payment methods so payers don't have to enter details for future transactions. Payers can check out faster or pay without being present after they agree to save a payment method.</p>
+          <p>The API associates a payment method with a temporary setup token. Pass the setup token to the API to exchange the setup token for a permanent token.</p>
+          <p>The permanent token represents a payment method that's saved to the vault. This token can be used repeatedly for checkout or recurring transactions such as subscriptions.</p>
+        </li>
+      </ul>
+    </section>
 
-      <section class="apis">
-        <h2>PayPal Tools Used</h2>
-        <ul>
-          <li>JavaScript SDK</li>
-          <li>Orders v2 REST API</li>
-          <li>Payment Method Tokens API</li>
-        </ul>
-      </section>
-
-      <section class="checkout">
-        <h2>Available Checkout Pages</h2>
-        <ul>
-          <li>
-            <a href="/purchase">Purchase Flow</a>
-            <p>Use this flow to handle one-time purchases using PayPal's card fields and buttons.</p>
-          </li>
-          <li>
-            <a href="/vault">Vault Flow</a>
-            <p>Use this flow to save card details for future transactions OR save PayPal payment source details during a one-time transaction for future transactions.</p>
-          </li>
-          <li>
-            <a href="/returning-user">Returning User</a>
-            <p>Use this flow to handle returning users by entering their Customer ID.</p>
-          </li>
-        </ul>
-      </section>
-    </div>
-  </body>
+    <section class="checkout">
+      <h2>Advanced Checkout Examples</h2>
+      <ul>
+        <li>
+          <a href="/first-time-payer">First Time Payer</a>
+          <p>Customer's have the option of saving or "vaulting" their payment methods on checkout.</p>
+        </li>
+        <li>
+          <a href="/returning-user">Returning User</a>
+          <p>Use this flow to handle returning users by entering their Customer ID.</p>
+        </li>
+      </ul>
+    </section>
+  </div>
+</body>
 </html>

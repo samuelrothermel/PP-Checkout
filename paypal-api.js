@@ -17,6 +17,8 @@ const handleResponse = async response => {
 
 // generate access token for first-time payer
 export const generateAccessToken = async () => {
+  console.log('generating access token for first-time payer');
+
   const auth = Buffer.from(CLIENT_ID + ':' + APP_SECRET).toString('base64');
   const response = await fetch(`${base}/v1/oauth2/token`, {
     method: 'post',
@@ -31,6 +33,10 @@ export const generateAccessToken = async () => {
 
 // generate access token for returning payer
 export const returningAccessToken = async customerId => {
+  console.log(
+    'generating access token for returning payer with customer id ',
+    customerId
+  );
   const auth = Buffer.from(CLIENT_ID + ':' + APP_SECRET).toString('base64');
   const response = await fetch(`${base}/v1/oauth2/token`, {
     method: 'post',
@@ -49,6 +55,7 @@ export const returningAccessToken = async customerId => {
 
 // create order request
 export const createOrder = async () => {
+  console.log('creating order');
   const purchaseAmount = '100.00'; // TODO: pull prices from a database
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders`;
@@ -68,6 +75,22 @@ export const createOrder = async () => {
           },
         },
       ],
+      payment_source: {
+        paypal: {
+          attributes: {
+            vault: {
+              store_in_vault: 'ON_SUCCESS',
+              usage_type: 'MERCHANT',
+              customer_type: 'CONSUMER',
+            },
+          },
+          experience_context: {
+            return_url: 'http://example.com',
+            cancel_url: 'http://example.com',
+            shipping_preference: 'NO_SHIPPING',
+          },
+        },
+      },
     }),
   });
 
@@ -76,6 +99,7 @@ export const createOrder = async () => {
 
 // capture payment request
 export const capturePayment = async orderId => {
+  console.log('capturing payment with order ID:', orderId);
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders/${orderId}/capture`;
   const response = await fetch(url, {
@@ -91,6 +115,7 @@ export const capturePayment = async orderId => {
 
 // create vault setup token
 export const createVaultSetupToken = async ({ paymentSource }) => {
+  // console.log('creating vault setup token for payment source:', paymentSource);
   const paymentSources = {
     paypal: {
       description: 'Description for PayPal to be shown to PayPal payer',
@@ -132,6 +157,10 @@ export const createVaultSetupToken = async ({ paymentSource }) => {
 
 // create vault payment token
 export const createVaultPaymentToken = async vaultSetupToken => {
+  console.log(
+    'creating vault payment token with setup token:',
+    vaultSetupToken
+  );
   const response = await fetch(`${base}/v3/vault/payment-tokens`, {
     method: 'post',
     headers: {
@@ -154,6 +183,7 @@ export const createVaultPaymentToken = async vaultSetupToken => {
 
 // create payment token from customer ID
 export const createPaymentTokenFromCustomerId = async customerId => {
+  console.log('creating payment token from customer ID:', customerId);
   const accessToken = await generateAccessToken();
   const response = await fetch(`${base}/v3/vault/payment-tokens`, {
     method: 'post',
@@ -177,6 +207,7 @@ export const createPaymentTokenFromCustomerId = async customerId => {
 
 // get payment tokens from customer ID
 export const fetchPaymentTokens = async customerId => {
+  console.log('fetching payment tokens for customer ID:', customerId);
   const accessToken = await generateAccessToken();
   const response = await fetch(
     `https://api-m.sandbox.paypal.com/v3/vault/payment-tokens?customer_id=${customerId}`,

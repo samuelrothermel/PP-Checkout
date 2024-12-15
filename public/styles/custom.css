@@ -12,6 +12,9 @@ body {
   padding: 20px;
   background-color: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  /* width: 80%; */
+  border: 1px solid #ccc;
+  /* align-items: center; */
 }
 
 header {
@@ -75,15 +78,6 @@ ul li p {
   margin: 0 auto;
 }
 
-.container {
-  width: 50%;
-  margin: 0 auto;
-  border: 1px solid #ccc;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  /* align-items: center; */
-}
-
 .separator {
   border-top: 1px solid #ccc;
   margin: 20px 0;
@@ -95,3 +89,18 @@ ul li p {
   font-weight: bold;
   margin: 20px 0;
 }
+
+.vault-checkbox {
+  padding: 10px 0;
+}
+
+.paypal-button-container {
+  width: 70%;
+  display: flex;
+  justify-content: center;
+}
+
+/* .paypal-button-container iframe {
+  max-width: 100%;
+  width: auto !important;
+} */

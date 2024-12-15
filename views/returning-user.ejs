@@ -7,42 +7,34 @@
   </head>
 
   <body>
+    <h2>Order ID</h2>
+      <div id="create-order-info"></div>
+      <h2>Payment Source in Capture Response</h2>
+      <div id="create-payment-info"></div>
     <div class="container">
-      <header>
-        <h1>Returning User Login</h1>
-      </header>
-      <section class="returning-user">
+      <section>
         <form id="customer-id-form">
           <label for="customer-id">Enter Customer ID:</label>
-          <input type="text" id="customer-id" name="customer-id" value="vLOMLitZuN" required />
+          <input type="text" id="customer-id" name="customer-id" required />
           <button type="submit">Submit</button>
         </form>
+        <div class="or-text">RETURNING USER</div>
+        <div class="separator"></div>
+        <div id="paypal-button-container" class="paypal-button-container"></div>
+        <div class="separator"></div>
+        <div class="card-fields">
+          <div id="card-name-field-container"></div>
+          <div id="card-number-field-container"></div>
+          <div id="card-expiry-field-container"></div>
+          <div id="card-cvv-field-container"></div>
+          <button id="multi-card-field-button" type="button">Checkout</button>
+        </div>
       </section>
       <div id="paypal-buttons-container"></div>
     </div>
-
-    <script src="/returning-user.js"></script>
-    <script src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&merchant-id=MERCHANT-ID" data-user-id-token="<%= idToken %>"></script>
     <script>
-      window.paypal.Buttons({
-        createVaultSetupToken: async () => {
-          const result = await fetch("/api/vault/setup-token", { method: "POST" });
-          const data = await result.json();
-          return data.token;
-        },
-        onApprove: async ({ vaultSetupToken }) => {
-          return fetch("/api/payment-tokens", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ vaultSetupToken }),
-          });
-        },
-        onError: (error) => {
-          console.log("An error occurred: ", error);
-        },
-      }).render("#paypal-buttons-container");
+      const clientId = '<%= clientId %>';
     </script>
+    <script src="/returning-user.js"></script>
   </body>
 </html>

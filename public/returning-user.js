@@ -1,27 +1,143 @@
-document
-  .getElementById('customer-id-form')
-  .addEventListener('submit', async event => {
-    event.preventDefault();
-    const customerId = document.getElementById('customer-id').value;
+document.addEventListener('DOMContentLoaded', function () {
+  const customerIdForm = document.getElementById('customer-id-form');
+  const customerIdInput = document.getElementById('customer-id');
 
-    // Fetch ID token for the customer
-    const idTokenResponse = await fetch('/api/returning-user-token', {
+  // Event listener for the customer ID form submission
+  customerIdForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const customerId = customerIdInput.value;
+
+    fetch('/api/returning-user-token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ customerId }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.idToken) {
+          // Load PayPal components after receiving the idToken
+          loadPayPalComponents(data.idToken);
+        } else {
+          console.error('Failed to retrieve idToken');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  });
+});
+
+function loadPayPalComponents(idToken) {
+  console.log('idToken:', idToken);
+
+  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields&client-id=${clientId}&enable-funding=venmo`;
+  const scriptElement = document.createElement('script');
+  scriptElement.src = scriptUrl;
+  scriptElement.setAttribute('data-user-id-token', idToken);
+  scriptElement.onload = () => {
+    paypal
+      .Buttons({
+        style: {
+          layout: 'vertical',
+        },
+        createOrder,
+        onApprove,
+        onCancel,
+        onError,
+      })
+      .render('#paypal-button-container');
+
+    // Initialize the card fields
+    const cardField = paypal.CardFields({
+      createOrder,
+      onApprove,
+      onError,
     });
 
-    const { idToken } = await idTokenResponse.json();
-    console.log('id_token: ', idToken);
+    if (cardField.isEligible()) {
+      const nameField = cardField.NameField();
+      nameField.render('#card-name-field-container');
 
-    if (idToken) {
-      console.log('returned idToken: ', idToken);
+      const numberField = cardField.NumberField();
+      numberField.render('#card-number-field-container');
 
-      // Redirect to new checkout page with idToken in the URL
-      window.location.href = `/checkout?data-user-id-token=${idToken}`;
-    } else {
-      alert('Failed to fetch ID token for this customer.');
+      const cvvField = cardField.CVVField();
+      cvvField.render('#card-cvv-field-container');
+
+      const expiryField = cardField.ExpiryField();
+      expiryField.render('#card-expiry-field-container');
+
+      document
+        .getElementById('multi-card-field-button')
+        .addEventListener('click', () => {
+          cardField.submit();
+        });
     }
-  });
+  };
+
+  document.head.appendChild(scriptElement);
+}
+
+const createOrder = (data, actions) => {
+  console.log('createOrder data:', data);
+  return fetch('/api/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      source: data.paymentSource, //paypal / venmo / etc.
+      cart: [
+        {
+          sku: '<YOUR_PRODUCT_STOCK_KEEPING_UNIT>',
+          quantity: '<YOUR_PRODUCT_QUANTITY>',
+        },
+      ],
+    }),
+  })
+    .then(response => response.json())
+    .then(orderData => {
+      console.log('Order data in response:', orderData);
+      const orderId = orderData.id;
+      document.getElementById(
+        'create-order-info'
+      ).textContent = `SUCCESS: ${orderId}`;
+      return orderId;
+    })
+    .catch(error => {
+      document.getElementById(
+        'create-order-info'
+      ).textContent = `ERROR: ${error}`;
+    });
+};
+
+const onApprove = (data, actions) => {
+  console.log('onApprove capture triggered');
+
+  return fetch(`/api/orders/${data.orderID}/capture`, {
+    method: 'POST',
+  })
+    .then(response => response.json())
+    .then(orderData => {
+      console.log('Capture result', orderData);
+      const paymentSource = orderData.payment_source;
+      document.getElementById(
+        'create-payment-info'
+      ).textContent = `SUCCESS: ${JSON.stringify(paymentSource)}`;
+    })
+    .catch(error => {
+      document.getElementById(
+        'create-payment-info'
+      ).textContent = `ERROR: ${error}`;
+    });
+};
+
+const onCancel = (data, actions) => {
+  console.log(`Order Canceled - ID: ${data.orderID}`);
+};
+
+const onError = err => {
+  console.error(err);
+};
