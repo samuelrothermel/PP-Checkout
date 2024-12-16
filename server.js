@@ -69,7 +69,7 @@ app.post('/api/orders', async (req, res) => {
 
 // vault setup token request
 app.post('/api/vault/setup-token', async (req, res) => {
-  console.log('create vault setup token req.body: ', req.body);
+  console.log('create vault setup token triggered');
   try {
     const { paymentSource } = req.body;
     const vaultSetupToken = await paypal.createVaultSetupToken({
@@ -84,7 +84,7 @@ app.post('/api/vault/setup-token', async (req, res) => {
 
 // create vault payment token
 app.post('/api/vault/payment-token/:vaultSetupToken', async (req, res) => {
-  console.log('create vault payment token req.body: ', req.body);
+  console.log('create vault payment token triggered');
   try {
     const { vaultSetupToken } = req.params;
     const paymentToken = await paypal.createVaultPaymentToken(vaultSetupToken);
@@ -96,7 +96,7 @@ app.post('/api/vault/payment-token/:vaultSetupToken', async (req, res) => {
 
 // returning payer access token request
 app.post('/api/returning-user-token', async (req, res) => {
-  console.log('create returning user access token req.body: ', req.body);
+  console.log('create returning user access token triggered');
   try {
     const { customerId } = req.body; // Changed from req.params to req.body
     const idToken = await paypal.returningAccessToken(customerId);
@@ -109,7 +109,7 @@ app.post('/api/returning-user-token', async (req, res) => {
 
 // create payment token from customer ID
 app.post('/api/vault/payment-token', async (req, res) => {
-  console.log('create vault payment token from customer ID req.body: ', req);
+  console.log('create vault payment token from customer ID triggered');
   const { customerId } = req.body;
   try {
     const paymentToken = await paypal.createPaymentTokenFromCustomerId(
@@ -123,7 +123,7 @@ app.post('/api/vault/payment-token', async (req, res) => {
 
 // get payment tokens from customer ID
 app.get('/api/payment-tokens', async (req, res) => {
-  console.log('get payment tokens req.body: ', req.body);
+  console.log('get payment tokens request triggered');
   const customerId = req.query.customer_id;
   try {
     const paymentTokens = await paypal.fetchPaymentTokens(customerId);
@@ -135,15 +135,11 @@ app.get('/api/payment-tokens', async (req, res) => {
 
 // capture payment
 app.post('/api/orders/:orderID/capture', async (req, res) => {
-  console.log('capture order payment req.body: ', req.body);
+  console.log('capture order request triggered');
   const { orderID } = req.params;
   try {
     const captureData = await paypal.capturePayment(orderID);
     const vaultResponse = JSON.stringify(captureData.payment_source);
-    console.log('captureData: ', captureData);
-    console.log('vaultResponse: ', vaultResponse);
-
-    // const vaultResponse = JSON.stringify(captureData.paymentSource);
     res.json(captureData);
   } catch (err) {
     handleError(res, err);
