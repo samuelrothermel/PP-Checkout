@@ -101,7 +101,9 @@ function displaySavedPaymentMethods(paymentTokens) {
   console.log('paymentTokens:', paymentTokens);
 
   const container = document.getElementById('saved-payment-methods-container');
+  const cardContainer = document.getElementById('saved-cards');
   container.innerHTML = ''; // Clear any existing content
+  cardContainer.innerHTML = ''; // Clear any existing content
 
   if (paymentTokens.length === 0) {
     container.textContent = 'No saved payment methods found';
@@ -109,7 +111,6 @@ function displaySavedPaymentMethods(paymentTokens) {
   } else {
     container.textContent =
       'Saved payment methods found. Reloading PayPal components with data-user-id-token...';
-    return;
   }
 }
 
