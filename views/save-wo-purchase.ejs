@@ -1,35 +1,42 @@
 <html>
-
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- To be replaced with your own stylesheet -->
-    <link rel="stylesheet" type="text/css"
-      href="https://www.paypalobjects.com/webstatic/en_US/developer/docs/css/cardfields.css" />
-      <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
-    <!-- Express fills in the clientId and clientToken variables -->
-    <script src="https://www.paypal.com/sdk/js?components=buttons,card-fields&client-id=<%= clientId %>"></script>
+    <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
+    <title>Returning User</title>
   </head>
 
   <body>
     <div class="container">
-      <div id="paypal-button-container" class="paypal-button-container"></div>
-      <div class="or-text">OR VAULT CARD BELOW</div>
-      <div class="separator"></div>
-      <div class="card-fields">
-      <div id="card-name-field-container"></div>
-      <div id="card-number-field-container"></div>
-      <div id="card-expiry-field-container"></div>
-      <div id="card-cvv-field-container"></div>
-      <button id="multi-card-field-button" type="button">Vault now with Card</button>
+      <section>
+        <div class="or-text">SAVE WITHOUT PURCHASE</div>
+        <div id="vault-info-section" style="display: none;">
+          <div class="separator"></div>
+          <div id="vault-setup-info"></div>
+          <div id="vault-setup-status"></div>
+        </div>
+        <div id="payment-source-section" style="display: none;">
+          <div class="separator"></div>
+          <div id="payment-source-type-info"></div>
+          <div id="customer-id-info"></div>
+        </div>
+        <div class="separator"></div>
+        <div id="paypal-button-container" class="paypal-button-container"></div>
+        <div class="or-text">OR SAVE NEW CARD</div>
+        <div class="separator"></div>
+        <div class="card-fields">
+          <div id="card-name-field-container"></div>
+          <div id="card-number-field-container"></div>
+          <div id="card-expiry-field-container"></div>
+          <div id="card-cvv-field-container"></div>
+          <button id="multi-card-field-button" type="button">Save Card</button>
+        </div>
+      </section>
+      <div id="paypal-buttons-container"></div>
     </div>
-    </div>
-      <div id="general-error"></div>
-      <h2>Create Vault Setup Token</h2>
-      <div id="create-setup-info"></div>
-      <h2>Create Vault Payment Token</h2>
-      <div id="create-payment-info"></div>
-    <script src="vault.js"></script>
+    <script>
+      const clientId = '<%= clientId %>';
+    </script>
+    <script src="/save-wo-purchase.js"></script>
   </body>
-
 </html>
