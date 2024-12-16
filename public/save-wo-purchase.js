@@ -1,6 +1,6 @@
 const createVaultSetupToken = data => {
   let paymentSource;
-  console.log('data', data);
+  console.log('Client-Side Create Vault Setup Token Raw Request: ', data);
 
   if (!data) {
     paymentSource = 'card';
@@ -18,18 +18,29 @@ const createVaultSetupToken = data => {
     }),
   })
     .then(response => response.json())
-    .then(vaultResponse => {
-      console.log(JSON.stringify({ vaultResponse }));
-      const vaultSetupToken = vaultResponse.id;
+    .then(setupTokenResponse => {
+      console.log(
+        'Create Setup Token Raw Response: ',
+        JSON.stringify({ setupTokenResponse })
+      );
+      const vaultSetupToken = setupTokenResponse.id;
+      document.getElementById('vault-info-section').style.display = 'block';
       document.getElementById(
-        'create-setup-info'
-      ).textContent = `SUCCESS: ${vaultSetupToken}`;
+        'vault-setup-info'
+      ).textContent = `Vault Setup Token ID: ${vaultSetupToken}`;
+      document.getElementById(
+        'vault-setup-status'
+      ).textContent = `Status: ${setupTokenResponse.status}`;
+      document.getElementById(
+        'customer-id-info'
+      ).textContent = `Customer ID: ${setupTokenResponse.customer.id}`;
 
       return vaultSetupToken;
     })
     .catch(error => {
+      document.getElementById('vault-info-section').style.display = 'block';
       document.getElementById(
-        'create-setup-info'
+        'vault-setup-info'
       ).textContent = `ERROR: ${error}`;
     });
 };
@@ -47,11 +58,16 @@ const onApprove = ({ vaultSetupToken }) =>
         JSON.stringify(vaultPaymentResponse, null, 2)
       );
 
+      document.getElementById('payment-source-section').style.display = 'block';
       document.getElementById(
-        'create-payment-info'
-      ).textContent = `SUCCESS: ${vaultPaymentResponse.id}`;
+        'payment-source-type-info'
+      ).textContent = `Payment Method Token ID: ${vaultPaymentResponse.id}`;
+      document.getElementById(
+        'customer-id-info'
+      ).textContent = `Customer ID: ${vaultPaymentResponse.customer.id}`;
     })
     .catch(error => {
+      document.getElementById('payment-source-section').style.display = 'block';
       document.getElementById(
         'create-payment-info'
       ).textContent = `ERROR: ${error}`;
@@ -59,41 +75,56 @@ const onApprove = ({ vaultSetupToken }) =>
 
 const onError = console.error;
 
-paypal
-  .Buttons({
-    // Sets up the transaction when a payment button is clicked
-    createVaultSetupToken,
-    // Finalize the transaction after payer approval
-    onApprove,
-    onError,
-  })
-  .render('#paypal-button-container');
+const onCancel = (data, actions) => {
+  console.log(`Order Canceled Data: ${data}`);
+};
 
-// Create the Card Fields Component and define callbacks
-const cardField = paypal.CardFields({
-  createVaultSetupToken,
-  onApprove,
-  onError,
-});
+loadPayPalSDK();
 
-// Render each field after checking for eligibility
-if (cardField.isEligible()) {
-  const nameField = cardField.NameField();
-  nameField.render('#card-name-field-container');
+function loadPayPalSDK() {
+  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields&client-id=${clientId}&enable-funding=venmo`;
+  const scriptElement = document.createElement('script');
+  scriptElement.src = scriptUrl;
+  scriptElement.onload = () => {
+    paypal
+      .Buttons({
+        style: {
+          layout: 'vertical',
+        },
+        createVaultSetupToken,
+        onApprove,
+        onCancel,
+        onError,
+      })
+      .render('#paypal-button-container');
 
-  const numberField = cardField.NumberField();
-  numberField.render('#card-number-field-container');
-
-  const cvvField = cardField.CVVField();
-  cvvField.render('#card-cvv-field-container');
-
-  const expiryField = cardField.ExpiryField();
-  expiryField.render('#card-expiry-field-container');
-
-  // Add click listener to submit button and call the submit function on the CardField component
-  document
-    .getElementById('multi-card-field-button')
-    .addEventListener('click', () => {
-      cardField.submit();
+    // Initialize the card fields
+    const cardField = paypal.CardFields({
+      createVaultSetupToken,
+      onApprove,
+      onError,
     });
+
+    if (cardField.isEligible()) {
+      const nameField = cardField.NameField();
+      nameField.render('#card-name-field-container');
+
+      const numberField = cardField.NumberField();
+      numberField.render('#card-number-field-container');
+
+      const cvvField = cardField.CVVField();
+      cvvField.render('#card-cvv-field-container');
+
+      const expiryField = cardField.ExpiryField();
+      expiryField.render('#card-expiry-field-container');
+
+      document
+        .getElementById('multi-card-field-button')
+        .addEventListener('click', () => {
+          cardField.submit();
+        });
+    }
+  };
+
+  document.head.appendChild(scriptElement);
 }
