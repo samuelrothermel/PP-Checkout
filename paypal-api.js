@@ -17,7 +17,7 @@ const handleResponse = async response => {
 
 // generate access token for first-time payer
 export const generateAccessToken = async () => {
-  console.log('generating access token for first-time payer');
+  // console.log('generating access token for first-time payer');
 
   const auth = Buffer.from(CLIENT_ID + ':' + APP_SECRET).toString('base64');
   const response = await fetch(`${base}/v1/oauth2/token`, {
@@ -129,6 +129,7 @@ export const createVaultSetupToken = async ({ paymentSource }) => {
       },
     },
     card: {
+      verification_method: 'SCA_WHEN_REQUIRED',
       experience_context: {
         shipping_preference: 'NO_SHIPPING',
       },
@@ -149,6 +150,10 @@ export const createVaultSetupToken = async ({ paymentSource }) => {
     }),
   });
 
+  console.log(
+    'Create Vault Setup Token Response: ',
+    JSON.stringify(await response.clone().json(), null, 2)
+  );
   return handleResponse(response);
 };
 
@@ -171,6 +176,11 @@ export const createVaultPaymentToken = async vaultSetupToken => {
     }),
   });
 
+  const jsonResponse = await response.clone().json();
+  console.log(
+    'Create Vault Payment Token Response: ',
+    JSON.stringify(jsonResponse, null, 2)
+  );
   return handleResponse(response);
 };
 

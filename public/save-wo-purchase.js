@@ -49,7 +49,12 @@ const onApprove = ({ vaultSetupToken }) =>
   fetch(`/api/vault/payment-token/${vaultSetupToken}`, {
     method: 'post',
   })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(vaultPaymentResponse => {
       // Successful capture! For dev/demo purposes:
       console.log(
@@ -65,12 +70,25 @@ const onApprove = ({ vaultSetupToken }) =>
       document.getElementById(
         'customer-id-info'
       ).textContent = `Customer ID: ${vaultPaymentResponse.customer.id}`;
+      document.getElementById(
+        'card-verification-status-info'
+      ).textContent = `Card Verification Status: ${vaultPaymentResponse.payment_source.card.verification_status}`;
+      document.getElementById(
+        'card-verification-auth-info'
+      ).textContent = `Card Verification Auth Amount: $${vaultPaymentResponse.payment_source.card.verification.amount.value}`;
+      document.getElementById(
+        'card-verification-processor-info'
+      ).textContent = `Processor Response Code: ${vaultPaymentResponse.payment_source.card.verification.processor_response.response_code}`;
+      document.getElementById(
+        'card-verification-cvv-info'
+      ).textContent = `CVV Response Code: ${vaultPaymentResponse.payment_source.card.verification.processor_response.cvv_code}`;
     })
     .catch(error => {
+      console.error('Error during vault payment:', error);
       document.getElementById('payment-source-section').style.display = 'block';
       document.getElementById(
         'create-payment-info'
-      ).textContent = `ERROR: ${error}`;
+      ).textContent = `ERROR: ${error.message}`;
     });
 
 const onError = console.error;
