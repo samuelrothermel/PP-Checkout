@@ -101,17 +101,37 @@ function displaySavedPaymentMethods(paymentTokens) {
   console.log('paymentTokens:', paymentTokens);
 
   const container = document.getElementById('saved-payment-methods-container');
-  const cardContainer = document.getElementById('saved-cards');
   container.innerHTML = ''; // Clear any existing content
-  cardContainer.innerHTML = ''; // Clear any existing content
 
   if (paymentTokens.length === 0) {
     container.textContent = 'No saved payment methods found';
     return;
   } else {
-    container.textContent =
-      'Saved payment methods found. Reloading PayPal components with data-user-id-token...';
+    container.textContent = 'Saved payment methods:';
   }
+
+  const list = document.createElement('ul');
+  paymentTokens.forEach(token => {
+    const listItem = document.createElement('li');
+    const radioInput = document.createElement('input');
+    radioInput.type = 'radio';
+    radioInput.name = 'paymentToken';
+    radioInput.value = token.id;
+    listItem.appendChild(radioInput);
+
+    const label = document.createElement('label');
+    const card = token.payment_source.card || {};
+    const brand = card.brand || 'N/A';
+    const expiration = card.expiry || 'N/A';
+    const name = card.name || 'N/A';
+    const lastDigits = card.last_digits || 'N/A';
+    label.textContent = `Brand: ${brand}, Expiry: ${expiration}, Name: ${name}, Last 4: ${lastDigits}`;
+    listItem.appendChild(label);
+
+    list.appendChild(listItem);
+  });
+
+  container.appendChild(list);
 }
 
 function loadPayPalSDK(idToken) {
