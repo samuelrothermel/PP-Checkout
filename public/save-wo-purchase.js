@@ -82,6 +82,9 @@ const onApprove = ({ vaultSetupToken }) =>
       document.getElementById(
         'card-verification-cvv-info'
       ).textContent = `CVV Response Code: ${vaultPaymentResponse.payment_source.card.verification.processor_response.cvv_code}`;
+      document.getElementById(
+        'card-verification-avs-info'
+      ).textContent = `AVS Response Code: ${vaultPaymentResponse.payment_source.card.verification.processor_response.avs_code}`;
     })
     .catch(error => {
       console.error('Error during vault payment:', error);

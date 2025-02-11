@@ -11,12 +11,12 @@
   <div class="container">
     <header>
       <h1>PayPal Checkout Integrations</h1>
-      <p>Online and mobile payments solutions using the PayPal JavaScript SDK and REST APIs</p>
+      <p>Payment solutions using the PayPal JavaScript SDK and REST APIs</p>
     </header>
 
     <section class="description">
       <h2>Intention</h2>
-      <p>This page demonstrates the integration of PayPal-hosted card fields alongside SPBs via the PayPal JS SDK for both Save with Purchase and Save without Purchase integrations.</p>
+      <p>This page demonstrates the integration and use of PayPal-hosted card fields alongside the Smart Payment Button stack via the PayPal JS SDK for both Save with Purchase and Save without Purchase checkout flows.</p>
     </section>
 
     <section class="apis">
@@ -44,13 +44,14 @@
       <ul>
         <li>
           <a href="/checkout">Save with Purchase</a>
-          <p>Customers have their payment method saved or "vaulted" on checkout.</p>
-          <p>Returning customers have the option of re-using a previously saved or "vaulted" payment method on checkout.</p>
+          <p>Customers have their payment method vaulted upon successful purchase via Payment Method Token API.</p>
+          <p>A returning customer's Customer ID is exchanged for a User ID Token via the OAuth 2.0 API. This user ID token is passed to JS SDK to load saved payment methods.</p>
         </li>
         <li>
           <a href="/save-wo-purchase">Save without Purchase</a>
-          <p>Save payment methods to charge payers after a set amount of time. For example, you can offer a free trial and charge payers after the trial expires. Payers don't need to be present when charged. No checkout required.</p>
-
+          <p>Both PayPal and Card payment methods are vaulted for future payment.</p>
+          <p>Setup Token is exchanged for a Permanent Payment Token via the Payment Method Token API.</p>
+          <p>Card payment methods verified at time of request Setup Token.</p>
         </li>
       </ul>
     </section>
