@@ -113,3 +113,39 @@ ul li p {
 #multi-card-field-button:hover {
   background-color: #005ea6;
 }
+
+.shipping-info {
+  margin-bottom: 20px;
+}
+
+.shipping-info h3 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}
+
+.shipping-info label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.shipping-info input[type='text'],
+.shipping-info input[type='email'] {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.shipping-info input[type='text']:focus,
+.shipping-info input[type='email']:focus {
+  border-color: #0070ba;
+  outline: none;
+}
+
+.shipping-info input[type='text']::placeholder,
+.shipping-info input[type='email']::placeholder {
+  color: #999;
+}

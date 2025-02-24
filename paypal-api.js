@@ -94,6 +94,73 @@ export const createOrder = async () => {
   return handleResponse(response);
 };
 
+// create order request
+export const createQlOrder = async orderData => {
+  const { shippingInfo, cart } = orderData;
+  const purchaseAmount = '100.00'; // TODO: pull prices from a database
+  const accessToken = await generateAccessToken();
+
+  let shippingPreference = 'GET_FROM_FILE';
+  let shippingDetails = {};
+
+  if (shippingInfo) {
+    shippingPreference = 'SET_PROVIDED_ADDRESS';
+    shippingDetails = {
+      name: {
+        full_name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
+      },
+      address: {
+        address_line_1: shippingInfo.address.addressLine1,
+        admin_area_2: shippingInfo.address.adminArea2,
+        admin_area_1: shippingInfo.address.adminArea1,
+        postal_code: shippingInfo.address.postalCode,
+        country_code: shippingInfo.address.countryCode,
+      },
+    };
+  }
+
+  const url = `${base}/v2/checkout/orders`;
+  const response = await fetch(url, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      'PayPal-Request-Id': Date.now().toString(),
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      intent: 'CAPTURE',
+      payment_source: {
+        paypal: {
+          attributes: {
+            vault: {
+              store_in_vault: 'ON_SUCCESS',
+              usage_type: 'MERCHANT',
+              customer_type: 'CONSUMER',
+            },
+          },
+          experience_context: {
+            shipping_preference: shippingPreference,
+            user_action: 'PAY_NOW',
+            return_url: 'https://example.com/returnUrl',
+            cancel_url: 'https://example.com/cancelUrl',
+          },
+        },
+      },
+      purchase_units: [
+        {
+          amount: {
+            currency_code: 'USD',
+            value: purchaseAmount,
+          },
+          shipping: shippingDetails,
+        },
+      ],
+    }),
+  });
+
+  return handleResponse(response);
+};
+
 // capture payment request
 export const capturePayment = async orderId => {
   // console.log('capturing payment with order ID:', orderId);

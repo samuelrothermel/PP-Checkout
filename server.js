@@ -37,10 +37,8 @@ app.get('/checkout', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
   const hardCodedCustomerId = 'vLOMLitZuN';
   try {
-    // const idToken = await paypal.returningAccessToken(hardCodedCustomerId);
     res.render('checkout', {
       clientId,
-      // idToken,
     });
   } catch (err) {
     handleError(res, err);
@@ -49,7 +47,6 @@ app.get('/checkout', async (req, res) => {
 
 app.get('/save-wo-purchase', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
-  // const idToken = req.query['data-user-id-token'];
   try {
     res.render('save-wo-purchase', { clientId });
   } catch (err) {
@@ -57,10 +54,34 @@ app.get('/save-wo-purchase', async (req, res) => {
   }
 });
 
+app.get('/ql-checkout', async (req, res) => {
+  const clientId = process.env.CLIENT_ID;
+  try {
+    res.render('ql-checkout', {
+      clientId,
+    });
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
 // create order request
 app.post('/api/orders', async (req, res) => {
+  console.log('non-QL create order request triggered');
   try {
     const order = await paypal.createOrder();
+    res.json(order);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+// create QL order request
+app.post('/api/ql-orders', async (req, res) => {
+  console.log('create QL order request triggered');
+  console.log('request body:', req.body);
+  try {
+    const order = await paypal.createQlOrder(req.body);
     res.json(order);
   } catch (err) {
     handleError(res, err);

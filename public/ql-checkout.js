@@ -1,19 +1,46 @@
 const createOrder = (data, actions) => {
   console.log('Client-Side Create Order Raw Request: ', data);
-  return fetch('/api/orders', {
+
+  let shippingInfo = null;
+  if (document.getElementById('toggle-shipping-info').checked) {
+    shippingInfo = {
+      firstName: document.getElementById('shipping-first-name').value,
+      lastName: document.getElementById('shipping-last-name').value,
+      email: document.getElementById('shipping-email').value,
+      phone_number: {
+        countryCode: '1',
+        nationalNumber: document.getElementById('shipping-phone').value,
+      },
+      address: {
+        addressLine1: document.getElementById('shipping-address-line1').value,
+        adminArea2: document.getElementById('shipping-admin-area2').value,
+        adminArea1: document.getElementById('shipping-admin-area1').value,
+        postalCode: document.getElementById('shipping-postal-code').value,
+        countryCode: document.getElementById('shipping-country-code').value,
+      },
+    };
+  }
+
+  const requestBody = {
+    source: data.paymentSource, //paypal / venmo / etc.
+    cart: [
+      {
+        sku: '123456789',
+        quantity: '1',
+      },
+    ],
+  };
+
+  if (shippingInfo) {
+    requestBody.shippingInfo = shippingInfo;
+  }
+
+  return fetch('/api/ql-orders', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      source: data.paymentSource, //paypal / venmo / etc.
-      cart: [
-        {
-          sku: '<YOUR_PRODUCT_STOCK_KEEPING_UNIT>',
-          quantity: '<YOUR_PRODUCT_QUANTITY>',
-        },
-      ],
-    }),
+    body: JSON.stringify(requestBody),
   })
     .then(response => response.json())
     .then(orderData => {
@@ -38,6 +65,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const customerIdInput = document.getElementById('customer-id');
   const toggleCustomerIdCheckbox =
     document.getElementById('toggle-customer-id');
+  const toggleShippingInfoCheckbox = document.getElementById(
+    'toggle-shipping-info'
+  );
+  const shippingInfoSection = document.querySelector('.shipping-info');
 
   // Load PayPal components initially
   loadPayPalComponents();
@@ -48,6 +79,15 @@ document.addEventListener('DOMContentLoaded', function () {
       customerIdForm.style.display = 'block';
     } else {
       customerIdForm.style.display = 'none';
+    }
+  });
+
+  // Event listener for the checkbox to toggle shipping info section visibility
+  toggleShippingInfoCheckbox.addEventListener('change', function () {
+    if (this.checked) {
+      shippingInfoSection.style.display = 'block';
+    } else {
+      shippingInfoSection.style.display = 'none';
     }
   });
 
@@ -153,6 +193,8 @@ function loadPayPalSDK(idToken) {
         onApprove,
         onCancel,
         onError,
+        onShippingOptionsChange,
+        onShippingAddressChange,
       })
       .render('#paypal-button-container');
 
@@ -244,4 +286,12 @@ const onCancel = (data, actions) => {
 
 const onError = err => {
   console.error(err);
+};
+
+const onShippingOptionsChange = (data, actions) => {
+  console.log('Shipping Options Change:', data);
+};
+
+const onShippingAddressChange = (data, actions) => {
+  console.log('Shipping Address Change:', data);
 };
