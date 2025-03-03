@@ -4,7 +4,11 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import * as paypal from './paypal-api.js';
 
-const { PORT = 8888 } = process.env;
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8888';
+const PORT = process.env.PORT || 8888;
+const CALLBACK_URL = `${BASE_URL}/callback/shipping`;
+
+console.log('Callback URL:', CALLBACK_URL);
 
 const handleError = (res, error) => {
   console.error(error);
@@ -15,7 +19,7 @@ const app = express();
 
 const corsOptions = {
   credentials: true,
-  origin: ['http://localhost:8888'],
+  origin: [BASE_URL],
 };
 
 app.set('view engine', 'ejs');
@@ -88,17 +92,17 @@ app.post('/api/accel-orders', async (req, res) => {
   }
 });
 
-// create QL order request
-app.post('/api/ql-orders', async (req, res) => {
-  console.log('create QL order request triggered');
-  console.log('request body:', req.body);
-  try {
-    const order = await paypal.createQlOrder(req.body);
-    res.json(order);
-  } catch (err) {
-    handleError(res, err);
-  }
-});
+// // create QL order request
+// app.post('/api/ql-orders', async (req, res) => {
+//   console.log('create QL order request triggered');
+//   console.log('request body:', req.body);
+//   try {
+//     const order = await paypal.createQlOrder(req.body);
+//     res.json(order);
+//   } catch (err) {
+//     handleError(res, err);
+//   }
+// });
 
 // vault setup token request
 app.post('/api/vault/setup-token', async (req, res) => {
@@ -180,6 +184,25 @@ app.post('/api/orders/:orderID/capture', async (req, res) => {
     const captureData = await paypal.capturePayment(orderID);
     const vaultResponse = JSON.stringify(captureData.payment_source);
     res.json(captureData);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+// Shipping callback endpoint
+app.post('/api/shipping-callback', async (req, res) => {
+  console.log('Shipping callback received');
+  const { id, shipping_address, shipping_option, purchase_units } = req.body;
+
+  try {
+    // Process the shipping callback data
+    console.log('Order ID:', id);
+    console.log('Shipping Address:', shipping_address);
+    console.log('Shipping Option:', shipping_option);
+    console.log('Purchase Units:', purchase_units);
+
+    // Respond with a success status
+    res.status(200).send('Shipping callback processed successfully');
   } catch (err) {
     handleError(res, err);
   }

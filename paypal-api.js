@@ -1,8 +1,15 @@
 import fetch from 'node-fetch';
 
 // set some important variables
-const { CLIENT_ID, APP_SECRET } = process.env;
+const {
+  CLIENT_ID,
+  APP_SECRET,
+  BASE_URL = 'http://localhost:8888',
+} = process.env;
 const base = 'https://api-m.sandbox.paypal.com';
+const CALLBACK_URL = `${BASE_URL}/api/shipping-callback`;
+
+console.log('Callback URL:', CALLBACK_URL);
 
 // handle response from PayPal API
 const handleResponse = async response => {
@@ -104,11 +111,11 @@ export const createAccelOrder = async totalAmount => {
         experience_context: {
           user_action: 'PAY_NOW',
           shipping_preference: 'GET_FROM_FILE',
-          return_url: 'https://example.com/return',
-          cancel_url: 'https://example.com/cancel',
+          return_url: `${BASE_URL}/return`,
+          cancel_url: `${BASE_URL}/cancel`,
           order_update_callback_config: {
             callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
-            callback_url: 'https://example.com/callback',
+            callback_url: CALLBACK_URL, // Use dynamically constructed URL
           },
         },
       },

@@ -19,21 +19,22 @@
     </section>
 
     <section class="apis content">
-      <h2>REST APIs & JavaScript SDK Used</h2>
+      <h2>Tools Used</h2>
         <a href="https://developer.paypal.com/sdk/js/">JavaScript SDK</a>
           <ul>
-            <li>The JavaScript SDK is used to render payment buttons, card form fields, pay later messaging, and more.</li>
-            <li>You can also use the JavaScript SDK to check the funding-eligibility of a given payment method.</li>
+            <li>Renders payment buttons, card form fields, pay later messaging, and more.</li>
+            <li>Also used to check the funding-eligibility of a given payment method.</li>
           </ul>
         <a href="https://developer.paypal.com/docs/api/orders/v2/">Orders API</a> aka Orders v2
           <ul>
-            <li>An order represents a payment between two or more parties. Use the Orders API to create, update, retrieve, authorize, and capture orders.</li>
+            <li>Used to create, update, retrieve, authorize, and capture orders.</li>
           </ul>
         <a href="https://developer.paypal.com/docs/api/payment-tokens/v3/">Payment Method Tokens API</a> aka Vault v3
           <ul>
-            <li>The Payment Method Tokens API saves payment methods so payers don't have to enter details for future transactions. Payers can check out faster or pay without being present after they agree to save a payment method.</li>
+            <li>Saves payment methods so payers don't have to enter details for future transactions.</li>
             <li>The API associates a payment method with a temporary setup token. Pass the setup token to the API to exchange the setup token for a permanent token.</li>
-            <li>The permanent token represents a payment method that's saved to the merchant's vault. This token can be used repeatedly for checkout or recurring transactions such as subscriptions.</li>
+            <li>The permanent token represents a payment method that has been saved to the merchant's PayPal vault.</li>
+            <li>This token can be used repeatedly for returning checkout or recurring transactions such as recurring payments.</li>
         </ul>
     </section>
 
