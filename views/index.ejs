@@ -43,7 +43,7 @@
         <h3>One-Time Payments</h3>
           <a href="/one-time-payments-cart">Product/Cart Page</a> (Client-side callback)
           <ul>
-            <li>Shipping Method, Shipping Option and Contact Information received from PayPal via client-side callback.</li>
+            <li>Shipping Address and Shipping Option received from PayPal via client-side callback.</li>
             <li>Venmo is not available when utilizing client-side shipping callbacks</li>
           </ul>
           <a href="/one-time-payments-cart-ql">Product/Cart Page</a> (Server-side callback)
@@ -53,7 +53,8 @@
           </ul>
           <a href="/one-time-payments-checkout">Checkout Page</a>
           <ul>
-            <li>Shipping Address Info collected on checkout is rendered in PayPal window.</li>
+            <li>Shipping Address collected on checkout is included in create order call and thus rendered in PayPal window.</li>
+            <li>By setting the shipping_preference to 'SET_PROVIDED', customer must return to checkout page in order to change shipping address and options.</li>
           </ul>
           <h3>References</h3>
             <a href="https://developer.paypal.com/docs/checkout/standard/best-practices/one-time/">One-Time Payments Best Practices</a>
