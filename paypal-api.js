@@ -1,15 +1,9 @@
 import fetch from 'node-fetch';
 
 // set some important variables
-const {
-  CLIENT_ID,
-  APP_SECRET,
-  BASE_URL = 'http://localhost:8888',
-} = process.env;
+const { CLIENT_ID, APP_SECRET, NGROK_URL } = process.env;
 const base = 'https://api-m.sandbox.paypal.com';
-const CALLBACK_URL = `${BASE_URL}/api/shipping-callback`;
-
-console.log('Callback URL:', CALLBACK_URL);
+const CALLBACK_URL = `${NGROK_URL}/api/shipping-callback`;
 
 // handle response from PayPal API
 const handleResponse = async response => {
@@ -24,8 +18,6 @@ const handleResponse = async response => {
 
 // generate access token for first-time payer
 export const generateAccessToken = async () => {
-  // console.log('generating access token for first-time payer');
-
   const auth = Buffer.from(CLIENT_ID + ':' + APP_SECRET).toString('base64');
   const response = await fetch(`${base}/v1/oauth2/token`, {
     method: 'post',
@@ -51,16 +43,11 @@ export const returningAccessToken = async customerId => {
     },
   });
   const jsonData = await handleResponse(response);
-  // console.log('Returning User Access Token Response: ', jsonData);
-  // console.log('ID Token Returned: ', jsonData.id_token);
-
   return jsonData.id_token;
 };
 
-// create order request
-export const createOrder = async () => {
-  // console.log('creating order');
-  const purchaseAmount = '50.00';
+// create upstream order request (client-side shipping callbacks)
+export const createUpstreamOrder = async totalAmount => {
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders`;
   const response = await fetch(url, {
@@ -71,14 +58,6 @@ export const createOrder = async () => {
     },
     body: JSON.stringify({
       intent: 'CAPTURE',
-      purchase_units: [
-        {
-          amount: {
-            currency_code: 'USD',
-            value: purchaseAmount,
-          },
-        },
-      ],
       payment_source: {
         paypal: {
           attributes: {
@@ -89,20 +68,64 @@ export const createOrder = async () => {
             },
           },
           experience_context: {
+            user_action: 'PAY_NOW',
+            shipping_preference: 'GET_FROM_FILE',
             return_url: 'http://example.com',
             cancel_url: 'http://example.com',
             shipping_preference: 'NO_SHIPPING',
           },
         },
       },
+      purchase_units: [
+        {
+          amount: {
+            currency_code: 'USD',
+            value: totalAmount,
+            breakdown: {
+              item_total: {
+                currency_code: 'USD',
+                value: totalAmount,
+              },
+              shipping: {
+                currency_code: 'USD',
+                value: '0.00',
+              },
+            },
+          },
+          shipping: {
+            options: [
+              {
+                id: '1',
+                amount: {
+                  currency_code: 'USD',
+                  value: '0.00',
+                },
+                type: 'SHIPPING',
+                label: 'Free Shipping',
+                selected: true,
+              },
+              {
+                id: '2',
+                amount: {
+                  currency_code: 'USD',
+                  value: '10.00',
+                },
+                type: 'SHIPPING',
+                label: 'Express Shipping',
+                selected: false,
+              },
+            ],
+          },
+        },
+      ],
     }),
   });
 
   return handleResponse(response);
 };
 
-// create order request
-export const createAccelOrder = async totalAmount => {
+// create upstream order request (server-side shipping callbacks)
+export const createUpstreamQlOrder = async totalAmount => {
   const accessToken = await generateAccessToken();
   const payload = {
     intent: 'CAPTURE',
@@ -177,9 +200,10 @@ export const createAccelOrder = async totalAmount => {
 };
 
 // create order request
-export const createQlOrder = async orderData => {
-  const { shippingInfo, cart } = orderData;
-  const purchaseAmount = '100.00'; // TODO: pull prices from a database
+export const createCheckoutOrder = async orderData => {
+  console.log('creating checkout order with data:', JSON.stringify(orderData));
+  const { shippingInfo, amount } = orderData;
+  const purchaseAmount = amount || '100.00'; // Use provided amount or default to 100.00
   const accessToken = await generateAccessToken();
 
   let shippingPreference = 'GET_FROM_FILE';

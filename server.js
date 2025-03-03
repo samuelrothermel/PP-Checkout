@@ -2,11 +2,12 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import { pingCallbackUrl } from './services/pingCallbackUrl.js'; // Import the function
 import * as paypal from './paypal-api.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8888';
 const PORT = process.env.PORT || 8888;
-const CALLBACK_URL = `${BASE_URL}/callback/shipping`;
+const CALLBACK_URL = `${BASE_URL}/api/shipping-callback`;
 
 console.log('Callback URL:', CALLBACK_URL);
 
@@ -78,9 +79,21 @@ app.get('/one-time-payments-cart', async (req, res) => {
   }
 });
 
+app.get('/one-time-payments-checkout', async (req, res) => {
+  const clientId = process.env.CLIENT_ID;
+  try {
+    res.render('one-time-payments-checkout', {
+      clientId,
+    });
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
 // create order request
 app.post('/api/orders', async (req, res) => {
-  console.log('non-QL create order request triggered');
+  console.log('Checkout Create Order Request');
+  console.log('');
   try {
     const order = await paypal.createOrder();
     res.json(order);
@@ -89,29 +102,43 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// create order request
-app.post('/api/accel-orders', async (req, res) => {
-  console.log('Accelerated create order request triggered');
-  const { totalAmount } = req.body;
+// create order request from Checkout page
+app.post('/api/checkout-orders', async (req, res) => {
+  console.log('Checkout Create Order Request');
+  console.log('');
   try {
-    const order = await paypal.createAccelOrder(totalAmount);
+    const order = await paypal.createCheckoutOrder(req.body); // Pass the request body
     res.json(order);
   } catch (err) {
     handleError(res, err);
   }
 });
 
-// // create QL order request
-// app.post('/api/ql-orders', async (req, res) => {
-//   console.log('create QL order request triggered');
-//   console.log('request body:', req.body);
-//   try {
-//     const order = await paypal.createQlOrder(req.body);
-//     res.json(order);
-//   } catch (err) {
-//     handleError(res, err);
-//   }
-// });
+// create upstream order request (client-side callbacks only)
+app.post('/api/upstream-orders', async (req, res) => {
+  console.log('Upstream Create Order Request');
+  console.log('');
+  const { totalAmount } = req.body;
+  try {
+    const order = await paypal.createUpstreamOrder(totalAmount);
+    res.json(order);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+// create upstream order request (server-side callbacks only)
+app.post('/api/upstream-ql-orders', async (req, res) => {
+  console.log('Upstream Server-Side Callback Create Order Request');
+  console.log('');
+  console.log('request body:', req.body);
+  try {
+    const order = await paypal.createUpstreamQlOrder(req.body);
+    res.json(order);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
 
 // vault setup token request
 app.post('/api/vault/setup-token', async (req, res) => {
@@ -220,4 +247,5 @@ app.post('/api/shipping-callback', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server listening at http://localhost:${PORT}/`);
   console.log('');
+  pingCallbackUrl(); // Ping the callback URL when the server starts
 });

@@ -1,0 +1,142 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
+    <title>One-Time Payments - Checkout Page</title>
+  </head>
+
+  <body>
+    <div class="container">
+      <section>
+        <div class="or-text">One-Time Payments - Checkout Page</div>
+        <p>Cart Total: $<span id="cart-total">50</span></p> <label style="font-size: 0.5em;">
+            <input type="checkbox" id="change-total-checkbox"> Change Cart Total
+          </label>
+          <input type="number" id="new-total-input" style="display: none;" placeholder="Enter new cart total">
+        <p>Shipping: $<span id="shipping-amount">0.00</span></p>
+        <h2>Checkout Total: $<span id="amount-total">50</span></h2>
+        <div
+        data-pp-message
+        data-pp-style-layout="text"
+        data-pp-style-logo-type="inline"
+        data-pp-style-text-color="black"
+        data-pp-style-text-size="12"
+        data-pp-amount="50"
+        data-pp-placement="cart">
+      </div>
+
+<div class="shipping-options bordered-section">
+    <h4 class="card-field-title">Shipping Options</h4>
+    <div>
+      <input type="radio" id="free-shipping" name="shipping-option" value="0" checked />
+      <label for="free-shipping">Free Shipping ($0)</label>
+    </div>
+    <div>
+      <input type="radio" id="expedited-shipping" name="shipping-option" value="10" />
+      <label for="expedited-shipping">Expedited Shipping ($10)</label>
+    </div>
+  </div>
+
+  <div class="shipping-info bordered-section">
+    <h4 class="card-field-title">Shipping Info</h4>
+    <label for="shipping-first-name">First Name:</label>
+    <input type="text" id="shipping-first-name" name="shipping-first-name" value="Jane" class="form-control" required />
+    <label for="shipping-last-name">Last Name:</label>
+    <input type="text" id="shipping-last-name" name="shipping-last-name" value="Doe" class="form-control" required />
+    <label for="shipping-email">Email Address:</label>
+    <input type="email" id="shipping-email" name="shipping-email" value="jane.doe@example.com" class="form-control" required />
+    <label for="shipping-phone">Phone Number:</label>
+    <input type="text" id="shipping-phone" name="shipping-phone" value="1234567890" class="form-control" required />
+    <label for="shipping-address-line1">Street Address:</label>
+    <input type="text" id="shipping-address-line1" name="shipping-address-line1" value="123 Main St" class="form-control" required />
+    <label for="shipping-admin-area2">City:</label>
+    <input type="text" id="shipping-admin-area2" name="shipping-admin-area2" value="Springfield" class="form-control" required />
+    <label for="shipping-admin-area1">State:</label>
+    <input type="text" id="shipping-admin-area1" name="shipping-admin-area1" value="IL" class="form-control" required />
+    <label for="shipping-postal-code">Zip Code:</label>
+    <input type="text" id="shipping-postal-code" name="shipping-postal-code" value="62701" class="form-control" required />
+    <label for="shipping-country-code">Country Code:</label>
+    <input type="text" id="shipping-country-code" name="shipping-country-code" value="US" class="form-control" required />
+  </div>
+
+  <div class="separator"></div>
+  <div id="order-info-section" style="display: none;">
+      <div class="separator"></div>
+    <div id="create-order-info"></div>
+  </div>
+  <div id="capture-info-section" style="display: none;">
+      <div class="separator"></div>
+    <div id="capture-order-info"></div>
+  </div>
+  <div id="payment-source-section" style="display: none;">
+      <div class="separator"></div>
+      <div id="payment-source-type-info"></div>
+    <div id="vault-payment-info"></div>
+    <div id="vault-status-info"></div>
+    <div id="customer-id-info"></div>
+    <div id="payment-token-id-info"></div>
+    <p>Check Console Log full API Response</p>
+  </div>
+  <div id="paypal-button-container"></div>
+
+  <div class="card-field bordered-section">
+    <h4 class="card-field-title">Or Pay with Card</h4>
+    <div>
+        <input type="checkbox" id="billing-info-toggle" />
+        <label for="billing-info-toggle">Billing is different from Shipping</label>
+    </div>
+    <div id="billing-info" class="billing-info">
+        <h5>Billing Info</h5>
+        <label for="billing-first-name">First Name:</label>
+        <input type="text" id="billing-first-name" name="billing-first-name" value="Jane" class="form-control" required />
+        <label for="billing-last-name">Last Name:</label>
+        <input type="text" id="billing-last-name" name="billing-last-name" value="Doe" class="form-control" required />
+        <label for="billing-email">Email Address:</label>
+        <input type="email" id="billing-email" name="billing-email" value="jane.doe@example.com" class="form-control" required />
+        <label for="billing-phone">Phone Number:</label>
+        <input type="text" id="billing-phone" name="billing-phone" value="1234567890" class="form-control" required />
+        <label for="billing-address-line1">Street Address:</label>
+        <input type="text" id="billing-address-line1" name="billing-address-line1" value="123 Main St" class="form-control" required />
+        <label for="billing-admin-area2">City:</label>
+        <input type="text" id="billing-admin-area2" name="billing-admin-area2" value="Springfield" class="form-control" required />
+        <label for="billing-admin-area1">State:</label>
+        <input type="text" id="billing-admin-area1" name="billing-admin-area1" value="IL" class="form-control" required />
+        <label for="billing-postal-code">Zip Code:</label>
+        <input type="text" id="billing-postal-code" name="billing-postal-code" value="62701" class="form-control" required />
+        <label for="billing-country-code">Country Code:</label>
+        <input type="text" id="billing-country-code" name="billing-country-code" value="US" class="form-control" required />
+    </div>
+    <div id="card-name-field-container"></div>
+    <div id="card-number-field-container"></div>
+    <div id="card-expiry-field-container"></div>
+    <div id="card-cvv-field-container"></div>
+    <button id="multi-card-field-button" type="button">Checkout with Card</button>
+  </div>
+
+</div>
+<script>
+  const clientId = '<%= clientId %>';
+
+  const shippingOptions = document.querySelectorAll('input[name="shipping-option"]');
+  const shippingAmountElement = document.getElementById('shipping-amount');
+  const amountTotalElement = document.getElementById('amount-total');
+  const cartTotalElement = document.getElementById('cart-total');
+  const ppMessageElement = document.querySelector('[data-pp-message]');
+
+  shippingOptions.forEach(option => {
+    option.addEventListener('change', () => {
+      const shippingAmount = parseFloat(option.value);
+      const cartTotal = parseFloat(cartTotalElement.textContent);
+      const totalAmount = cartTotal + shippingAmount;
+
+      shippingAmountElement.textContent = shippingAmount.toFixed(2);
+      amountTotalElement.textContent = totalAmount.toFixed(2);
+      ppMessageElement.setAttribute('data-pp-amount', totalAmount.toFixed(2));
+      paypal.Messages().render(ppMessageElement);
+    });
+  });
+</script>
+<script src="/one-time-payments-checkout.js"></script>
+</body>
+</html>

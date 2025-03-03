@@ -41,20 +41,21 @@
     <section class="checkout content">
       <h2>Best Practices</h2>
         <h3>One-Time Payments</h3>
-          <a href="/one-time-payments-cart">Product/Cart Page</a>
+          <a href="/one-time-payments-cart">Product/Cart Page</a> (Client-side callback)
           <ul>
-            <li>Typically found on Product or Cart pages.</li>
             <li>Shipping Method, Shipping Option and Contact Information received from PayPal via client-side callback.</li>
-            <li>NOTE: Server-side callback is preferred when integrating via native mobile applications. For example, Venmo does not support client-side callbacks (thus will not appear).</li>
-            <li>NOTE: You will need to publicly expose any server-side callback URL you wish to utilize when attempting server-side callbacks.</li>
+            <li>Venmo is not available when utilizing client-side shipping callbacks</li>
+          </ul>
+          <a href="/one-time-payments-cart-ql">Product/Cart Page</a> (Server-side callback)
+          <ul>
+            <li>Server-side callback is preferred when integrating via native mobile applications.</li>
+            <li>NOTE: You will need to publicly expose any server-side callback URL you wish to utilize.</li>
           </ul>
           <a href="/one-time-payments-checkout">Checkout Page</a>
-            <ul>
-            <li>Customers can save their payment method for future use. This is done via the Payment Method Token API.</li>
-            <li>Customers can also save their payment method without making a purchase.</li>
+          <ul>
+            <li>Shipping Address Info collected on checkout is rendered in PayPal window.</li>
           </ul>
           <h3>References</h3>
-
             <a href="https://developer.paypal.com/docs/checkout/standard/best-practices/one-time/">One-Time Payments Best Practices</a>
       <h2>Advanced Checkout Examples</h2>
 

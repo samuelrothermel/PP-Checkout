@@ -14,7 +14,7 @@ const createOrder = (data, actions) => {
     ).toFixed(2),
   };
 
-  return fetch('/api/upstream-orders', {
+  return fetch('/api/checkout-orders', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -42,6 +42,16 @@ const createOrder = (data, actions) => {
 document.addEventListener('DOMContentLoaded', function () {
   // Load PayPal components initially
   loadPayPalComponents();
+
+  // Add event listeners to shipping options
+  document.querySelectorAll('input[name="shipping-option"]').forEach(option => {
+    option.addEventListener('change', function () {
+      const shippingAmount = parseFloat(this.value).toFixed(2);
+      document.getElementById('shipping-amount').textContent = shippingAmount;
+      updateAmountTotal();
+      updatePayPalMessages();
+    });
+  });
 });
 
 function loadPayPalComponents() {
@@ -62,8 +72,6 @@ function loadPayPalSDK() {
         onApprove,
         onCancel,
         onError,
-        onShippingOptionsChange,
-        onShippingAddressChange,
       })
       .render('#paypal-button-container');
   };
@@ -140,7 +148,7 @@ document
       document.getElementById('cart-total').textContent = newTotal;
       updateAmountTotal();
       console.log('New Total:', newTotal);
-      updatePayPalMessages(newTotal);
+      updatePayPalMessages();
     }
   });
 
@@ -169,8 +177,6 @@ function reloadPayPalComponents(newTotal) {
         onApprove,
         onCancel,
         onError,
-        onShippingOptionsChange,
-        onShippingAddressChange,
       })
       .render('#paypal-button-container');
   };
@@ -178,7 +184,10 @@ function reloadPayPalComponents(newTotal) {
   document.head.appendChild(scriptElement);
 }
 
-function updatePayPalMessages(amount) {
+function updatePayPalMessages() {
+  const amount = parseFloat(
+    document.getElementById('amount-total').textContent
+  ).toFixed(2);
   console.log('updatePayPalMessages amount:', amount);
   const messageContainer = document.querySelector('[data-pp-message]');
   messageContainer.setAttribute('data-pp-amount', amount);
