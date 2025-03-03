@@ -2,6 +2,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link
+    rel="stylesheet"
+    type="text/css"
+    href="https://www.paypalobjects.com/webstatic/en_US/developer/docs/css/cardfields.css"
+/>
     <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
     <title>One-Time Payments - Checkout Page</title>
   </head>
@@ -10,9 +15,8 @@
     <div class="container">
       <section>
         <div class="or-text">One-Time Payments - Checkout Page</div>
-        <p>Cart Total: $<span id="cart-total">50</span></p> <label style="font-size: 0.5em;">
-            <input type="checkbox" id="change-total-checkbox"> Change Cart Total
-          </label>
+        <p>Cart Total: $<span id="cart-total">50</span></p><label style="font-size: 0.5em;">
+          <input type="checkbox" id="change-total-checkbox"> Change Cart Total</label>
           <input type="number" id="new-total-input" style="display: none;" placeholder="Enter new cart total">
         <p>Shipping: $<span id="shipping-amount">0.00</span></p>
         <h2>Checkout Total: $<span id="amount-total">50</span></h2>
@@ -23,11 +27,11 @@
         data-pp-style-text-color="black"
         data-pp-style-text-size="12"
         data-pp-amount="50"
-        data-pp-placement="cart">
-      </div>
+        data-pp-placement="payment">
+        </div>
 
-<div class="shipping-options bordered-section">
-    <h4 class="card-field-title">Shipping Options</h4>
+    <div class="shipping-options bordered-section">
+      <h4 class="card-field-title">Shipping Options</h4>
     <div>
       <input type="radio" id="free-shipping" name="shipping-option" value="0" checked />
       <label for="free-shipping">Free Shipping ($0)</label>
@@ -62,12 +66,12 @@
 
   <div class="separator"></div>
   <div id="order-info-section" style="display: none;">
-      <div class="separator"></div>
     <div id="create-order-info"></div>
+    <div class="separator"></div>
   </div>
   <div id="capture-info-section" style="display: none;">
-      <div class="separator"></div>
     <div id="capture-order-info"></div>
+    <div class="separator"></div>
   </div>
   <div id="payment-source-section" style="display: none;">
       <div class="separator"></div>
@@ -107,35 +111,19 @@
         <label for="billing-country-code">Country Code:</label>
         <input type="text" id="billing-country-code" name="billing-country-code" value="US" class="form-control" required />
     </div>
+    <div class = "card-fields">
     <div id="card-name-field-container"></div>
     <div id="card-number-field-container"></div>
     <div id="card-expiry-field-container"></div>
     <div id="card-cvv-field-container"></div>
+
     <button id="multi-card-field-button" type="button">Checkout with Card</button>
+  </div>
   </div>
 
 </div>
 <script>
   const clientId = '<%= clientId %>';
-
-  const shippingOptions = document.querySelectorAll('input[name="shipping-option"]');
-  const shippingAmountElement = document.getElementById('shipping-amount');
-  const amountTotalElement = document.getElementById('amount-total');
-  const cartTotalElement = document.getElementById('cart-total');
-  const ppMessageElement = document.querySelector('[data-pp-message]');
-
-  shippingOptions.forEach(option => {
-    option.addEventListener('change', () => {
-      const shippingAmount = parseFloat(option.value);
-      const cartTotal = parseFloat(cartTotalElement.textContent);
-      const totalAmount = cartTotal + shippingAmount;
-
-      shippingAmountElement.textContent = shippingAmount.toFixed(2);
-      amountTotalElement.textContent = totalAmount.toFixed(2);
-      ppMessageElement.setAttribute('data-pp-amount', totalAmount.toFixed(2));
-      paypal.Messages().render(ppMessageElement);
-    });
-  });
 </script>
 <script src="/one-time-payments-checkout.js"></script>
 </body>

@@ -1,5 +1,69 @@
+document.addEventListener('DOMContentLoaded', function () {
+  // Load PayPal components initially
+  loadPayPalComponents();
+
+  // Add event listeners to shipping options
+  document.querySelectorAll('input[name="shipping-option"]').forEach(option => {
+    option.addEventListener('change', function () {
+      const shippingAmount = parseFloat(this.value).toFixed(2);
+      document.getElementById('shipping-amount').textContent = shippingAmount;
+      updateAmountTotal();
+      updatePayPalMessages();
+    });
+  });
+
+  document
+    .getElementById('billing-info-toggle')
+    .addEventListener('change', function () {
+      const billingInfo = document.getElementById('billing-info');
+      if (this.checked) {
+        billingInfo.style.display = 'block';
+      } else {
+        billingInfo.style.display = 'none';
+      }
+    });
+
+  document
+    .getElementById('change-total-checkbox')
+    .addEventListener('change', function () {
+      const newTotalInput = document.getElementById('new-total-input');
+      if (this.checked) {
+        newTotalInput.style.display = 'block';
+      } else {
+        newTotalInput.style.display = 'none';
+        newTotalInput.value = '';
+      }
+    });
+
+  document
+    .getElementById('new-total-input')
+    .addEventListener('change', function () {
+      const newTotal = parseFloat(this.value).toFixed(2);
+      if (!isNaN(newTotal) && newTotal > 0) {
+        document.getElementById('cart-total').textContent = newTotal;
+        updateAmountTotal();
+        console.log('New Total:', newTotal);
+        updatePayPalMessages();
+      }
+    });
+});
+
 const createOrder = (data, actions) => {
   console.log('Client-Side Create Order Raw Request: ', data);
+
+  const shippingInfo = {
+    firstName: document.getElementById('shipping-first-name').value,
+    lastName: document.getElementById('shipping-last-name').value,
+    email: document.getElementById('shipping-email').value,
+    phone: document.getElementById('shipping-phone').value,
+    address: {
+      addressLine1: document.getElementById('shipping-address-line1').value,
+      adminArea2: document.getElementById('shipping-admin-area2').value,
+      adminArea1: document.getElementById('shipping-admin-area1').value,
+      postalCode: document.getElementById('shipping-postal-code').value,
+      countryCode: document.getElementById('shipping-country-code').value,
+    },
+  };
 
   const requestBody = {
     source: data.paymentSource, //paypal / venmo / etc.
@@ -12,6 +76,7 @@ const createOrder = (data, actions) => {
     totalAmount: parseFloat(
       document.getElementById('amount-total').textContent
     ).toFixed(2),
+    shippingInfo: shippingInfo,
   };
 
   return fetch('/api/checkout-orders', {
@@ -39,21 +104,6 @@ const createOrder = (data, actions) => {
     });
 };
 
-document.addEventListener('DOMContentLoaded', function () {
-  // Load PayPal components initially
-  loadPayPalComponents();
-
-  // Add event listeners to shipping options
-  document.querySelectorAll('input[name="shipping-option"]').forEach(option => {
-    option.addEventListener('change', function () {
-      const shippingAmount = parseFloat(this.value).toFixed(2);
-      document.getElementById('shipping-amount').textContent = shippingAmount;
-      updateAmountTotal();
-      updatePayPalMessages();
-    });
-  });
-});
-
 function loadPayPalComponents() {
   loadPayPalSDK();
 }
@@ -72,8 +122,37 @@ function loadPayPalSDK() {
         onApprove,
         onCancel,
         onError,
+        onShippingOptionsChange,
+        onShippingAddressChange,
       })
       .render('#paypal-button-container');
+
+    // Initialize the card fields
+    const cardField = paypal.CardFields({
+      createOrder,
+      onApprove,
+      onError,
+    });
+
+    if (cardField.isEligible()) {
+      const nameField = cardField.NameField();
+      nameField.render('#card-name-field-container');
+
+      const numberField = cardField.NumberField();
+      numberField.render('#card-number-field-container');
+
+      const cvvField = cardField.CVVField();
+      cvvField.render('#card-cvv-field-container');
+
+      const expiryField = cardField.ExpiryField();
+      expiryField.render('#card-expiry-field-container');
+
+      document
+        .getElementById('multi-card-field-button')
+        .addEventListener('click', () => {
+          cardField.submit();
+        });
+    }
   };
 
   document.head.appendChild(scriptElement);
@@ -128,30 +207,6 @@ const onShippingAddressChange = (data, actions) => {
   console.log('Shipping Address Change:', data);
 };
 
-document
-  .getElementById('change-total-checkbox')
-  .addEventListener('change', function () {
-    const newTotalInput = document.getElementById('new-total-input');
-    if (this.checked) {
-      newTotalInput.style.display = 'block';
-    } else {
-      newTotalInput.style.display = 'none';
-      newTotalInput.value = '';
-    }
-  });
-
-document
-  .getElementById('new-total-input')
-  .addEventListener('change', function () {
-    const newTotal = parseFloat(this.value).toFixed(2);
-    if (!isNaN(newTotal) && newTotal > 0) {
-      document.getElementById('cart-total').textContent = newTotal;
-      updateAmountTotal();
-      console.log('New Total:', newTotal);
-      updatePayPalMessages();
-    }
-  });
-
 function updateAmountTotal() {
   const cartTotal = parseFloat(
     document.getElementById('cart-total').textContent
@@ -177,6 +232,8 @@ function reloadPayPalComponents(newTotal) {
         onApprove,
         onCancel,
         onError,
+        onShippingOptionsChange,
+        onShippingAddressChange,
       })
       .render('#paypal-button-container');
   };

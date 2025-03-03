@@ -201,9 +201,12 @@ export const createUpstreamQlOrder = async totalAmount => {
 
 // create order request
 export const createCheckoutOrder = async orderData => {
-  console.log('creating checkout order with data:', JSON.stringify(orderData));
-  const { shippingInfo, amount } = orderData;
-  const purchaseAmount = amount || '100.00'; // Use provided amount or default to 100.00
+  console.log(
+    'creating order from Checkout Page with data:',
+    JSON.stringify(orderData)
+  );
+  const { shippingInfo, totalAmount } = orderData;
+  const purchaseAmount = totalAmount || '100.00'; // Use provided amount or default to 100.00
   const accessToken = await generateAccessToken();
 
   let shippingPreference = 'GET_FROM_FILE';
@@ -238,11 +241,11 @@ export const createCheckoutOrder = async orderData => {
       payment_source: {
         paypal: {
           attributes: {
-            vault: {
-              store_in_vault: 'ON_SUCCESS',
-              usage_type: 'MERCHANT',
-              customer_type: 'CONSUMER',
-            },
+            // vault: {
+            //   store_in_vault: 'ON_SUCCESS',
+            //   usage_type: 'MERCHANT',
+            //   customer_type: 'CONSUMER',
+            // },
           },
           experience_context: {
             shipping_preference: shippingPreference,

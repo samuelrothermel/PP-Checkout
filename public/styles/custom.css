@@ -102,23 +102,28 @@ section h3 {
   background-color: #005ea6;
 }
 
-.shipping-info {
+.shipping-info,
+.billing-info {
   margin-bottom: 20px;
 }
 
-.shipping-info h3 {
+.shipping-info h3,
+.billing-info h3 {
   font-size: 1.5em;
   margin-bottom: 10px;
 }
 
-.shipping-info label {
+.shipping-info label,
+.billing-info label {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
 }
 
 .shipping-info input[type='text'],
-.shipping-info input[type='email'] {
+.shipping-info input[type='email'],
+.billing-info input[type='text'],
+.billing-info input[type='email'] {
   width: calc(100% - 20px);
   padding: 10px;
   margin-bottom: 10px;
@@ -128,12 +133,20 @@ section h3 {
 }
 
 .shipping-info input[type='text']:focus,
-.shipping-info input[type='email']:focus {
+.shipping-info input[type='email']:focus,
+.billing-info input[type='text']:focus,
+.billing-info input[type='email']:focus {
   border-color: #0070ba;
   outline: none;
 }
 
 .shipping-info input[type='text']::placeholder,
-.shipping-info input[type='email']::placeholder {
+.shipping-info input[type='email']::placeholder,
+.billing-info input[type='text']::placeholder,
+.billing-info input[type='email']::placeholder {
   color: #999;
+}
+
+#billing-info {
+  display: none;
 }
