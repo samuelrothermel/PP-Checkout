@@ -61,18 +61,17 @@ export const createUpstreamOrder = async totalAmount => {
       payment_source: {
         paypal: {
           attributes: {
-            vault: {
-              store_in_vault: 'ON_SUCCESS',
-              usage_type: 'MERCHANT',
-              customer_type: 'CONSUMER',
-            },
+            // vault: {
+            //   store_in_vault: 'ON_SUCCESS',
+            //   usage_type: 'MERCHANT',
+            //   customer_type: 'CONSUMER',
+            // },
           },
           experience_context: {
             user_action: 'PAY_NOW',
             shipping_preference: 'GET_FROM_FILE',
             return_url: 'http://example.com',
             cancel_url: 'http://example.com',
-            shipping_preference: 'NO_SHIPPING',
           },
         },
       },

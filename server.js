@@ -6,8 +6,9 @@ import { pingCallbackUrl } from './services/pingCallbackUrl.js'; // Import the f
 import * as paypal from './paypal-api.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8888';
+const NGROK_URL = process.env.NGROK_URL;
 const PORT = process.env.PORT || 8888;
-const CALLBACK_URL = `${BASE_URL}/api/shipping-callback`;
+const CALLBACK_URL = `${NGROK_URL}/api/shipping-callback`;
 
 console.log('Callback URL:', CALLBACK_URL);
 
@@ -49,7 +50,7 @@ app.get('/', async (req, res) => {
 
 app.get('/checkout', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
-  const hardCodedCustomerId = 'vLOMLitZuN';
+  // const hardCodedCustomerId = 'vLOMLitZuN';
   try {
     res.render('checkout', {
       clientId,
@@ -107,7 +108,7 @@ app.post('/api/checkout-orders', async (req, res) => {
   console.log('Checkout Create Order Request');
   console.log('');
   try {
-    const order = await paypal.createCheckoutOrder(req.body); // Pass the request body
+    const order = await paypal.createCheckoutOrder(req.body);
     res.json(order);
   } catch (err) {
     handleError(res, err);
@@ -150,7 +151,6 @@ app.post('/api/vault/setup-token', async (req, res) => {
       paymentSource,
     });
     res.json(vaultSetupToken);
-    // console.log('vaultSetupToken', vaultSetupToken);
   } catch (err) {
     handleError(res, err);
   }
@@ -174,10 +174,9 @@ app.post('/api/returning-user-token', async (req, res) => {
   console.log('create returning user access token triggered');
   console.log('');
   try {
-    const { customerId } = req.body; // Changed from req.params to req.body
+    const { customerId } = req.body;
     const idToken = await paypal.returningAccessToken(customerId);
-    // console.log('returning user access token id: ', idToken);
-    res.json({ idToken }); // Ensure the response is in the correct format
+    res.json({ idToken });
   } catch (err) {
     handleError(res, err);
   }
