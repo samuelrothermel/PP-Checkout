@@ -54,10 +54,10 @@ app.get('/save-wo-purchase', async (req, res) => {
   }
 });
 
-app.get('/ql-checkout', async (req, res) => {
+app.get('/one-time-payments-cart', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
   try {
-    res.render('ql-checkout', {
+    res.render('one-time-payments-cart', {
       clientId,
     });
   } catch (err) {
@@ -70,6 +70,18 @@ app.post('/api/orders', async (req, res) => {
   console.log('non-QL create order request triggered');
   try {
     const order = await paypal.createOrder();
+    res.json(order);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+// create order request
+app.post('/api/accel-orders', async (req, res) => {
+  console.log('Accelerated create order request triggered');
+  const { totalAmount } = req.body;
+  try {
+    const order = await paypal.createAccelOrder(totalAmount);
     res.json(order);
   } catch (err) {
     handleError(res, err);

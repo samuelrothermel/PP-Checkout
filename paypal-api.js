@@ -53,7 +53,7 @@ export const returningAccessToken = async customerId => {
 // create order request
 export const createOrder = async () => {
   // console.log('creating order');
-  const purchaseAmount = '100.00'; // TODO: pull prices from a database
+  const purchaseAmount = '50.00';
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders`;
   const response = await fetch(url, {
@@ -92,6 +92,81 @@ export const createOrder = async () => {
   });
 
   return handleResponse(response);
+};
+
+// create order request
+export const createAccelOrder = async totalAmount => {
+  const accessToken = await generateAccessToken();
+  const payload = {
+    intent: 'CAPTURE',
+    payment_source: {
+      paypal: {
+        experience_context: {
+          user_action: 'PAY_NOW',
+          shipping_preference: 'GET_FROM_FILE',
+          return_url: 'https://example.com/return',
+          cancel_url: 'https://example.com/cancel',
+          order_update_callback_config: {
+            callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
+            callback_url: 'https://example.com/callback',
+          },
+        },
+      },
+    },
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: totalAmount,
+          breakdown: {
+            item_total: {
+              currency_code: 'USD',
+              value: totalAmount,
+            },
+            shipping: {
+              currency_code: 'USD',
+              value: '0.00',
+            },
+          },
+        },
+        shipping: {
+          options: [
+            {
+              id: '1',
+              amount: {
+                currency_code: 'USD',
+                value: '0.00',
+              },
+              type: 'SHIPPING',
+              label: 'Free Shipping',
+              selected: true,
+            },
+            {
+              id: '2',
+              amount: {
+                currency_code: 'USD',
+                value: '10.00',
+              },
+              type: 'SHIPPING',
+              label: 'Express Shipping',
+              selected: false,
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const response = await fetch(`${base}/v2/checkout/orders`, {
+    method: 'post',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  console.log('Create Order Response: ', await response.clone().json());
+  return await handleResponse(response);
 };
 
 // create order request

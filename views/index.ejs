@@ -11,49 +11,64 @@
   <div class="container">
     <header>
       <h1>PayPal Checkout Integrations</h1>
-      <p>Payment solutions using the PayPal JavaScript SDK and REST APIs</p>
     </header>
 
-    <section class="description">
+    <section class="description content">
       <h2>Intention</h2>
-      <p>This page demonstrates the integration and use of PayPal-hosted card fields alongside the Smart Payment Button stack via the PayPal JS SDK for both Save with Purchase and Save without Purchase checkout flows.</p>
+      <p>To demonstrate various integration methods, highlighting best practices under specific checkout scenarios.</p>
     </section>
 
-    <section class="apis">
+    <section class="apis content">
       <h2>REST APIs & JavaScript SDK Used</h2>
-      <ul>
-        <li>
-          <a href="https://developer.paypal.com/sdk/js/">JavaScript SDK</a>
-          <p>The JavaScript SDK is used to render buttons, payment method icons (marks), and credit and debit card form fields (card-fields). You can also use the JavaScript SDK to check the funding-eligibility of a given payment method.</p>
-        </li>
-        <li>
-          <a href="https://developer.paypal.com/docs/api/orders/v2/">Orders API</a> aka Orders v2
-          <p>An order represents a payment between two or more parties. Use the Orders API to create, update, retrieve, authorize, and capture orders.</p>
-        </li>
-        <li>
-          <a href="https://developer.paypal.com/docs/api/payment-tokens/v3/">Payment Method Tokens API</a> aka Vault v3
-          <p>The Payment Method Tokens API saves payment methods so payers don't have to enter details for future transactions. Payers can check out faster or pay without being present after they agree to save a payment method.</p>
-          <p>The API associates a payment method with a temporary setup token. Pass the setup token to the API to exchange the setup token for a permanent token.</p>
-          <p>The permanent token represents a payment method that's saved to the merchant's vault. This token can be used repeatedly for checkout or recurring transactions such as subscriptions.</p>
-        </li>
-      </ul>
+        <a href="https://developer.paypal.com/sdk/js/">JavaScript SDK</a>
+          <ul>
+            <li>The JavaScript SDK is used to render payment buttons, card form fields, pay later messaging, and more.</li>
+            <li>You can also use the JavaScript SDK to check the funding-eligibility of a given payment method.</li>
+          </ul>
+        <a href="https://developer.paypal.com/docs/api/orders/v2/">Orders API</a> aka Orders v2
+          <ul>
+            <li>An order represents a payment between two or more parties. Use the Orders API to create, update, retrieve, authorize, and capture orders.</li>
+          </ul>
+        <a href="https://developer.paypal.com/docs/api/payment-tokens/v3/">Payment Method Tokens API</a> aka Vault v3
+          <ul>
+            <li>The Payment Method Tokens API saves payment methods so payers don't have to enter details for future transactions. Payers can check out faster or pay without being present after they agree to save a payment method.</li>
+            <li>The API associates a payment method with a temporary setup token. Pass the setup token to the API to exchange the setup token for a permanent token.</li>
+            <li>The permanent token represents a payment method that's saved to the merchant's vault. This token can be used repeatedly for checkout or recurring transactions such as subscriptions.</li>
+        </ul>
     </section>
 
-    <section class="checkout">
+    <section class="checkout content">
+      <h2>Best Practices</h2>
+        <h3>One-Time Payments</h3>
+          <a href="/one-time-payments-cart">Product/Cart Page</a>
+          <ul>
+            <li>Typically found on Product or Cart pages.</li>
+            <li>Shipping Method, Shipping Option and Contact Information received from PayPal via client-side callback.</li>
+            <li>NOTE: Server-side callback is preferred when integrating via native mobile applications. For example, Venmo does not support client-side callbacks (thus will not appear).</li>
+            <li>NOTE: You will need to publicly expose any server-side callback URL you wish to utilize when attempting server-side callbacks.</li>
+          </ul>
+          <a href="/one-time-payments-checkout">Checkout Page</a>
+            <ul>
+            <li>Customers can save their payment method for future use. This is done via the Payment Method Token API.</li>
+            <li>Customers can also save their payment method without making a purchase.</li>
+          </ul>
+          <h3>References</h3>
+
+            <a href="https://developer.paypal.com/docs/checkout/standard/best-practices/one-time/">One-Time Payments Best Practices</a>
       <h2>Advanced Checkout Examples</h2>
-      <ul>
-        <li>
+
           <a href="/checkout">Save with Purchase</a>
-          <p>Customers have their payment method vaulted upon successful purchase via Payment Method Token API.</p>
-          <p>A returning customer's Customer ID is exchanged for a User ID Token via the OAuth 2.0 API. This user ID token is passed to JS SDK to load saved payment methods.</p>
-        </li>
-        <li>
+          <ul>
+            <li>Customers have their payment method vaulted upon successful purchase via Payment Method Token API.</li>
+            <li>A returning customer's Customer ID is exchanged for a User ID Token via the OAuth 2.0 API. This user ID token is passed to JS SDK to load saved payment methods.</li>
+          </ul>
           <a href="/save-wo-purchase">Save without Purchase</a>
-          <p>Both PayPal and Card payment methods are vaulted for future payment.</p>
-          <p>Setup Token is exchanged for a Permanent Payment Token via the Payment Method Token API.</p>
-          <p>Card payment methods verified at time of request Setup Token.</p>
-        </li>
-      </ul>
+          <ul>
+            <li>Both PayPal and Card payment methods are vaulted for future payment.</li>
+            <li>Setup Token is exchanged for a Permanent Payment Token via the Payment Method Token API.</li>
+            <li>Card payment methods verified at time of request Setup Token.</li>
+          </ul>
+
     </section>
   </div>
 </body>
