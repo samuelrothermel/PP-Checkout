@@ -27,6 +27,15 @@ app.use(express.static('public'));
 app.use(bodyParser.json());
 app.use(cors(corsOptions));
 
+// Set Content Security Policy
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.sandbox.paypal.com"
+  );
+  next();
+});
+
 // Routes
 app.get('/', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
