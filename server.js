@@ -8,7 +8,9 @@ import * as paypal from './paypal-api.js';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8888';
 const NGROK_URL = process.env.NGROK_URL;
 const PORT = process.env.PORT || 8888;
-const CALLBACK_URL = `${NGROK_URL}/api/shipping-callback`;
+// const CALLBACK_URL = `${NGROK_URL}/api/shipping-callback`
+const CALLBACK_URL =
+  'https://pp-advanced-card-fields.onrender.com/api/shipping-callback';
 
 console.log('Callback URL:', CALLBACK_URL);
 
@@ -80,6 +82,17 @@ app.get('/one-time-payments-cart', async (req, res) => {
   }
 });
 
+app.get('/one-time-payments-cart-ql', async (req, res) => {
+  const clientId = process.env.CLIENT_ID;
+  try {
+    res.render('one-time-payments-cart-ql', {
+      clientId,
+    });
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
 app.get('/one-time-payments-checkout', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
   try {
@@ -117,7 +130,7 @@ app.post('/api/checkout-orders', async (req, res) => {
 
 // create upstream order request (client-side callbacks only)
 app.post('/api/upstream-orders', async (req, res) => {
-  console.log('Upstream Create Order Request');
+  console.log('Upstream Client-Side Callback Create Order Request');
   console.log('');
   const { totalAmount } = req.body;
   try {
@@ -132,9 +145,12 @@ app.post('/api/upstream-orders', async (req, res) => {
 app.post('/api/upstream-ql-orders', async (req, res) => {
   console.log('Upstream Server-Side Callback Create Order Request');
   console.log('');
-  console.log('request body:', req.body);
+  const { totalAmount, paymentSource } = req.body;
   try {
-    const order = await paypal.createUpstreamQlOrder(req.body);
+    const order = await paypal.createUpstreamQlOrder(
+      totalAmount,
+      paymentSource
+    );
     res.json(order);
   } catch (err) {
     handleError(res, err);
@@ -246,5 +262,5 @@ app.post('/api/shipping-callback', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server listening at http://localhost:${PORT}/`);
   console.log('');
-  // pingCallbackUrl(); // Ping the callback URL when the server starts
+  pingCallbackUrl(); // Ping the callback URL when the server starts
 });
