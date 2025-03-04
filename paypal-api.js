@@ -3,7 +3,8 @@ import fetch from 'node-fetch';
 // set some important variables
 const { CLIENT_ID, APP_SECRET, NGROK_URL, BASE_URL } = process.env;
 const base = 'https://api-m.sandbox.paypal.com';
-const CALLBACK_URL = `${NGROK_URL}/api/shipping-callback`;
+const CALLBACK_URL =
+  'https://pp-advanced-card-fields.onrender.com/api/shipping-callback';
 
 // handle response from PayPal API
 const handleResponse = async response => {
