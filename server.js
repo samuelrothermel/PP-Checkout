@@ -10,7 +10,7 @@ const NGROK_URL = process.env.NGROK_URL;
 const PORT = process.env.PORT || 8888;
 // const CALLBACK_URL = `${NGROK_URL}/api/shipping-callback`
 const CALLBACK_URL =
-  'https://pp-advanced-card-fields.onrender.com/api/shipping-callback';
+  'https://pp-ql-best-practices.onrender.com/api/shipping-callback';
 
 console.log('Callback URL:', CALLBACK_URL);
 
