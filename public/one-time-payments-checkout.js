@@ -198,14 +198,6 @@ const onError = err => {
   console.error(err);
 };
 
-const onShippingOptionsChange = (data, actions) => {
-  console.log('Shipping Options Change:', data);
-};
-
-const onShippingAddressChange = (data, actions) => {
-  console.log('Shipping Address Change:', data);
-};
-
 function updateAmountTotal() {
   const cartTotal = parseFloat(
     document.getElementById('cart-total').textContent
@@ -231,8 +223,6 @@ function reloadPayPalComponents(newTotal) {
         onApprove,
         onCancel,
         onError,
-        onShippingOptionsChange,
-        onShippingAddressChange,
       })
       .render('#paypal-button-container');
   };
