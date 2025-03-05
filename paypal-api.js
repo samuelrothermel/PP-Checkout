@@ -140,7 +140,7 @@ export const createUpstreamQlOrder = async totalAmount => {
           cancel_url: `${BASE_URL}/cancel`,
           order_update_callback_config: {
             callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
-            callback_url: CALLBACK_URL, // Use dynamically constructed URL
+            callback_url: CALLBACK_URL,
           },
         },
       },
@@ -254,6 +254,9 @@ export const createCheckoutOrder = async orderData => {
             user_action: 'PAY_NOW',
             return_url: 'https://example.com/returnUrl',
             cancel_url: 'https://example.com/cancelUrl',
+            app_Switch_preference: {
+              launch_paypal_app: true,
+            },
           },
         },
       },
