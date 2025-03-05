@@ -118,12 +118,11 @@ function loadPayPalSDK() {
         style: {
           layout: 'vertical',
         },
+        appSwitchWhenAvailable: true,
         createOrder,
         onApprove,
         onCancel,
         onError,
-        onShippingOptionsChange,
-        onShippingAddressChange,
       })
       .render('#paypal-button-container');
 
