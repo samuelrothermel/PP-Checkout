@@ -262,5 +262,5 @@ app.post('/api/shipping-callback', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server listening at http://localhost:${PORT}/`);
   console.log('');
-  pingCallbackUrl(); // Ping the callback URL when the server starts
+  // pingCallbackUrl(); // Ping the callback URL when the server starts
 });

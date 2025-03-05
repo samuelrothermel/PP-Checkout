@@ -114,10 +114,16 @@ const onError = err => {
 
 const onShippingOptionsChange = (data, actions) => {
   console.log('Shipping Options Change:', data);
+  // if (data.shippingAddress.countryCode !== 'US') {
+  //   return actions.reject(data.errors.COUNTRY_ERROR);
+  // }
 };
 
 const onShippingAddressChange = (data, actions) => {
   console.log('Shipping Address Change:', data);
+  // if (data.selectedShippingOption.type === 'PICKUP') {
+  //   return actions.reject(data.errors.STORE_UNAVAILABLE);
+  // }
 };
 
 document
@@ -156,7 +162,7 @@ function updateAmountTotal() {
 }
 
 function reloadPayPalComponents(newTotal) {
-  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields,messages&client-id=${clientId}&enable-funding=venmo`;
+  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,messages&client-id=${clientId}&enable-funding=venmo`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   scriptElement.onload = () => {
