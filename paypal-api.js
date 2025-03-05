@@ -1,9 +1,10 @@
 import fetch from 'node-fetch';
 
 // set some important variables
-const { CLIENT_ID, APP_SECRET, NGROK_URL } = process.env;
+const { CLIENT_ID, APP_SECRET, NGROK_URL, BASE_URL } = process.env;
 const base = 'https://api-m.sandbox.paypal.com';
-const CALLBACK_URL = `${NGROK_URL}/api/shipping-callback`;
+const CALLBACK_URL =
+  'https://pp-ql-best-practices.onrender.com/api/shipping-callback';
 
 // handle response from PayPal API
 const handleResponse = async response => {
@@ -125,6 +126,8 @@ export const createUpstreamOrder = async totalAmount => {
 
 // create upstream order request (server-side shipping callbacks)
 export const createUpstreamQlOrder = async totalAmount => {
+  console.log('creating upstream with server-side shipping callback');
+  console.log('confirming callback_url:', CALLBACK_URL);
   const accessToken = await generateAccessToken();
   const payload = {
     intent: 'CAPTURE',
