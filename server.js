@@ -28,7 +28,7 @@ const corsOptions = {
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
-app.use(bodyParser.json());
+app.use(bodyParser.json()); // Ensure body-parser is set up to parse JSON request bodies
 app.use(cors(corsOptions));
 
 // Set Content Security Policy
@@ -243,6 +243,8 @@ app.post('/api/orders/:orderID/capture', async (req, res) => {
 // Shipping callback endpoint
 app.post('/api/shipping-callback', async (req, res) => {
   console.log('Shipping callback received');
+  console.log('Request Headers:', req.headers);
+  console.log('Request Body:', req.body);
   const { id, shipping_address, shipping_option, purchase_units } = req.body;
 
   try {
