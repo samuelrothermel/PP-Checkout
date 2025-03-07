@@ -252,8 +252,68 @@ app.post('/api/shipping-callback', async (req, res) => {
     console.log('Shipping Option:', shipping_option);
     console.log('Purchase Units:', purchase_units);
 
-    // Respond with a success status
-    res.status(200).send('Shipping callback processed successfully');
+    // Construct the response
+    const response = {
+      id: 'DPB2KE6BUVSR4',
+      purchase_units: [
+        {
+          reference_id: 'default',
+          amount: {
+            currency_code: 'USD',
+            value: '27',
+            breakdown: {
+              item_total: {
+                currency_code: 'USD',
+                value: '22.50',
+              },
+              tax_total: {
+                currency_code: 'USD',
+                value: '4.50',
+              },
+              shipping: {
+                currency_code: 'USD',
+                value: '0.00',
+              },
+            },
+          },
+          shipping_options: [
+            {
+              id: '1',
+              amount: {
+                currency_code: 'USD',
+                value: '0.00',
+              },
+              type: 'PICKUP_IN_STORE',
+              label: 'Pickup in Store',
+              selected: true,
+            },
+            {
+              id: '2',
+              amount: {
+                currency_code: 'USD',
+                value: '7.00',
+              },
+              type: 'SHIPPING',
+              label: 'USPS Priority',
+              selected: false,
+            },
+            {
+              id: '3',
+              amount: {
+                currency_code: 'USD',
+                value: '10.00',
+              },
+              type: 'SHIPPING',
+              label: '1-Day Rush',
+              selected: false,
+            },
+          ],
+        },
+      ],
+    };
+
+    // Respond with the constructed response
+    res.json(response);
   } catch (err) {
     handleError(res, err);
   }
