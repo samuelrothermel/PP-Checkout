@@ -4,7 +4,6 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { pingCallbackUrl } from './services/pingCallbackUrl.js'; // Import the function
 import * as paypal from './paypal-api.js';
-import { WebSocketServer } from 'ws'; // Import WebSocketServer
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8888';
 const NGROK_URL = process.env.NGROK_URL;
@@ -41,36 +40,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// Create WebSocket server
-const wss = new WebSocketServer({ noServer: true });
+// SSE endpoint
+app.get('/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
-wss.on('connection', ws => {
-  console.log('WebSocket connection established');
-  ws.on('message', message => {
-    console.log('Received message:', message);
+  const sendEvent = (event, data) => {
+    res.write(`event: ${event}\n`);
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  // Store the sendEvent function to use later
+  req.app.locals.sendEvent = sendEvent;
+
+  req.on('close', () => {
+    console.log('SSE connection closed');
   });
 });
-
-const server = app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}/`);
-  console.log('');
-  // pingCallbackUrl(); // Ping the callback URL when the server starts
-});
-
-server.on('upgrade', (request, socket, head) => {
-  wss.handleUpgrade(request, socket, head, ws => {
-    wss.emit('connection', ws, request);
-  });
-});
-
-// Function to broadcast messages to all connected clients
-const broadcastMessage = message => {
-  wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(message));
-    }
-  });
-};
 
 // Routes
 app.get('/', async (req, res) => {
@@ -275,8 +262,6 @@ app.post('/api/orders/:orderID/capture', async (req, res) => {
 // Shipping callback endpoint
 app.post('/api/shipping-callback', async (req, res) => {
   console.log('Shipping Callback from PayPal (raw):', req.body);
-  broadcastMessage({ type: 'callback-received', data: req.body }); // Broadcast received callback
-
   const { id, shipping_address, shipping_option, purchase_units } = req.body;
 
   try {
@@ -351,8 +336,15 @@ app.post('/api/shipping-callback', async (req, res) => {
       ],
     };
 
-    // Broadcast response
-    broadcastMessage({ type: 'response-sent', data: response });
+    // Send SSE message for received callback
+    if (req.app.locals.sendEvent) {
+      req.app.locals.sendEvent('callback-received', req.body);
+    }
+
+    // Send SSE message for response sent
+    if (req.app.locals.sendEvent) {
+      req.app.locals.sendEvent('response-sent', response);
+    }
 
     // Respond with the constructed response
     res.json(response);

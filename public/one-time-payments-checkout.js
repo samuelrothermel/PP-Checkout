@@ -47,24 +47,23 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-  // Set up WebSocket client
-  const ws = new WebSocket(`ws://${window.location.host}`);
+  // Set up SSE client
+  const eventSource = new EventSource('/events');
 
-  ws.onopen = () => {
-    console.log('WebSocket connection established');
+  eventSource.onmessage = event => {
+    console.log('SSE message received:', event.data);
   };
 
-  ws.onmessage = event => {
-    const message = JSON.parse(event.data);
-    console.log('WebSocket message received:', message);
-  };
+  eventSource.addEventListener('callback-received', event => {
+    console.log('Callback received:', JSON.parse(event.data));
+  });
 
-  ws.onclose = () => {
-    console.log('WebSocket connection closed');
-  };
+  eventSource.addEventListener('response-sent', event => {
+    console.log('Response sent:', JSON.parse(event.data));
+  });
 
-  ws.onerror = error => {
-    console.error('WebSocket error:', error);
+  eventSource.onerror = error => {
+    console.error('SSE error:', error);
   };
 });
 
