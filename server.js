@@ -40,25 +40,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// SSE endpoint
-app.get('/events', (req, res) => {
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-
-  const sendEvent = (event, data) => {
-    res.write(`event: ${event}\n`);
-    res.write(`data: ${JSON.stringify(data)}\n\n`);
-  };
-
-  // Store the sendEvent function to use later
-  req.app.locals.sendEvent = sendEvent;
-
-  req.on('close', () => {
-    console.log('SSE connection closed');
-  });
-});
-
 // Routes
 app.get('/', async (req, res) => {
   const clientId = process.env.CLIENT_ID;
@@ -335,16 +316,6 @@ app.post('/api/shipping-callback', async (req, res) => {
         },
       ],
     };
-
-    // Send SSE message for received callback
-    if (req.app.locals.sendEvent) {
-      req.app.locals.sendEvent('callback-received', req.body);
-    }
-
-    // Send SSE message for response sent
-    if (req.app.locals.sendEvent) {
-      req.app.locals.sendEvent('response-sent', response);
-    }
 
     // Respond with the constructed response
     res.json(response);

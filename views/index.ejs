@@ -48,8 +48,9 @@
           </ul>
           <a href="/one-time-payments-cart-ql">Product/Cart Page</a> (Server-side callback)
           <ul>
-            <li>Server-side callback is preferred when integrating via native mobile applications.</li>
-            <li>Note: You will need to publicly expose any server-side callback URL you wish to utilize.</li>
+            <li>Shipping Address and Shipping Option received from PayPal via server-side callback.</li>
+            <li>Note: Patching is not required when updating Order details in server-side response.</li>
+            <li>Note: You will need to publicly expose the server-side callback URL.</li>
           </ul>
           <a href="/one-time-payments-checkout">Checkout Page</a>
           <ul>
@@ -57,7 +58,10 @@
             <li>By setting the shipping_preference to 'SET_PROVIDED', customer must return to checkout page in order to change shipping address and options.</li>
           </ul>
           <h3>References</h3>
-            <a href="https://developer.paypal.com/docs/checkout/standard/best-practices/one-time/">One-Time Payments Best Practices</a>
+            <a href="https://developer.paypal.com/docs/checkout/standard/best-practices/one-time/">One-Time Payments Best Practices</a><br>
+            <a href="https://developer.paypal.com/docs/checkout/standard/customize/shipping-module/">Shipping Module</a><br>
+            <a href="https://developer.paypal.com/docs/checkout/standard/customize/contact-module/">Contact Module</a><br>
+
       <h2>Advanced Checkout Examples</h2>
 
           <a href="/checkout">Save with Purchase</a>

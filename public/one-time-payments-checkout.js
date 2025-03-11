@@ -46,25 +46,6 @@ document.addEventListener('DOMContentLoaded', function () {
         updatePayPalMessages();
       }
     });
-
-  // Set up SSE client
-  const eventSource = new EventSource('/events');
-
-  eventSource.onmessage = event => {
-    console.log('SSE message received:', event.data);
-  };
-
-  eventSource.addEventListener('callback-received', event => {
-    console.log('Callback received:', JSON.parse(event.data));
-  });
-
-  eventSource.addEventListener('response-sent', event => {
-    console.log('Response sent:', JSON.parse(event.data));
-  });
-
-  eventSource.onerror = error => {
-    console.error('SSE error:', error);
-  };
 });
 
 const createOrder = (data, actions) => {
