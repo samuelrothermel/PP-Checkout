@@ -265,6 +265,7 @@ app.post('/api/shipping-callback', async (req, res) => {
     const itemTotal = parseFloat(
       purchase_units[0].amount.breakdown.item_total.value
     );
+
     const shippingAmount = shipping_option
       ? parseFloat(shipping_option.amount.value)
       : parseFloat(purchase_units[0].amount.breakdown.shipping.value);

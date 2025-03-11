@@ -137,7 +137,8 @@ export const createUpstreamQlOrder = async totalAmount => {
           return_url: `${BASE_URL}/return`,
           cancel_url: `${BASE_URL}/cancel`,
           order_update_callback_config: {
-            callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
+            callback_events: ['SHIPPING_ADDRESS'],
+            // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
             callback_url: CALLBACK_URL,
           },
         },
