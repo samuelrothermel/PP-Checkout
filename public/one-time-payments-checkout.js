@@ -46,6 +46,26 @@ document.addEventListener('DOMContentLoaded', function () {
         updatePayPalMessages();
       }
     });
+
+  // Set up WebSocket client
+  const ws = new WebSocket(`ws://${window.location.host}`);
+
+  ws.onopen = () => {
+    console.log('WebSocket connection established');
+  };
+
+  ws.onmessage = event => {
+    const message = JSON.parse(event.data);
+    console.log('WebSocket message received:', message);
+  };
+
+  ws.onclose = () => {
+    console.log('WebSocket connection closed');
+  };
+
+  ws.onerror = error => {
+    console.error('WebSocket error:', error);
+  };
 });
 
 const createOrder = (data, actions) => {
