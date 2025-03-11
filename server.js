@@ -242,17 +242,24 @@ app.post('/api/orders/:orderID/capture', async (req, res) => {
 
 // Shipping callback endpoint
 app.post('/api/shipping-callback', async (req, res) => {
-  console.log('Shipping callback received');
-  console.log('Request Headers:', req.headers);
-  console.log('Request Body:', req.body);
+  console.log('Shipping Callback from PayPal (raw):', req.body);
   const { id, shipping_address, shipping_option, purchase_units } = req.body;
 
   try {
     // Process the shipping callback data
+    console.log('Shipping Callback from PayPal:');
     console.log('Order ID:', id);
     console.log('Shipping Address:', shipping_address);
     console.log('Shipping Option:', shipping_option);
     console.log('Purchase Units:', purchase_units);
+
+    // Log breakdown and shipping details
+    if (purchase_units && purchase_units.length > 0) {
+      const breakdown = purchase_units[0].amount.breakdown;
+      const shipping = purchase_units[0].shipping;
+      console.log('Breakdown:', JSON.stringify(breakdown, null, 2));
+      console.log('Shipping:', JSON.stringify(shipping, null, 2));
+    }
 
     // Construct the response
     const response = {
@@ -285,28 +292,18 @@ app.post('/api/shipping-callback', async (req, res) => {
                 currency_code: 'USD',
                 value: '0.00',
               },
-              type: 'PICKUP_IN_STORE',
-              label: 'Pickup in Store',
+              type: 'SHIPPING',
+              label: 'Free Shipping',
               selected: true,
             },
             {
               id: '2',
               amount: {
                 currency_code: 'USD',
-                value: '7.00',
-              },
-              type: 'SHIPPING',
-              label: 'USPS Priority',
-              selected: false,
-            },
-            {
-              id: '3',
-              amount: {
-                currency_code: 'USD',
                 value: '10.00',
               },
               type: 'SHIPPING',
-              label: '1-Day Rush',
+              label: 'Express Shipping',
               selected: false,
             },
           ],

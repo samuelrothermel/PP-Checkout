@@ -126,8 +126,6 @@ export const createUpstreamOrder = async totalAmount => {
 
 // create upstream order request (server-side shipping callbacks)
 export const createUpstreamQlOrder = async totalAmount => {
-  console.log('creating upstream with server-side shipping callback');
-  console.log('confirming callback_url:', CALLBACK_URL);
   const accessToken = await generateAccessToken();
   const payload = {
     intent: 'CAPTURE',
