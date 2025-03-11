@@ -265,7 +265,9 @@ app.post('/api/shipping-callback', async (req, res) => {
     const itemTotal = parseFloat(
       purchase_units[0].amount.breakdown.item_total.value
     );
-    const shippingAmount = parseFloat(shipping_option.amount.value);
+    const shippingAmount = shipping_option
+      ? parseFloat(shipping_option.amount.value)
+      : parseFloat(purchase_units[0].amount.breakdown.shipping.value);
     const totalAmount = (itemTotal + shippingAmount).toFixed(2);
 
     // Construct the response
@@ -281,10 +283,6 @@ app.post('/api/shipping-callback', async (req, res) => {
               item_total: {
                 currency_code: 'USD',
                 value: itemTotal.toFixed(2),
-              },
-              tax_total: {
-                currency_code: 'USD',
-                value: breakdown.tax_total.value,
               },
               shipping: {
                 currency_code: 'USD',
