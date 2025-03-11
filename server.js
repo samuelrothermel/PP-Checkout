@@ -261,27 +261,34 @@ app.post('/api/shipping-callback', async (req, res) => {
       console.log('Shipping:', JSON.stringify(shipping, null, 2));
     }
 
+    // Calculate the total amount
+    const itemTotal = parseFloat(
+      purchase_units[0].amount.breakdown.item_total.value
+    );
+    const shippingAmount = parseFloat(shipping_option.amount.value);
+    const totalAmount = (itemTotal + shippingAmount).toFixed(2);
+
     // Construct the response
     const response = {
-      id: 'DPB2KE6BUVSR4',
+      id: id,
       purchase_units: [
         {
           reference_id: 'default',
           amount: {
             currency_code: 'USD',
-            value: '27',
+            value: totalAmount,
             breakdown: {
               item_total: {
                 currency_code: 'USD',
-                value: '22.50',
+                value: itemTotal.toFixed(2),
               },
               tax_total: {
                 currency_code: 'USD',
-                value: '4.50',
+                value: breakdown.tax_total.value,
               },
               shipping: {
                 currency_code: 'USD',
-                value: '0.00',
+                value: shippingAmount.toFixed(2),
               },
             },
           },
