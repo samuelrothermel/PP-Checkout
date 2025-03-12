@@ -136,6 +136,9 @@ export const createUpstreamQlOrder = async totalAmount => {
           shipping_preference: 'GET_FROM_FILE',
           return_url: `${BASE_URL}/return`,
           cancel_url: `${BASE_URL}/cancel`,
+          app_switch_preference: {
+            launch_paypal_app: true,
+          },
           order_update_callback_config: {
             callback_events: ['SHIPPING_ADDRESS'],
             // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],

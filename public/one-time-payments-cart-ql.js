@@ -58,6 +58,7 @@ function loadPayPalSDK() {
         style: {
           layout: 'vertical',
         },
+        appSwitchWhenAvailable: true,
         createOrder,
         onApprove,
         onCancel,
