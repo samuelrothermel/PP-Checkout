@@ -25,10 +25,7 @@ const createOrder = (data, actions) => {
     .then(orderData => {
       console.log('Create Order Raw Response: ', orderData);
       const orderId = orderData.id;
-      document.getElementById(
-        'create-order-info'
-      ).textContent = `Created Order ID: ${orderId}`;
-      document.getElementById('order-info-section').style.display = 'block';
+
       return orderId;
     })
     .catch(error => {
@@ -41,34 +38,26 @@ const createOrder = (data, actions) => {
 
 document.addEventListener('DOMContentLoaded', function () {
   // Load PayPal components initially
-  loadPayPalComponents();
-});
-
-function loadPayPalComponents() {
   loadPayPalSDK();
-}
+});
 
 function loadPayPalSDK() {
   const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields,messages&client-id=${clientId}&enable-funding=venmo`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   scriptElement.onload = () => {
-    paypal.Buttons({
-      style: {
-        layout: 'vertical',
-      },
-      appSwitchWhenAvailable: true,
-      createOrder,
-      onApprove,
-      onCancel,
-      onError,
-    });
-
-    if (buttons.hasReturned()) {
-      buttons.resume();
-    } else {
-      buttons.render('#paypal-button-container');
-    }
+    paypal
+      .Buttons({
+        style: {
+          layout: 'vertical',
+        },
+        appSwitchWhenAvailable: true,
+        createOrder,
+        onApprove,
+        onCancel,
+        onError,
+      })
+      .render('#paypal-button-container');
   };
 
   document.head.appendChild(scriptElement);
@@ -114,38 +103,6 @@ const onCancel = (data, actions) => {
 const onError = err => {
   console.error(err);
 };
-
-const onShippingOptionsChange = (data, actions) => {
-  console.log('Shipping Options Change:', data);
-};
-
-const onShippingAddressChange = (data, actions) => {
-  console.log('Shipping Address Change:', data);
-};
-
-document
-  .getElementById('change-total-checkbox')
-  .addEventListener('change', function () {
-    const newTotalInput = document.getElementById('new-total-input');
-    if (this.checked) {
-      newTotalInput.style.display = 'block';
-    } else {
-      newTotalInput.style.display = 'none';
-      newTotalInput.value = '';
-    }
-  });
-
-document
-  .getElementById('new-total-input')
-  .addEventListener('change', function () {
-    const newTotal = parseFloat(this.value).toFixed(2);
-    if (!isNaN(newTotal) && newTotal > 0) {
-      document.getElementById('cart-total').textContent = newTotal;
-      updateAmountTotal();
-      console.log('New Total:', newTotal);
-      updatePayPalMessages(newTotal);
-    }
-  });
 
 function updateAmountTotal() {
   const cartTotal = parseFloat(
