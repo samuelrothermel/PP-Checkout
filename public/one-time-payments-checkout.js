@@ -122,8 +122,6 @@ function loadPayPalSDK() {
         onApprove,
         onCancel,
         onError,
-        onShippingOptionsChange,
-        onShippingAddressChange,
       })
       .render('#paypal-button-container');
 
@@ -232,8 +230,6 @@ function reloadPayPalComponents(newTotal) {
         onApprove,
         onCancel,
         onError,
-        onShippingOptionsChange,
-        onShippingAddressChange,
       })
       .render('#paypal-button-container');
   };

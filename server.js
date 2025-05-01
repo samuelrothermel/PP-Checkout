@@ -104,6 +104,28 @@ app.get('/one-time-payments-checkout', async (req, res) => {
   }
 });
 
+app.get('/subscriptions-api', async (req, res) => {
+  const clientId = process.env.CLIENT_ID;
+  try {
+    res.render('subscriptions-api', {
+      clientId,
+    });
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+app.get('/mixed-checkout', async (req, res) => {
+  const clientId = process.env.CLIENT_ID;
+  try {
+    res.render('mixed-checkout', {
+      clientId,
+    });
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
 // create order request
 app.post('/api/orders', async (req, res) => {
   console.log('Checkout Create Order Request');
