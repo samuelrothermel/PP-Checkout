@@ -53,22 +53,18 @@ function loadPayPalSDK() {
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   scriptElement.onload = () => {
-    paypal.Buttons({
-      style: {
-        layout: 'vertical',
-      },
-      appSwitchWhenAvailable: true,
-      createOrder,
-      onApprove,
-      onCancel,
-      onError,
-    });
-
-    if (buttons.hasReturned()) {
-      buttons.resume();
-    } else {
-      buttons.render('#paypal-button-container');
-    }
+    paypal
+      .Buttons({
+        style: {
+          layout: 'vertical',
+        },
+        appSwitchWhenAvailable: true,
+        createOrder,
+        onApprove,
+        onCancel,
+        onError,
+      })
+      .render('#paypal-button-container');
   };
 
   document.head.appendChild(scriptElement);
@@ -178,6 +174,12 @@ function reloadPayPalComponents(newTotal) {
   };
 
   document.head.appendChild(scriptElement);
+
+  if (buttons.hasReturned()) {
+    buttons.resume();
+  } else {
+    buttons.render('#paypal-button-container');
+  }
 }
 
 function updatePayPalMessages(amount) {
