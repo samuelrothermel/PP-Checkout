@@ -216,8 +216,11 @@ export const createQuantumOrder = async totalAmount => {
           shipping_preference: 'GET_FROM_FILE',
           return_url: 'https://pp-ql-best-practices.onrender.com',
           cancel_url: 'https://pp-ql-best-practices.onrender.com',
-          app_switch_preference: {
-            launch_paypal_app: true,
+          app_switch_context: {
+            native_app: {
+              os_type: 'IOS',
+              os_version: '18.4.1',
+            },
           },
           order_update_callback_config: {
             callback_events: ['SHIPPING_ADDRESS'],
