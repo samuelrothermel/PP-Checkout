@@ -268,7 +268,7 @@ app.post('/api/shipping-callback', async (req, res) => {
   const { id, shipping_address, shipping_option, purchase_units } = req.body;
 
   try {
-    // Process the shipping callback data
+    // Log the shipping callback data
     console.log('Shipping Callback from PayPal:');
     console.log('Order ID:', id);
     console.log('Shipping Address:', shipping_address);
