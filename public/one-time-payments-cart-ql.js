@@ -164,6 +164,7 @@ function reloadPayPalComponents(newTotal) {
         style: {
           layout: 'vertical',
         },
+        appSwitchWhenAvailable: true,
         createOrder,
         onApprove,
         onCancel,
