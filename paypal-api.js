@@ -212,7 +212,7 @@ export const createQuantumOrder = async totalAmount => {
       paypal: {
         email_address: 'buyer3@adorno.com',
         experience_context: {
-          user_action: 'PAY_NOW',
+          user_action: 'CONTINUE',
           shipping_preference: 'GET_FROM_FILE',
           return_url: 'https://pp-ql-best-practices.onrender.com',
           cancel_url: 'https://pp-ql-best-practices.onrender.com',
