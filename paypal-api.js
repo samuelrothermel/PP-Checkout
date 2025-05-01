@@ -134,8 +134,8 @@ export const createUpstreamQlOrder = async totalAmount => {
         experience_context: {
           user_action: 'PAY_NOW',
           shipping_preference: 'GET_FROM_FILE',
-          return_url: 'https://pp-ql-best-practices-onrender.com',
-          cancel_url: 'https://pp-ql-best-practices-onrender.com',
+          return_url: 'https://pp-ql-best-practices.onrender.com',
+          cancel_url: 'https://pp-ql-best-practices.onrender.com',
           app_switch_preference: {
             launch_paypal_app: true,
           },
