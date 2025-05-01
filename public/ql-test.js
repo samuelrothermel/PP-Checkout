@@ -9,12 +9,10 @@ const createOrder = (data, actions) => {
         quantity: '1',
       },
     ],
-    totalAmount: parseFloat(
-      document.getElementById('amount-total').textContent
-    ).toFixed(2),
+    totalAmount: '12',
   };
 
-  return fetch('/api/upstream-ql-orders', {
+  return fetch('/api/quantum-test', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -25,14 +23,12 @@ const createOrder = (data, actions) => {
     .then(orderData => {
       console.log('Create Order Raw Response: ', orderData);
       const orderId = orderData.id;
-
       return orderId;
     })
     .catch(error => {
       document.getElementById(
         'create-order-info'
       ).textContent = `Error: ${error}`;
-      document.getElementById('order-info-section').style.display = 'block';
     });
 };
 
@@ -78,16 +74,6 @@ const onApprove = (data, actions) => {
       const captureId = orderData.purchase_units[0].payments.captures[0].id;
       const paymentSource = orderData.payment_source;
       const paymentSourceType = paymentSource.card ? 'card' : 'paypal';
-
-      document.getElementById(
-        'capture-order-info'
-      ).textContent = `Capture ID: ${captureId}`;
-      document.getElementById(
-        'payment-source-type-info'
-      ).textContent = `Payment Source: ${paymentSourceType}`;
-
-      document.getElementById('capture-info-section').style.display = 'block';
-      document.getElementById('payment-source-section').style.display = 'block';
     })
     .catch(error => {
       document.getElementById(
@@ -103,45 +89,3 @@ const onCancel = (data, actions) => {
 const onError = err => {
   console.error(err);
 };
-
-function updateAmountTotal() {
-  const cartTotal = parseFloat(
-    document.getElementById('cart-total').textContent
-  );
-  const shippingAmount = parseFloat(
-    document.getElementById('shipping-amount').textContent
-  );
-  const amountTotal = (cartTotal + shippingAmount).toFixed(2);
-  document.getElementById('amount-total').textContent = amountTotal;
-}
-
-function reloadPayPalComponents(newTotal) {
-  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields,messages&client-id=${clientId}&enable-funding=venmo`;
-  const scriptElement = document.createElement('script');
-  scriptElement.src = scriptUrl;
-  scriptElement.onload = () => {
-    paypal
-      .Buttons({
-        style: {
-          layout: 'vertical',
-        },
-        appSwitchWhenAvailable: true,
-        createOrder,
-        onApprove,
-        onCancel,
-        onError,
-      })
-      .render('#paypal-button-container');
-  };
-
-  document.head.appendChild(scriptElement);
-}
-
-function updatePayPalMessages(amount) {
-  console.log('updatePayPalMessages amount:', amount);
-  const messageContainer = document.querySelector('[data-pp-message]');
-  messageContainer.setAttribute('data-pp-amount', amount);
-  paypal.Messages().render(messageContainer);
-}
-
-updateAmountTotal();

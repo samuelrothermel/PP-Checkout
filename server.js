@@ -126,6 +126,17 @@ app.get('/mixed-checkout', async (req, res) => {
   }
 });
 
+app.get('/ql-test', async (req, res) => {
+  const clientId = process.env.CLIENT_ID;
+  try {
+    res.render('ql-test', {
+      clientId,
+    });
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
 // create order request
 app.post('/api/orders', async (req, res) => {
   console.log('Checkout Create Order Request');
@@ -173,6 +184,19 @@ app.post('/api/upstream-ql-orders', async (req, res) => {
       totalAmount,
       paymentSource
     );
+    res.json(order);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+// create upstream order request (server-side callbacks only)
+app.post('/api/quantum-test', async (req, res) => {
+  console.log('Upstream Server-Side Callback Create Order Request');
+  console.log('');
+  const { totalAmount, paymentSource } = req.body;
+  try {
+    const order = await paypal.createQuantumOrder(totalAmount, paymentSource);
     res.json(order);
   } catch (err) {
     handleError(res, err);

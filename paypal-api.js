@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 // set some important variables
-const { CLIENT_ID, APP_SECRET, NGROK_URL, BASE_URL } = process.env;
+const { CLIENT_ID, APP_SECRET, BASE_URL } = process.env;
 const base = 'https://api-m.sandbox.paypal.com';
 const CALLBACK_URL =
   'https://pp-ql-best-practices.onrender.com/api/shipping-callback';
@@ -139,11 +139,90 @@ export const createUpstreamQlOrder = async totalAmount => {
           app_switch_preference: {
             launch_paypal_app: true,
           },
-          // order_update_callback_config: {
-          //   callback_events: ['SHIPPING_ADDRESS'],
-          //   // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
-          //   callback_url: CALLBACK_URL,
-          // },
+          order_update_callback_config: {
+            callback_events: ['SHIPPING_ADDRESS'],
+            // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
+            callback_url: CALLBACK_URL,
+          },
+        },
+      },
+    },
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: totalAmount,
+          breakdown: {
+            item_total: {
+              currency_code: 'USD',
+              value: totalAmount,
+            },
+            shipping: {
+              currency_code: 'USD',
+              value: '0.00',
+            },
+          },
+        },
+        shipping: {
+          options: [
+            {
+              id: '1',
+              amount: {
+                currency_code: 'USD',
+                value: '0.00',
+              },
+              type: 'SHIPPING',
+              label: 'Free Shipping',
+              selected: true,
+            },
+            {
+              id: '2',
+              amount: {
+                currency_code: 'USD',
+                value: '10.00',
+              },
+              type: 'SHIPPING',
+              label: 'Express Shipping',
+              selected: false,
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const response = await fetch(`${base}/v2/checkout/orders`, {
+    method: 'post',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  console.log('Create Order Response: ', await response.clone().json());
+  return await handleResponse(response);
+};
+
+// create upstream QL order request (server-side shipping callbacks)
+export const createQuantumOrder = async totalAmount => {
+  const accessToken = await generateAccessToken();
+  const payload = {
+    intent: 'CAPTURE',
+    payment_source: {
+      paypal: {
+        experience_context: {
+          user_action: 'PAY_NOW',
+          shipping_preference: 'GET_FROM_FILE',
+          return_url: 'https://pp-ql-best-practices.onrender.com',
+          cancel_url: 'https://pp-ql-best-practices.onrender.com',
+          app_switch_preference: {
+            launch_paypal_app: true,
+          },
+          order_update_callback_config: {
+            callback_events: ['SHIPPING_ADDRESS'],
+            // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
+            callback_url: CALLBACK_URL,
+          },
         },
       },
     },
