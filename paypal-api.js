@@ -139,11 +139,11 @@ export const createUpstreamQlOrder = async totalAmount => {
           app_switch_preference: {
             launch_paypal_app: true,
           },
-          order_update_callback_config: {
-            callback_events: ['SHIPPING_ADDRESS'],
-            // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
-            callback_url: CALLBACK_URL,
-          },
+          // order_update_callback_config: {
+          //   callback_events: ['SHIPPING_ADDRESS'],
+          //   // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
+          //   callback_url: CALLBACK_URL,
+          // },
         },
       },
     },
