@@ -210,6 +210,7 @@ export const createQuantumOrder = async totalAmount => {
     intent: 'CAPTURE',
     payment_source: {
       paypal: {
+        email_address: 'buyer3@adorno.com',
         experience_context: {
           user_action: 'PAY_NOW',
           shipping_preference: 'GET_FROM_FILE',
