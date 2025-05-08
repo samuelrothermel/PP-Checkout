@@ -139,11 +139,11 @@ export const createUpstreamQlOrder = async totalAmount => {
           app_switch_preference: {
             launch_paypal_app: true,
           },
-          order_update_callback_config: {
-            callback_events: ['SHIPPING_ADDRESS'],
-            // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
-            callback_url: CALLBACK_URL,
-          },
+          // order_update_callback_config: {
+          //   callback_events: ['SHIPPING_ADDRESS'],
+          //   // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
+          //   callback_url: CALLBACK_URL,
+          // },
         },
       },
     },
@@ -203,14 +203,13 @@ export const createUpstreamQlOrder = async totalAmount => {
   return await handleResponse(response);
 };
 
-// create upstream QL order request (server-side shipping callbacks)
+// create upstream Test QL order request (server-side shipping callbacks)
 export const createQuantumOrder = async totalAmount => {
   const accessToken = await generateAccessToken();
   const payload = {
     intent: 'CAPTURE',
     payment_source: {
       paypal: {
-        email_address: 'buyer3@adorno.com',
         experience_context: {
           user_action: 'CONTINUE',
           shipping_preference: 'GET_FROM_FILE',
@@ -218,8 +217,7 @@ export const createQuantumOrder = async totalAmount => {
           cancel_url: 'https://pp-ql-best-practices.onrender.com',
           app_switch_context: {
             native_app: {
-              os_type: 'IOS',
-              os_version: '18.4.1',
+              launch_paypal_app: true,
             },
           },
           order_update_callback_config: {
