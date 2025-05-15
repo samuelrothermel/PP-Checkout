@@ -165,30 +165,30 @@ export const createUpstreamQlOrder = async totalAmount => {
             },
           },
         },
-        // shipping: {
-        //   options: [
-        //     {
-        //       id: '1',
-        //       amount: {
-        //         currency_code: 'USD',
-        //         value: '0.00',
-        //       },
-        //       type: 'SHIPPING',
-        //       label: 'Free Shipping',
-        //       selected: true,
-        //     },
-        //     {
-        //       id: '2',
-        //       amount: {
-        //         currency_code: 'USD',
-        //         value: '10.00',
-        //       },
-        //       type: 'SHIPPING',
-        //       label: 'Express Shipping',
-        //       selected: false,
-        //     },
-        //   ],
-        // },
+        shipping: {
+          options: [
+            {
+              id: '1',
+              amount: {
+                currency_code: 'USD',
+                value: '0.00',
+              },
+              type: 'SHIPPING',
+              label: 'Free Shipping',
+              selected: true,
+            },
+            {
+              id: '2',
+              amount: {
+                currency_code: 'USD',
+                value: '10.00',
+              },
+              type: 'SHIPPING',
+              label: 'Express Shipping',
+              selected: false,
+            },
+          ],
+        },
       },
     ],
   };
