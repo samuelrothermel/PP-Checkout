@@ -345,28 +345,28 @@ app.post('/api/shipping-callback', async (req, res) => {
               },
             },
           },
-          shipping_options: [
-            {
-              id: '1',
-              amount: {
-                currency_code: 'USD',
-                value: '0.00',
-              },
-              type: 'SHIPPING',
-              label: 'Free Shipping',
-              selected: true,
-            },
-            {
-              id: '2',
-              amount: {
-                currency_code: 'USD',
-                value: '10.00',
-              },
-              type: 'SHIPPING',
-              label: 'Express Shipping',
-              selected: false,
-            },
-          ],
+          // shipping_options: [
+          //   {
+          //     id: '1',
+          //     amount: {
+          //       currency_code: 'USD',
+          //       value: '0.00',
+          //     },
+          //     type: 'SHIPPING',
+          //     label: 'Free Shipping',
+          //     selected: true,
+          //   },
+          //   {
+          //     id: '2',
+          //     amount: {
+          //       currency_code: 'USD',
+          //       value: '10.00',
+          //     },
+          //     type: 'SHIPPING',
+          //     label: 'Express Shipping',
+          //     selected: false,
+          //   },
+          // ],
         },
       ],
     };
