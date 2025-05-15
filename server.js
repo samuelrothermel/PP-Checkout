@@ -321,6 +321,8 @@ app.post('/api/shipping-callback', async (req, res) => {
 
     if (customerState === 'CA') {
       shippingAmount += 10;
+    } else {
+      shippingAmount = 0;
     }
 
     const totalAmount = (itemTotal + shippingAmount).toFixed(2);
@@ -350,7 +352,7 @@ app.post('/api/shipping-callback', async (req, res) => {
               id: '1',
               amount: {
                 currency_code: 'USD',
-                value: '0.00',
+                value: shippingAmount,
               },
               type: 'SHIPPING',
               label: 'Free Shipping',
@@ -360,7 +362,7 @@ app.post('/api/shipping-callback', async (req, res) => {
               id: '2',
               amount: {
                 currency_code: 'USD',
-                value: '10.00',
+                value: shippingAmount,
               },
               type: 'SHIPPING',
               label: 'Express Shipping',
