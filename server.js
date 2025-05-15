@@ -288,7 +288,6 @@ app.post('/api/orders/:orderID/capture', async (req, res) => {
 
 // Shipping callback endpoint
 app.post('/api/shipping-callback', async (req, res) => {
-  console.log('Shipping Callback from PayPal (raw):', req.body);
   const { id, shipping_address, shipping_option, purchase_units } = req.body;
 
   try {
@@ -372,6 +371,8 @@ app.post('/api/shipping-callback', async (req, res) => {
         },
       ],
     };
+
+    console.log('Server Callback Response: ', response);
 
     // Respond with the constructed response
     res.json(response);
