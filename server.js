@@ -308,13 +308,20 @@ app.post('/api/shipping-callback', async (req, res) => {
     }
 
     // Calculate the total amount
-    const itemTotal = parseFloat(
+    let itemTotal = parseFloat(
       purchase_units[0].amount.breakdown.item_total.value
     );
 
-    const shippingAmount = shipping_option
+    let shippingAmount = shipping_option
       ? parseFloat(shipping_option.amount.value)
       : parseFloat(purchase_units[0].amount.breakdown.shipping.value);
+
+    // Check if the customer's state is 'NY' and increase values by $10
+    if (shipping_address && shipping_address.state === 'NY') {
+      itemTotal += 10;
+      shippingAmount += 10;
+    }
+
     const totalAmount = (itemTotal + shippingAmount).toFixed(2);
 
     // Construct the response
