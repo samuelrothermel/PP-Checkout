@@ -317,7 +317,10 @@ app.post('/api/shipping-callback', async (req, res) => {
       : parseFloat(purchase_units[0].amount.breakdown.shipping.value);
 
     // Check if the customer's state (admin_area_1) is 'NY' and increase values by $10
-    if (shipping_address && shipping_address.admin_area_1 === 'NY') {
+    const customerState = shipping_address.admin_area_1 === 'NY';
+    console.log('customer State: ', customerState);
+
+    if (customerState === 'NY') {
       itemTotal += 10;
       shippingAmount += 10;
     }
