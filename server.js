@@ -372,7 +372,10 @@ app.post('/api/shipping-callback', async (req, res) => {
       ],
     };
 
-    console.log('Server Callback Response: ', response);
+    console.log(
+      'Server Callback Response: ',
+      JSON.stringify(response, null, 2)
+    );
 
     // Respond with the constructed response
     res.json(response);
