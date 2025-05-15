@@ -62,7 +62,7 @@ function loadPayPalSDK() {
         onApprove,
         onCancel,
         onError,
-        onShippingOptionsChange,
+        // onShippingOptionsChange,
         onShippingAddressChange,
       })
       .render('#paypal-button-container');
@@ -121,9 +121,9 @@ const onShippingOptionsChange = (data, actions) => {
 
 const onShippingAddressChange = (data, actions) => {
   console.log('Shipping Address Change:', data);
-  // if (data.selectedShippingOption.type === 'PICKUP') {
-  //   return actions.reject(data.errors.STORE_UNAVAILABLE);
-  // }
+  if (data.shippingAddress.countryCode !== 'US') {
+    return actions.reject(data.errors.COUNTRY_ERROR);
+  }
 };
 
 document

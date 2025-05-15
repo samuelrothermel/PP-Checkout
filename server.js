@@ -319,8 +319,7 @@ app.post('/api/shipping-callback', async (req, res) => {
     const customerState = shipping_address?.admin_area_1 || null;
     console.log('Customer State:', customerState);
 
-    if (customerState === 'NY') {
-      itemTotal += 10;
+    if (customerState === 'CA') {
       shippingAmount += 10;
     }
 
