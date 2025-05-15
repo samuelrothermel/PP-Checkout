@@ -134,16 +134,18 @@ export const createUpstreamQlOrder = async totalAmount => {
         experience_context: {
           user_action: 'PAY_NOW',
           shipping_preference: 'GET_FROM_FILE',
-          return_url: 'https://pp-ql-best-practices.onrender.com',
-          cancel_url: 'https://pp-ql-best-practices.onrender.com',
+          return_url:
+            'https://pp-ql-best-practices.onrender.com/one-time-payments-cart-ql',
+          cancel_url:
+            'https://pp-ql-best-practices.onrender.com/one-time-payments-cart-ql',
           app_switch_preference: {
             launch_paypal_app: true,
           },
-          // order_update_callback_config: {
-          //   callback_events: ['SHIPPING_ADDRESS'],
-          //   // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
-          //   callback_url: CALLBACK_URL,
-          // },
+          order_update_callback_config: {
+            callback_events: ['SHIPPING_ADDRESS'],
+            // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
+            callback_url: CALLBACK_URL,
+          },
         },
       },
     },
@@ -213,8 +215,8 @@ export const createQuantumOrder = async totalAmount => {
         experience_context: {
           user_action: 'CONTINUE',
           shipping_preference: 'GET_FROM_FILE',
-          return_url: 'https://pp-ql-best-practices.onrender.com',
-          cancel_url: 'https://pp-ql-best-practices.onrender.com',
+          return_url: 'https://pp-ql-best-practices.onrender.com/ql-test',
+          cancel_url: 'https://pp-ql-best-practices.onrender.com/ql-test',
           app_switch_context: {
             native_app: {
               launch_paypal_app: true,
