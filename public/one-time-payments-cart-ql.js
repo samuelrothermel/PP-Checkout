@@ -53,18 +53,22 @@ function loadPayPalSDK() {
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   scriptElement.onload = () => {
-    paypal
-      .Buttons({
-        style: {
-          layout: 'vertical',
-        },
-        appSwitchWhenAvailable: true,
-        createOrder,
-        onApprove,
-        onCancel,
-        onError,
-      })
-      .render('#paypal-button-container');
+    const buttons = paypal.Buttons({
+      style: {
+        layout: 'vertical',
+      },
+      appSwitchWhenAvailable: true,
+      createOrder,
+      onApprove,
+      onCancel,
+      onError,
+    });
+
+    if (buttons.hasReturned()) {
+      buttons.resume();
+    } else {
+      buttons.render('#paypal-button-container');
+    }
   };
 
   document.head.appendChild(scriptElement);
@@ -78,6 +82,14 @@ const onApprove = (data, actions) => {
   })
     .then(response => response.json())
     .then(orderData => {
+      if (orderData.error && orderData.error === 'INSTRUMENT_DECLINED') {
+        console.error('Instrument Declined. Restarting checkout.');
+        document.getElementById('capture-order-info').textContent =
+          'Payment declined. Please try again.';
+        paypal.Buttons().render('#paypal-button-container'); // Re-render buttons
+        return;
+      }
+
       console.log(
         'Capture Order Response: ',
         JSON.stringify(orderData, null, 2)
