@@ -352,7 +352,7 @@ app.post('/api/shipping-callback', async (req, res) => {
               id: '1',
               amount: {
                 currency_code: 'USD',
-                value: shippingAmount,
+                value: 0,
               },
               type: 'SHIPPING',
               label: 'Free Shipping',
