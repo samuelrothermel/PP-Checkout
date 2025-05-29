@@ -1,6 +1,6 @@
 const createOrder = (data, actions) => {
   console.log('Client-Side Create Order Raw Request: ', data);
-  return fetch('/api/orders', {
+  return fetch('/api/checkout-orders', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

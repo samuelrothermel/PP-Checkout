@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 // set some important variables
-const { CLIENT_ID, APP_SECRET, BASE_URL } = process.env;
+const { CLIENT_ID, APP_SECRET } = process.env;
 const base = 'https://api-m.sandbox.paypal.com';
 const CALLBACK_URL =
   'https://pp-ql-best-practices.onrender.com/api/shipping-callback';
@@ -325,42 +325,32 @@ export const createCheckoutOrder = async orderData => {
     },
     body: JSON.stringify({
       intent: 'CAPTURE',
-      payment_source: {
-        // paypal: {
-        //   attributes: {
-        //     // vault: {
-        //     //   store_in_vault: 'ON_SUCCESS',
-        //     //   usage_type: 'MERCHANT',
-        //     //   customer_type: 'CONSUMER',
-        //     // },
-        //   },
-        //   experience_context: {
-        //     shipping_preference: shippingPreference,
-        //     user_action: 'PAY_NOW',
-        //     return_url: 'https://example.com/returnUrl',
-        //     cancel_url: 'https://example.com/cancelUrl',
-        //     app_Switch_preference: {
-        //       launch_paypal_app: true,
-        //     },
-        //   },
-        // },
-        venmo: {
-          experience_context: {
-            brand_name: 'EXAMPLE INC',
-            shipping_preference: shippingPreference,
-            user_action: 'PAY_NOW',
-          },
-        },
-      },
       purchase_units: [
         {
           amount: {
             currency_code: 'USD',
             value: purchaseAmount,
           },
-          shipping: shippingDetails,
         },
       ],
+      payment_source: {
+        paypal: {
+          attributes: {
+            vault: {
+              store_in_vault: 'ON_SUCCESS',
+              usage_type: 'MERCHANT',
+              customer_type: 'CONSUMER',
+            },
+          },
+        },
+        card: {
+          attributes: {
+            vault: {
+              store_in_vault: 'ON_SUCCESS',
+            },
+          },
+        },
+      },
     }),
   });
 

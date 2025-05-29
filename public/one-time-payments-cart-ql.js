@@ -123,14 +123,6 @@ const onError = err => {
   console.error(err);
 };
 
-// const onShippingOptionsChange = (data, actions) => {
-//   console.log('Shipping Options Change:', data);
-// };
-
-// const onShippingAddressChange = (data, actions) => {
-//   console.log('Shipping Address Change:', data);
-// };
-
 document
   .getElementById('change-total-checkbox')
   .addEventListener('change', function () {
