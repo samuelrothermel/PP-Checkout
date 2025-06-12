@@ -449,7 +449,7 @@ app.post('/api/shipping-callback', async (req, res) => {
           reference_id: 'default',
           amount: {
             currency_code: 'USD',
-            value: totalAmount,
+            value: 50,
             breakdown: {
               item_total: {
                 currency_code: 'USD',
