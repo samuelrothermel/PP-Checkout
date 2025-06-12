@@ -531,26 +531,6 @@ app.post('/api/shipping-callback', async (req, res) => {
               label: 'Expedited 3 Day',
               selected: false,
             },
-            {
-              id: '2',
-              amount: {
-                currency_code: 'USD',
-                value: '53.84',
-              },
-              type: 'SHIPPING',
-              label: 'Expedited 2 Day',
-              selected: false,
-            },
-            {
-              id: '11',
-              amount: {
-                currency_code: 'USD',
-                value: '110.23',
-              },
-              type: 'SHIPPING',
-              label: 'Expedited Overnight',
-              selected: false,
-            },
           ],
         },
       ],
