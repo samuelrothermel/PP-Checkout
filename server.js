@@ -424,18 +424,6 @@ app.post('/api/shipping-callback', async (req, res) => {
     console.log('Shipping Option:', shipping_option);
     console.log('Purchase Units:', purchase_units);
 
-    // Check if the shipping address country is not USA
-    if (shipping_address?.country_code !== 'US') {
-      return res.status(422).json({
-        name: 'UNPROCESSABLE_ENTITY',
-        details: [
-          {
-            issue: 'COUNTRY_ERROR',
-          },
-        ],
-      });
-    }
-
     // Log breakdown and shipping details
     if (purchase_units && purchase_units.length > 0) {
       const breakdown = purchase_units[0].amount.breakdown;
@@ -449,36 +437,9 @@ app.post('/api/shipping-callback', async (req, res) => {
       purchase_units[0].amount.breakdown.item_total.value
     );
 
-    // Determine base shipping amounts for both options
-    const baseFreeShipping = 0;
-    const baseExpressShipping = parseFloat(
-      purchase_units[0].amount.breakdown.shipping.value
-    );
+    totalAmount = itemTotal.toFixed(2);
 
-    // Calculate surcharge
-    const customerState = shipping_address?.admin_area_1 || null;
-    console.log('Customer State:', customerState);
-
-    let shippingSurcharge = 0;
-    if (customerState === 'CA') {
-      shippingSurcharge = 10;
-    }
-
-    // Add surcharge to both shipping options
-    const freeShippingAmount = baseFreeShipping + shippingSurcharge;
-    const expressShippingAmount = baseExpressShipping + shippingSurcharge;
-
-    // Determine which shipping option is selected
-    let selectedShippingAmount = expressShippingAmount; // default to express
-    let selectedShippingId = '2';
-    if (shipping_option?.id === '1') {
-      selectedShippingAmount = freeShippingAmount;
-      selectedShippingId = '1';
-    }
-
-    // Update shippingAmount and totalAmount based on selected option
-    const shippingAmount = selectedShippingAmount;
-    const totalAmount = (itemTotal + shippingAmount).toFixed(2);
+    shippingAmount = 0;
 
     // Construct the response
     const response = {
@@ -505,7 +466,7 @@ app.post('/api/shipping-callback', async (req, res) => {
               id: '31',
               amount: {
                 currency_code: 'USD',
-                value: '11.06',
+                value: '0',
               },
               type: 'SHIPPING',
               label: 'Economy Ground',
@@ -515,7 +476,7 @@ app.post('/api/shipping-callback', async (req, res) => {
               id: '28',
               amount: {
                 currency_code: 'USD',
-                value: '15.80',
+                value: '0',
               },
               type: 'SHIPPING',
               label: 'Ground',
@@ -525,7 +486,7 @@ app.post('/api/shipping-callback', async (req, res) => {
               id: '8',
               amount: {
                 currency_code: 'USD',
-                value: '45.56',
+                value: '0',
               },
               type: 'SHIPPING',
               label: 'Expedited 3 Day',
