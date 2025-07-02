@@ -11,7 +11,7 @@ const handleResponse = async response => {
   if (response.status === 200 || response.status === 201) {
     return response.json();
   }
-
+  console.log('Error Response: ', response);
   const error = new Error(await response.text());
   error.status = response.status;
   throw error;
@@ -46,6 +46,65 @@ export const returningAccessToken = async customerId => {
   const jsonData = await handleResponse(response);
   return jsonData.id_token;
 };
+
+// create billing agreement token
+export async function createBillingAgreementToken() {
+  const accessToken = await generateAccessToken();
+  const res = await fetch(
+    'https://api-m.sandbox.paypal.com/v1/billing-agreements/agreement-tokens',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        description: 'Billing Agreement',
+        shipping_address: {
+          line1: '123 Main St.',
+          line2: 'Suite #4',
+          city: 'New York',
+          state: 'NY',
+          postal_code: '12345',
+          country_code: 'US',
+          recipient_name: 'John Doe',
+        },
+        payer: {
+          payment_method: 'PAYPAL',
+        },
+        plan: {
+          type: 'MERCHANT_INITIATED_BILLING',
+          merchant_preferences: {
+            return_url: 'https://example.com/return',
+            cancel_url: 'https://example.com/cancel',
+            notify_url: 'https://example.com/notify',
+            accepted_pymt_type: 'INSTANT',
+            skip_shipping_address: false,
+            immutable_shipping_address: true,
+          },
+        },
+      }),
+    }
+  );
+  return await res.json();
+}
+
+// create billing agreement with token
+export async function createBillingAgreement(token) {
+  const accessToken = await generateAccessToken();
+  const res = await fetch(
+    'https://api-m.sandbox.paypal.com/v1/billing-agreements/agreements',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token_id: token }),
+    }
+  );
+  return await res.json();
+}
 
 // create upstream order request (client-side shipping callbacks)
 export const createUpstreamOrder = async totalAmount => {
@@ -292,7 +351,7 @@ export const createCheckoutOrder = async orderData => {
     'creating order from Checkout Page with data:',
     JSON.stringify(orderData)
   );
-  const { shippingInfo, totalAmount } = orderData;
+  const { shippingInfo, totalAmount, paymentSource = 'paypal' } = orderData;
   const purchaseAmount = totalAmount || '100.00'; // Use provided amount or default to 100.00
   const accessToken = await generateAccessToken();
 
@@ -315,6 +374,36 @@ export const createCheckoutOrder = async orderData => {
     };
   }
 
+  // Build payment_source object dynamically
+  let payment_source = {};
+  if (paymentSource === 'paypal') {
+    payment_source.paypal = {
+      attributes: {
+        vault: {
+          store_in_vault: 'ON_SUCCESS',
+          usage_type: 'MERCHANT',
+          customer_type: 'CONSUMER',
+        },
+      },
+      experience_context: {
+        return_url: 'https://example.com/return', // <-- REQUIRED
+        cancel_url: 'https://example.com/cancel', // <-- REQUIRED
+        user_action: 'PAY_NOW',
+        shipping_preference: shippingPreference,
+      },
+    };
+  } else if (paymentSource === 'card') {
+    payment_source.card = {
+      attributes: {
+        vault: {
+          store_in_vault: 'ON_SUCCESS',
+          usage_type: 'MERCHANT',
+          customer_type: 'CONSUMER',
+        },
+      },
+    };
+  }
+
   const url = `${base}/v2/checkout/orders`;
   const response = await fetch(url, {
     method: 'post',
@@ -333,24 +422,7 @@ export const createCheckoutOrder = async orderData => {
           },
         },
       ],
-      payment_source: {
-        paypal: {
-          attributes: {
-            vault: {
-              store_in_vault: 'ON_SUCCESS',
-              usage_type: 'MERCHANT',
-              customer_type: 'CONSUMER',
-            },
-          },
-        },
-        card: {
-          attributes: {
-            vault: {
-              store_in_vault: 'ON_SUCCESS',
-            },
-          },
-        },
-      },
+      payment_source,
     }),
   });
 
@@ -484,3 +556,43 @@ export const fetchPaymentTokens = async customerId => {
   const data = await response.json();
   return data.payment_tokens || [];
 };
+
+// Create order with Billing Agreement ID
+export async function createOrderWithBillingAgreement(
+  billingAgreementId,
+  amount = '10.00'
+) {
+  const accessToken = await generateAccessToken();
+  console.log('billingAgreementId: ', billingAgreementId);
+  const payload = {
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: amount,
+        },
+      },
+    ],
+    payment_source: {
+      token: {
+        id: billingAgreementId,
+        type: 'BILLING_AGREEMENT',
+      },
+    },
+  };
+  console.log('Order payload:', JSON.stringify(payload, null, 2));
+  const response = await fetch(
+    'https://api-m.sandbox.paypal.com/v2/checkout/orders',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+  console.log('Create Order with Billing Agreement Response: ', response);
+  return handleResponse(response);
+}

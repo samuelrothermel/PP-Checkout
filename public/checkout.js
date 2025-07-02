@@ -6,13 +6,8 @@ const createOrder = (data, actions) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      source: data.paymentSource, //paypal / venmo / etc.
-      cart: [
-        {
-          sku: '<YOUR_PRODUCT_STOCK_KEEPING_UNIT>',
-          quantity: '<YOUR_PRODUCT_QUANTITY>',
-        },
-      ],
+      totalAmount: '10.00', // or whatever amount you want
+      // add other fields as needed
     }),
   })
     .then(response => response.json())
