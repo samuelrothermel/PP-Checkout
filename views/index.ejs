@@ -10,73 +10,144 @@
 <body>
   <div class="container">
     <header>
-      <h1>PayPal Checkout Integrations</h1>
+      <h1>PayPal Online Checkout Solutions</h1>
+      <p style="text-align: center; color: #666; margin-bottom: 40px;">Explore different integration examples and best practices for PayPal's checkout solutions</p>
     </header>
 
-    <section class="description content">
-      <h2>Intention</h2>
-      <p>To demonstrate various integration methods, highlighting best practices under specific checkout scenarios.</p>
-    </section>
+    <section class="integrations-gallery">
+      
+      <!-- Standard Product Page Integration -->
+      <div class="integration-item">
+        <div class="integration-image">
+          <img src="https://www.paypalobjects.com/webstatic/en_US/developer/docs/images/checkout-standard-product-page.png" 
+               alt="Standard Product Page">
+        </div>
+        <div class="integration-description">
+          <h3><a href="/one-time-payments-cart-ql">Product/Cart Page</a></h3>
+          <p><strong>PayPal's Standard Integration</strong></p>
+          <p>Optimized for fast, conversion-focused checkout flows.</p>
+          <ul style="margin-top: 10px;">
+            <li>Shipping address received via server callbacks</li>
+            <li>Shipping and Tax validation performed via server-side APIs</li>
+            <li>App Switch Compatible</li>
+          </ul>
+        </div>
+      </div>
 
-    <section class="apis content">
-      <h2>Tools Used</h2>
-        <a href="https://developer.paypal.com/sdk/js/">JavaScript SDK</a>
-          <ul>
-            <li>Renders payment buttons, card form fields, pay later messaging, and more.</li>
-            <li>Also used to check the funding-eligibility of a given payment method.</li>
+      <!-- Expanded Checkout Integration -->
+      <div class="integration-item">
+        <div class="integration-image">
+          <img src="https://www.paypalobjects.com/webstatic/en_US/developer/docs/images/checkout-express.png" 
+               alt="Expanded Checkout">
+        </div>
+        <div class="integration-description">
+          <h3><a href="/one-time-payments-checkout">Expanded Checkout Page</a></h3>
+          <p><strong>Full Stack Checkout Experience</strong></p>
+          <p>Sample Checkout Page highlighting the full complement of PayPal's capabilities.</p>
+          <ul style="margin-top: 10px;">
+            <li>Upstream Presentment to enable buyers to check out without entering any information</li>
+            <li>The PayPal Marks component renders payment methods in radio buttons</li>
+            <li>Buyers have the flexibility to choose how to pay for their purchase after they fill out the form.</li>
+            <li>Shipping Callbacks utilized for Upstream Presentment buttons</li>
+            <li>Payment Methods are subject to change based on user input and selection.</li>
           </ul>
-        <a href="https://developer.paypal.com/docs/api/orders/v2/">Orders API</a> aka Orders v2
-          <ul>
-            <li>Used to create, update, retrieve, authorize, and capture orders.</li>
-          </ul>
-        <a href="https://developer.paypal.com/docs/api/payment-tokens/v3/">Payment Method Tokens API</a> aka Vault v3
-          <ul>
-            <li>Saves payment methods so payers don't have to enter details for future transactions.</li>
-            <li>The API associates a payment method with a temporary setup token. Pass the setup token to the API to exchange the setup token for a permanent token.</li>
-            <li>The permanent token represents a payment method that has been saved to the merchant's PayPal vault.</li>
-            <li>This token can be used repeatedly for returning checkout or recurring transactions such as recurring payments.</li>
-        </ul>
-    </section>
+        </div>
+      </div>
 
-    <section class="checkout content">
-      <h2>Best Practices</h2>
-        <h3>One-Time Payments</h3>
-          <a href="/one-time-payments-cart">Product/Cart Page</a> (Client-side callback)
-          <ul>
-            <li>Shipping Address and Shipping Option received from PayPal via client-side callback.</li>
-            <li>Note: Venmo is not available when utilizing client-side shipping callbacks</li>
+      <!-- Save Payment Methods Integration -->
+      <div class="integration-item">
+        <div class="integration-image">
+          <img src="https://www.paypalobjects.com/webstatic/en_US/developer/docs/images/vault-save-payment.png" 
+               alt="Save Payment Methods">
+        </div>
+        <div class="integration-description">
+          <h3><a href="/checkout">Save with Purchase</a></h3>
+          <p><strong>Vaulted Payment Methods</strong></p>
+          <p>Enable customers to securely save their payment methods during checkout for faster future purchases. Integrates with PayPal's Vault API for secure token storage.</p>
+          <ul style="margin-top: 10px;">
+            <li>Secure payment method storage</li>
+            <li>One-click future purchases</li>
+            <li>Customer account management</li>
+            <li>PCI-compliant token vaulting</li>
           </ul>
-          <a href="/one-time-payments-cart-ql">Product/Cart Page</a> (Server-side callback)
-          <ul>
-            <li>Shipping Address and Shipping Option received from PayPal via server-side callback.</li>
-            <li>Note: Patching is not required when updating Order details in server-side response.</li>
-            <li>Note: You will need to publicly expose the server-side callback URL.</li>
-          </ul>
-          <a href="/one-time-payments-checkout">Checkout Page</a>
-          <ul>
-            <li>Shipping Address collected on checkout is included in create order call and thus rendered in PayPal window.</li>
-            <li>By setting the shipping_preference to 'SET_PROVIDED', customer must return to checkout page in order to change shipping address and options.</li>
-          </ul>
-          <h3>References</h3>
-            <a href="https://developer.paypal.com/docs/checkout/standard/best-practices/one-time/">One-Time Payments Best Practices</a><br>
-            <a href="https://developer.paypal.com/docs/checkout/standard/customize/shipping-module/">Shipping Module</a><br>
-            <a href="https://developer.paypal.com/docs/checkout/standard/customize/contact-module/">Contact Module</a><br>
+        </div>
+      </div>
 
-      <h2>Recurring payments</h2>
-
-      <h2>Advanced Checkout Examples</h2>
-
-          <a href="/checkout">Save with Purchase</a>
-          <ul>
-            <li>Customers have their payment method vaulted upon successful purchase via Payment Method Token API.</li>
-            <li>A returning customer's Customer ID is exchanged for a User ID Token via the OAuth 2.0 API. This user ID token is passed to JS SDK to load saved payment methods.</li>
+      <!-- Subscription Setup Integration -->
+      <div class="integration-item">
+        <div class="integration-image">
+          <img src="https://www.paypalobjects.com/webstatic/en_US/developer/docs/images/vault-setup-token.png" 
+               alt="Save without Purchase">
+        </div>
+        <div class="integration-description">
+          <h3><a href="/save-wo-purchase">Save without Purchase</a></h3>
+          <p><strong>Payment Method Setup</strong></p>
+          <p>Allow customers to add and verify payment methods without making an immediate purchase. Ideal for subscription services, trials, and account setup flows.</p>
+          <ul style="margin-top: 10px;">
+            <li>Payment method verification without charge</li>
+            <li>Setup tokens for future billing</li>
+            <li>Subscription and trial support</li>
+            <li>Account onboarding optimization</li>
           </ul>
-          <a href="/save-wo-purchase">Save without Purchase</a>
-          <ul>
-            <li>Both PayPal and Card payment methods are vaulted for future payment.</li>
-            <li>Setup Token is exchanged for a Permanent Payment Token via the Payment Method Token API.</li>
-            <li>Card payment methods verified at time of request Setup Token.</li>
+        </div>
+      </div>
+
+      <!-- Subscription Setup Integration -->
+      <div class="integration-item">
+        <div class="integration-image">
+          <img src="https://www.paypalobjects.com/webstatic/en_US/developer/docs/images/vault-setup-token.png" 
+               alt="Subscriptions">
+        </div>
+        <div class="integration-description">
+          <h3><a href="/subscriptions">Subscriptions</a></h3>
+          <p><strong>Create subscriptions to bill customers at regular intervals.</strong></p>
+          <p>Allow customers to add and verify payment methods without making an immediate purchase. Ideal for subscription services, trials, and account setup flows.</p>
+          <ul style="margin-top: 10px;">
+            <li>Payment method verification without charge</li>
+            <li>Setup tokens for future billing</li>
+            <li>Subscription and trial support</li>
+            <li>Account onboarding optimization</li>
           </ul>
+        </div>
+      </div>
+
+      <!-- Advanced Card Fields Integration -->
+      <div class="integration-item">
+        <div class="integration-image">
+          <img src="https://www.paypalobjects.com/webstatic/en_US/developer/docs/images/card-fields-integration.png" 
+               alt="Advanced Card Fields">
+        </div>
+        <div class="integration-description">
+          <h3><a href="/mixed-checkout">Advanced Card Fields</a></h3>
+          <p><strong>Custom Card Form Integration</strong></p>
+          <p>Highly customizable card payment forms with advanced styling options. Provides complete control over the checkout experience while maintaining PCI compliance.</p>
+          <ul style="margin-top: 10px;">
+            <li>Custom-styled card input fields</li>
+            <li>Real-time validation and formatting</li>
+            <li>PCI-compliant card processing</li>
+            <li>Brand-consistent checkout design</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Deprecated Create Billing Agreement Integration -->
+      <div class="integration-item">
+        <div class="integration-image">
+          <img src="https://www.paypalobjects.com/webstatic/en_US/developer/docs/images/vault-setup-token.png" 
+               alt="BA without Purchase">
+        </div>
+        <div class="integration-description">
+          <h3><a href="/ba_reference">Create Billing Agreement</a></h3>
+          <p><strong>Deprecated Billing Agreement (without purchase) Integration</strong></p>
+          <p>Allow customers to add and verify payment methods without making an immediate purchase. Ideal for subscription services, trials, and account setup flows.</p>
+          <ul style="margin-top: 10px;">
+            <li>PP JS SDK Intent set to "tokenize" along with "vault=true" to specify this is a billing (without purchase) transaction</li>
+            <li>Setup tokens for future billing</li>
+            <li>Subscription and trial support</li>
+            <li><a href="https://developer.paypal.com/limited-release/reference-transactions/">PayPal Developer Documentation for more details</a></li>
+          </ul>
+        </div>
+      </div>
 
     </section>
   </div>

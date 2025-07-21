@@ -1,152 +1,111 @@
 body {
   font-family: 'Arial', sans-serif;
-  background-color: #f4f4f4;
+  background-color: #f8f9fa;
   color: #333;
   margin: 0;
-  padding: 0;
+  padding: 20px;
+  line-height: 1.6;
 }
 
 .container {
-  max-width: 600px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 40px 20px;
   background-color: #fff;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 40px;
 }
 
 header h1 {
-  font-size: 2.5em;
-  margin: 0;
+  font-size: 2.8em;
+  margin: 0 0 15px 0;
+  color: #1a1a1a;
+  font-weight: 300;
 }
 
-header p {
-  font-size: 1.2em;
-  color: #666;
+.integration-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-section {
-  margin-bottom: 20px;
+.integration-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
 }
 
-section h2 {
-  font-size: 1.8em;
-  border-bottom: 2px solid #ddd;
-  padding-bottom: 10px;
+.integration-image {
+  flex: 0 0 300px;
+  margin-right: 30px;
 }
 
-section h3 {
-  font-size: 1.5em;
-  margin-top: 20px;
+.integration-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.content p,
-.content ul {
-  font-size: 0.9em;
-  padding: 0 10px;
+.integration-description {
+  flex: 1;
 }
 
-.content ul {
-  list-style-type: disc;
+.integration-item h3 a {
+  font-size: 1.4em;
+  margin: 0 0 8px 0;
+  text-decoration: none;
+  color: #0070ba;
+}
+
+.integration-item h3 a:hover {
+  color: #005ea6;
+}
+
+.integration-item p {
+  margin: 8px 0;
+}
+
+.integration-item ul {
+  margin: 12px 0;
   padding-left: 20px;
 }
 
-.content ul li {
-  margin-bottom: 10px;
+.integration-item li {
+  margin-bottom: 6px;
+  color: #555;
 }
 
-.content a {
-  color: #0070ba;
-  text-decoration: none;
-  font-weight: bold;
-}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 15px;
+  }
 
-.content a:hover {
-  text-decoration: underline;
-}
+  .integration-item {
+    flex-direction: column;
+    text-align: center;
+  }
 
-.separator {
-  border-top: 1px solid #ccc;
-  margin: 20px 0;
-}
+  .integration-image {
+    margin-right: 0;
+    margin-bottom: 20px;
+    flex: none;
+  }
 
-.or-text {
-  text-align: center;
-  font-size: 1.5em;
-  font-weight: bold;
-  margin: 20px 0;
-}
+  .integration-image img {
+    max-width: 280px;
+  }
 
-.vault-checkbox {
-  padding: 10px 0;
-}
-
-#multi-card-field-button {
-  background-color: #0070ba;
-  color: white;
-  font-size: 1.2em;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 20px;
-  transition: background-color 0.3s ease;
-}
-
-#multi-card-field-button:hover {
-  background-color: #005ea6;
-}
-
-.shipping-info,
-.billing-info {
-  margin-bottom: 20px;
-}
-
-.shipping-info h3,
-.billing-info h3 {
-  font-size: 1.5em;
-  margin-bottom: 10px;
-}
-
-.shipping-info label,
-.billing-info label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.shipping-info input[type='text'],
-.shipping-info input[type='email'],
-.billing-info input[type='text'],
-.billing-info input[type='email'] {
-  width: calc(100% - 20px);
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box;
-}
-
-.shipping-info input[type='text']:focus,
-.shipping-info input[type='email']:focus,
-.billing-info input[type='text']:focus,
-.billing-info input[type='email']:focus {
-  border-color: #0070ba;
-  outline: none;
-}
-
-.shipping-info input[type='text']::placeholder,
-.shipping-info input[type='email']::placeholder,
-.billing-info input[type='text']::placeholder,
-.billing-info input[type='email']::placeholder {
-  color: #999;
-}
-
-#billing-info {
-  display: none;
+  header h1 {
+    font-size: 2.2em;
+  }
 }

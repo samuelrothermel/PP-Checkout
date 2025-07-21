@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PayPal Billing Agreement Reference Flow</title>
+  <script src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&intent=tokenize&vault=true"></script>
+</head>
+<body>
+  <h1>PayPal Billing Agreement & Reference Transaction Flow</h1>
+  <div id="paypal-button-container"></div>
+  <div id="ba-result"></div>
+  <script>
+    // Render the PayPal button
+    paypal.Buttons({
+      createBillingAgreement: function() {
+        // Call your server to create the billing agreement token
+        return fetch('/api/ba/create-billing-token', {
+          method: 'POST'
+        })
+        .then(res => res.json())
+        .then(data => {
+          // Return the BA token for PayPal approval flow
+          return data.token_id || data.token || data.tokenId;
+        });
+      },
+      onApprove: function(data, actions) {
+        // data.billingToken is the BA token
+        document.getElementById('ba-result').innerHTML = `
+          <div>BA Token: <code>${data.billingToken}</code></div>
+          <div id="agreement-id-result"></div>
+          <div id="execute-result"></div>
+        `;
+        // Immediately creates the billing agreement after approval
+        (async function() {
+          document.getElementById('execute-result').textContent = 'Creating agreement...';
+          const res = await fetch('/api/ba/create-agreement', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: data.billingToken })
+          });
+          const result = await res.json();
+          if (result.id) {
+            document.getElementById('execute-result').textContent = 'Agreement created!';
+            document.getElementById('agreement-id-result').innerHTML =
+              `<div>Billing Agreement ID: <code>${result.id}</code></div>`;
+          } else {
+            document.getElementById('execute-result').textContent = 'Failed to create agreement: ' + JSON.stringify(result);
+          }
+        })();
+      }
+    }).render('#paypal-button-container');
+  </script>
+  <hr>
+  <h2>Create & Capture New Order with Billing Agreement ID</h2>
+  <div>
+    <label>
+      Billing Agreement ID:
+      <input type="text" id="ba-id-input" placeholder="Enter BA ID" style="width:300px;">
+    </label>
+    <label>
+      Amount (USD):
+      <input type="number" id="ba-amount-input" value="10.00" step="0.01" min="0.01" style="width:100px;">
+    </label>
+    <button id="create-order-btn">Create Order</button>
+  </div>
+  <div id="create-order-result"></div>
+  <script>
+    document.getElementById('create-order-btn').onclick = async function() {
+      const baId = document.getElementById('ba-id-input').value.trim();
+      const amount = document.getElementById('ba-amount-input').value.trim() || '10.00';
+      if (!baId) {
+        document.getElementById('create-order-result').textContent = 'Please enter a Billing Agreement ID.';
+        return;
+      }
+      document.getElementById('create-order-result').textContent = 'Processing...';
+      const res = await fetch('/api/ba/capture-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ billingAgreementId: baId, amount }),
+      });
+      const result = await res.json();
+      if (result.id) {
+        document.getElementById('create-order-result').textContent = 'Order created! ID: ' + result.id + (result.status ? ' (Status: ' + result.status + ')' : '');
+      } else {
+        document.getElementById('create-order-result').textContent = 'Failed: ' + JSON.stringify(result);
+      }
+    };
+  </script>
+</body>
+</html>

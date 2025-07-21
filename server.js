@@ -2,8 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { pingCallbackUrl } from './services/pingCallbackUrl.js'; // Import the function
-import * as paypal from './paypal-api.js';
+import { pingCallbackUrl } from './src/services/pingCallbackUrl.js'; // Import the function
+import * as paypal from './src/services/paypal-api.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8888';
 const NGROK_URL = process.env.NGROK_URL;
