@@ -18,7 +18,12 @@ export const createCheckoutOrder = async (req, res, next) => {
   console.log('Checkout Create Order Request');
   console.log('');
   try {
-    const order = await createCheckoutOrderApi(req.body);
+    // Map 'source' field from frontend to 'paymentSource' for backend
+    const orderData = {
+      ...req.body,
+      paymentSource: req.body.source || req.body.paymentSource || 'paypal',
+    };
+    const order = await createCheckoutOrderApi(orderData);
     res.json(order);
   } catch (err) {
     next(err);
