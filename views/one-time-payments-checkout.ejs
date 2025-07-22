@@ -49,15 +49,18 @@
             </div>
           </div>
           
-          <!-- Development Controls -->
+          <!-- Returning User Controls -->
           <div class="controls-section">
             <div class="checkbox-control">
-              <input type="checkbox" id="change-total-checkbox">
-              <label for="change-total-checkbox">Change Cart Total</label>
+              <input type="checkbox" id="toggle-customer-id">
+              <label for="toggle-customer-id">Returning User?</label>
             </div>
-            <div class="new-total-input" id="new-total-input">
-              <input type="number" placeholder="Enter new cart total">
-            </div>
+            <form id="customer-id-form" style="display: none;">
+              <label for="customer-id">Enter PayPal Vault v3 Customer ID:</label>
+              <input type="text" id="customer-id" name="customer-id" required />
+              <button type="submit">Submit</button>
+            </form>
+            <div id="saved-payment-methods-container"></div>
           </div>
           
           <!-- Shipping Options -->
@@ -192,6 +195,7 @@
             </div>
             
             <div class="card-fields">
+              <div id="card-name-field-container"></div>
               <div id="card-number-field-container"></div>
               <div id="card-expiry-field-container"></div>
               <div id="card-cvv-field-container"></div>

@@ -3,8 +3,7 @@ import fetch from 'node-fetch';
 // set some important variables
 const { CLIENT_ID, APP_SECRET } = process.env;
 const base = 'https://api-m.sandbox.paypal.com';
-const CALLBACK_URL =
-  'https://pp-ql-best-practices.onrender.com/api/shipping-callback';
+const CALLBACK_URL = 'https://pp-checkout.onrender.com/api/shipping-callback';
 
 // handle response from PayPal API
 const handleResponse = async response => {

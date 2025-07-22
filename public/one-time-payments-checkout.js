@@ -1,6 +1,46 @@
 document.addEventListener('DOMContentLoaded', function () {
+  const customerIdForm = document.getElementById('customer-id-form');
+  const customerIdInput = document.getElementById('customer-id');
+  const toggleCustomerIdCheckbox =
+    document.getElementById('toggle-customer-id');
+
   // Load PayPal components initially
   loadPayPalComponents();
+
+  // Event listener for the checkbox to toggle customer ID form visibility
+  toggleCustomerIdCheckbox.addEventListener('change', function () {
+    if (this.checked) {
+      customerIdForm.style.display = 'block';
+    } else {
+      customerIdForm.style.display = 'none';
+    }
+  });
+
+  // Event listener for the customer ID form submission
+  customerIdForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const customerId = customerIdInput.value;
+
+    fetch('/api/returning-user-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ customerId }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.idToken) {
+          // Reload PayPal components after receiving the idToken
+          loadPayPalComponents(data.idToken, customerId);
+        } else {
+          console.error('Failed to retrieve idToken');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  });
 
   // Add event listeners to shipping options
   document.querySelectorAll('input[name="shipping-option"]').forEach(option => {
@@ -20,30 +60,6 @@ document.addEventListener('DOMContentLoaded', function () {
         billingInfo.style.display = 'block';
       } else {
         billingInfo.style.display = 'none';
-      }
-    });
-
-  document
-    .getElementById('change-total-checkbox')
-    .addEventListener('change', function () {
-      const newTotalInput = document.getElementById('new-total-input');
-      if (this.checked) {
-        newTotalInput.style.display = 'block';
-      } else {
-        newTotalInput.style.display = 'none';
-        newTotalInput.value = '';
-      }
-    });
-
-  document
-    .getElementById('new-total-input')
-    .addEventListener('change', function () {
-      const newTotal = parseFloat(this.value).toFixed(2);
-      if (!isNaN(newTotal) && newTotal > 0) {
-        document.getElementById('cart-total').textContent = newTotal;
-        updateAmountTotal();
-        console.log('New Total:', newTotal);
-        updatePayPalMessages();
       }
     });
 });
@@ -104,14 +120,71 @@ const createOrder = (data, actions) => {
     });
 };
 
-function loadPayPalComponents() {
-  loadPayPalSDK();
+function loadPayPalComponents(idToken = null, customerId = null) {
+  console.log('idToken:', idToken);
+
+  // Fetch and display saved payment methods
+  if (customerId) {
+    fetch(`/api/payment-tokens?customer_id=${customerId}`)
+      .then(response => response.json())
+      .then(paymentTokens => {
+        displaySavedPaymentMethods(paymentTokens);
+        loadPayPalSDK(idToken);
+      })
+      .catch(error => {
+        console.error('Error fetching payment tokens:', error);
+      });
+  } else {
+    loadPayPalSDK(idToken);
+  }
 }
 
-function loadPayPalSDK() {
+function displaySavedPaymentMethods(paymentTokens) {
+  console.log('paymentTokens:', paymentTokens);
+
+  const container = document.getElementById('saved-payment-methods-container');
+  container.innerHTML = ''; // Clear any existing content
+
+  if (paymentTokens.length === 0) {
+    container.textContent = 'No saved payment methods found';
+    return;
+  } else {
+    container.textContent = 'Saved payment methods found';
+  }
+
+  // Create a list of radio buttons for each saved payment method
+  // DISABLED: This is for demonstration purposes only
+  // const list = document.createElement('ul');
+  // paymentTokens.forEach(token => {
+  //   const listItem = document.createElement('li');
+  //   const radioInput = document.createElement('input');
+  //   radioInput.type = 'radio';
+  //   radioInput.name = 'paymentToken';
+  //   radioInput.value = token.id;
+  //   listItem.appendChild(radioInput);
+
+  //   const label = document.createElement('label');
+  //   const card = token.payment_source.card || {};
+  //   const brand = card.brand || 'N/A';
+  //   const expiration = card.expiry || 'N/A';
+  //   const name = card.name || 'N/A';
+  //   const lastDigits = card.last_digits || 'N/A';
+  //   label.textContent = `Brand: ${brand}, Expiry: ${expiration}, Name: ${name}, Last 4: ${lastDigits}`;
+  //   listItem.appendChild(label);
+
+  //   list.appendChild(listItem);
+  // });
+
+  // container.appendChild(list);
+}
+
+function loadPayPalSDK(idToken) {
   const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields,messages&client-id=${clientId}&enable-funding=venmo`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
+  if (idToken) {
+    scriptElement.setAttribute('data-user-id-token', idToken);
+  }
   scriptElement.onload = () => {
     paypal
       .Buttons({
@@ -133,6 +206,9 @@ function loadPayPalSDK() {
     });
 
     if (cardField.isEligible()) {
+      const nameField = cardField.NameField();
+      nameField.render('#card-name-field-container');
+
       const numberField = cardField.NumberField();
       numberField.render('#card-number-field-container');
 
@@ -168,6 +244,12 @@ const onApprove = (data, actions) => {
       const captureId = orderData.purchase_units[0].payments.captures[0].id;
       const paymentSource = orderData.payment_source;
       const paymentSourceType = paymentSource.card ? 'card' : 'paypal';
+      const vaultStatus =
+        paymentSource[paymentSourceType]?.attributes?.vault?.status;
+      const customerId =
+        paymentSource[paymentSourceType]?.attributes?.vault?.customer?.id;
+      const paymentTokenId =
+        paymentSource[paymentSourceType]?.attributes?.vault?.id;
 
       document.getElementById(
         'capture-order-info'
@@ -175,6 +257,21 @@ const onApprove = (data, actions) => {
       document.getElementById(
         'payment-source-type-info'
       ).textContent = `Payment Source: ${paymentSourceType}`;
+      if (vaultStatus) {
+        document.getElementById(
+          'vault-status-info'
+        ).textContent = `Vault Status: ${vaultStatus}`;
+      }
+      if (customerId) {
+        document.getElementById(
+          'customer-id-info'
+        ).textContent = `Customer ID: ${customerId}`;
+      }
+      if (paymentTokenId) {
+        document.getElementById(
+          'payment-token-id-info'
+        ).textContent = `Payment Token ID: ${paymentTokenId}`;
+      }
 
       document.getElementById('capture-info-section').style.display = 'block';
       document.getElementById('payment-source-section').style.display = 'block';
@@ -211,27 +308,6 @@ function updateAmountTotal() {
   );
   const amountTotal = (cartTotal + shippingAmount).toFixed(2);
   document.getElementById('amount-total').textContent = amountTotal;
-}
-
-function reloadPayPalComponents(newTotal) {
-  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields,messages&client-id=${clientId}&enable-funding=venmo`;
-  const scriptElement = document.createElement('script');
-  scriptElement.src = scriptUrl;
-  scriptElement.onload = () => {
-    paypal
-      .Buttons({
-        style: {
-          layout: 'vertical',
-        },
-        createOrder,
-        onApprove,
-        onCancel,
-        onError,
-      })
-      .render('#paypal-button-container');
-  };
-
-  document.head.appendChild(scriptElement);
 }
 
 function updatePayPalMessages() {
