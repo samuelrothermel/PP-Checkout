@@ -3,6 +3,6 @@ export const PORT = process.env.PORT || 8888;
 export const CLIENT_ID = process.env.CLIENT_ID;
 
 export const CALLBACK_URL =
-  'https://pp-ql-best-practices.onrender.com/api/shipping-callback';
+  'https://pp-checkout.onrender.com/api/shipping-callback';
 
 console.log('Callback URL:', CALLBACK_URL);

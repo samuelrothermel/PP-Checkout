@@ -1,13 +1,12 @@
 {
-  "name": "@paypal/advanced-integration",
+  "name": "@paypal/pp-checkout",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js",
-    "start:old": "nodemon server.js"
+    "start": "nodemon app.js"
   },
   "author": "",
   "license": "Apache-2.0",
