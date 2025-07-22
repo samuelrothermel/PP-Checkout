@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Webhook Testing - PayPal Checkout</title>
+    <link rel="stylesheet" type="text/css" href="/styles/custom.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PayPal Webhook Testing</h1>
+            <p>Test and monitor PayPal webhook events</p>
+        </header>
+        
+        <div class="webhook-section">
+            <h3>Webhook Configuration</h3>
+            <div class="webhook-info">
+                <p><strong>Webhook URL:</strong> https://www.pp-checkout.onrender.com/api/webhooks</p>
+                <p><strong>Webhook ID:</strong> 20L575036K977523R</p>
+                <p><strong>Supported Events:</strong></p>
+                <ul>
+                    <li>VAULT.PAYMENT-TOKEN.CREATED</li>
+                    <li>VAULT.CREDIT-CARD.CREATED</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="webhook-section">
+            <h3>Test Webhook</h3>
+            <button id="test-webhook" class="btn btn-primary">Test Webhook Processing</button>
+            <div id="test-result" class="result-section" style="display: none;"></div>
+        </div>
+        
+        <div class="webhook-section">
+            <h3>Get Webhook Details</h3>
+            <button id="get-webhook-info" class="btn btn-secondary">Get Webhook Info</button>
+            <div id="webhook-info-result" class="result-section" style="display: none;"></div>
+        </div>
+        
+        <div class="webhook-section">
+            <h3>List Webhook Events</h3>
+            <button id="list-webhook-events" class="btn btn-secondary">List Available Events</button>
+            <div id="webhook-events-result" class="result-section" style="display: none;"></div>
+        </div>
+        
+        <div class="webhook-section">
+            <h3>Webhook Event Log</h3>
+            <p>Recent webhook events will appear here when received:</p>
+            <div id="webhook-log" class="webhook-log">
+                <p class="no-events">No webhook events received yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .webhook-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        .webhook-info {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .webhook-info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .result-section {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .webhook-log {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .no-events {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .event-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #007bff;
+            background-color: #f1f3f4;
+        }
+        
+        .event-type {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .event-time {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+
+    <script>
+        // Test webhook functionality
+        document.getElementById('test-webhook').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('test-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>Testing webhook...</p>';
+            
+            try {
+                const response = await fetch('/api/webhooks/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                resultDiv.innerHTML = `
+                    <h4>Test Result:</h4>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Get webhook info
+        document.getElementById('get-webhook-info').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('webhook-info-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>Fetching webhook info...</p>';
+            
+            try {
+                const response = await fetch('/api/webhooks/info');
+                const result = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h4>Webhook Details:</h4>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+        
+        // List webhook events
+        document.getElementById('list-webhook-events').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('webhook-events-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>Fetching available webhook events...</p>';
+            
+            try {
+                const response = await fetch('/api/webhooks/events');
+                const result = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h4>Available Webhook Events:</h4>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Auto-refresh webhook log (in a real implementation, you might use WebSockets)
+        let logCheckInterval = setInterval(() => {
+            // This would check for new webhook events in a real implementation
+            // For now, it's just a placeholder
+        }, 5000);
+    </script>
+</body>
+</html>

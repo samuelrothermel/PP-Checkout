@@ -21,7 +21,13 @@ export const createCheckoutOrder = async orderData => {
     'creating order from Checkout Page with data:',
     JSON.stringify(orderData)
   );
-  const { shippingInfo, totalAmount, paymentSource = 'paypal' } = orderData;
+  const {
+    shippingInfo,
+    billingInfo,
+    totalAmount,
+    paymentSource = 'paypal',
+    customerId,
+  } = orderData;
   const purchaseAmount = totalAmount || '100.00'; // Use provided amount or default to 100.00
   const accessToken = await generateAccessToken();
 
@@ -46,6 +52,11 @@ export const createCheckoutOrder = async orderData => {
 
   console.log('Shipping Address: ', shippingDetails);
 
+  // Log customer ID if provided
+  if (customerId) {
+    console.log('Customer ID provided for returning user:', customerId);
+  }
+
   // Build payment_source object dynamically
   let payment_source = {};
   if (paymentSource === 'paypal') {
@@ -64,6 +75,13 @@ export const createCheckoutOrder = async orderData => {
         shipping_preference: shippingPreference,
       },
     };
+
+    // Add customer ID if provided for returning users with payment methods
+    if (customerId) {
+      payment_source.paypal.attributes.customer = {
+        id: customerId,
+      };
+    }
   } else if (paymentSource === 'card') {
     payment_source.card = {
       attributes: {
@@ -74,6 +92,31 @@ export const createCheckoutOrder = async orderData => {
         },
       },
     };
+
+    // Add customer name from billing or shipping info
+    const nameInfo = billingInfo || shippingInfo;
+    if (nameInfo) {
+      payment_source.card.name = `${nameInfo.firstName} ${nameInfo.lastName}`;
+    }
+
+    // Add billing address if provided, otherwise use shipping address
+    const addressInfo = billingInfo || shippingInfo;
+    if (addressInfo) {
+      payment_source.card.billing_address = {
+        address_line_1: addressInfo.address.addressLine1,
+        admin_area_2: addressInfo.address.adminArea2,
+        admin_area_1: addressInfo.address.adminArea1,
+        postal_code: addressInfo.address.postalCode,
+        country_code: addressInfo.address.countryCode,
+      };
+    }
+
+    // Add customer ID if provided for returning users with payment methods
+    if (customerId) {
+      payment_source.card.attributes.customer = {
+        id: customerId,
+      };
+    }
   }
 
   // Build purchase unit with shipping details if provided

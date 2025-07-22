@@ -11,6 +11,7 @@ import {
   renderQlTest,
   renderBaReference,
   renderProductCart,
+  renderWebhookTesting,
 } from '../controllers/pageController.js';
 
 const router = express.Router();
@@ -27,5 +28,6 @@ router.get('/mixed-checkout', renderMixedCheckout);
 router.get('/ql-test', renderQlTest);
 router.get('/ba_reference', renderBaReference);
 router.get('/product-cart', renderProductCart);
+router.get('/webhook-testing', renderWebhookTesting);
 
 export default router;

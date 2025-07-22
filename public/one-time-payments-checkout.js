@@ -1,3 +1,7 @@
+// Global variable to store customer ID when returning user is detected
+let globalCustomerId = null;
+let hasPaymentMethods = false;
+
 document.addEventListener('DOMContentLoaded', function () {
   const customerIdForm = document.getElementById('customer-id-form');
   const customerIdInput = document.getElementById('customer-id');
@@ -13,6 +17,13 @@ document.addEventListener('DOMContentLoaded', function () {
       customerIdForm.style.display = 'block';
     } else {
       customerIdForm.style.display = 'none';
+      // Hide saved payment methods when unchecking returning user
+      const container = document.getElementById(
+        'saved-payment-methods-container'
+      );
+      container.style.display = 'none';
+      globalCustomerId = null;
+      hasPaymentMethods = false;
     }
   });
 
@@ -20,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
   customerIdForm.addEventListener('submit', function (event) {
     event.preventDefault();
     const customerId = customerIdInput.value;
+    globalCustomerId = customerId; // Store globally
 
     fetch('/api/returning-user-token', {
       method: 'POST',
@@ -81,6 +93,25 @@ const createOrder = (data, actions) => {
     },
   };
 
+  // Collect billing information if different from shipping
+  let billingInfo = null;
+  const billingToggle = document.getElementById('billing-info-toggle');
+  if (billingToggle.checked) {
+    billingInfo = {
+      firstName: document.getElementById('billing-first-name').value,
+      lastName: document.getElementById('billing-last-name').value,
+      email: document.getElementById('billing-email').value,
+      phone: document.getElementById('billing-phone').value,
+      address: {
+        addressLine1: document.getElementById('billing-address-line1').value,
+        adminArea2: document.getElementById('billing-admin-area2').value,
+        adminArea1: document.getElementById('billing-admin-area1').value,
+        postalCode: document.getElementById('billing-postal-code').value,
+        countryCode: document.getElementById('billing-country-code').value,
+      },
+    };
+  }
+
   const requestBody = {
     source: data.paymentSource, //paypal / venmo / etc.
     cart: [
@@ -94,6 +125,22 @@ const createOrder = (data, actions) => {
     ).toFixed(2),
     shippingInfo: shippingInfo,
   };
+
+  // Include billing info if different from shipping
+  if (billingInfo) {
+    requestBody.billingInfo = billingInfo;
+  }
+
+  // Include customer ID if returning user has payment methods
+  if (globalCustomerId && hasPaymentMethods) {
+    requestBody.customerId = globalCustomerId;
+    console.log(
+      'Including customer ID for returning user with payment methods:',
+      globalCustomerId
+    );
+  }
+
+  console.log('Final request body:', requestBody);
 
   return fetch('/api/checkout-orders', {
     method: 'POST',
@@ -146,36 +193,79 @@ function displaySavedPaymentMethods(paymentTokens) {
   container.innerHTML = ''; // Clear any existing content
 
   if (paymentTokens.length === 0) {
-    container.textContent = 'No saved payment methods found';
+    container.style.display = 'none';
+    hasPaymentMethods = false;
     return;
   } else {
-    container.textContent = 'Saved payment methods found';
+    hasPaymentMethods = true;
+    container.style.display = 'block';
   }
 
-  // Create a list of radio buttons for each saved payment method
-  // DISABLED: This is for demonstration purposes only
-  // const list = document.createElement('ul');
-  // paymentTokens.forEach(token => {
-  //   const listItem = document.createElement('li');
-  //   const radioInput = document.createElement('input');
-  //   radioInput.type = 'radio';
-  //   radioInput.name = 'paymentToken';
-  //   radioInput.value = token.id;
-  //   listItem.appendChild(radioInput);
+  // Create the section wrapper
+  const sectionDiv = document.createElement('div');
+  sectionDiv.className = 'checkout-section';
 
-  //   const label = document.createElement('label');
-  //   const card = token.payment_source.card || {};
-  //   const brand = card.brand || 'N/A';
-  //   const expiration = card.expiry || 'N/A';
-  //   const name = card.name || 'N/A';
-  //   const lastDigits = card.last_digits || 'N/A';
-  //   label.textContent = `Brand: ${brand}, Expiry: ${expiration}, Name: ${name}, Last 4: ${lastDigits}`;
-  //   listItem.appendChild(label);
+  // Create a header
+  const header = document.createElement('h4');
+  header.textContent = 'Your Saved Payment Methods';
+  header.style.marginBottom = '15px';
+  sectionDiv.appendChild(header);
 
-  //   list.appendChild(listItem);
-  // });
+  // Create a list of saved payment methods
+  const list = document.createElement('div');
+  list.className = 'saved-payment-methods-list';
 
-  // container.appendChild(list);
+  paymentTokens.forEach((token, index) => {
+    const methodDiv = document.createElement('div');
+    methodDiv.className = 'saved-payment-method';
+
+    // Extract payment method details
+    let paymentSource = 'Unknown';
+    let brand = 'N/A';
+    let expiration = 'N/A';
+    let lastDigits = 'N/A';
+
+    if (token.payment_source.card) {
+      paymentSource = 'Card';
+      const card = token.payment_source.card;
+      brand = card.brand || 'N/A';
+      expiration = card.expiry || 'N/A';
+      lastDigits = card.last_digits || 'N/A';
+    } else if (token.payment_source.paypal) {
+      paymentSource = 'PayPal';
+      const paypal = token.payment_source.paypal;
+      brand = 'PayPal';
+      // PayPal doesn't typically have expiration or last digits
+      expiration = 'N/A';
+      lastDigits = 'N/A';
+    }
+
+    // Create the display content
+    const methodInfo = document.createElement('div');
+    methodInfo.className = 'saved-payment-method-details';
+    methodInfo.innerHTML = `
+      <div class="saved-payment-method-brand">${paymentSource} - ${brand}</div>
+      <div class="saved-payment-method-meta">
+        ${
+          paymentSource === 'Card'
+            ? `**** **** **** ${lastDigits} | Exp: ${expiration}`
+            : 'PayPal Account'
+        }
+      </div>
+    `;
+
+    // Create token ID display (for reference)
+    const tokenId = document.createElement('div');
+    tokenId.className = 'saved-payment-method-token';
+    tokenId.textContent = `Token: ${token.id.substring(0, 12)}...`;
+
+    methodDiv.appendChild(methodInfo);
+    methodDiv.appendChild(tokenId);
+    list.appendChild(methodDiv);
+  });
+
+  sectionDiv.appendChild(list);
+  container.appendChild(sectionDiv);
 }
 
 function loadPayPalSDK(idToken) {

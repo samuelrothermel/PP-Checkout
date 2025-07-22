@@ -503,6 +503,90 @@ header h1 {
   border-top: 1px solid #e9ecef;
 }
 
+/* Saved Payment Methods Styles */
+#saved-payment-methods-container {
+  margin-bottom: 0;
+}
+
+#saved-payment-methods-container .checkout-section {
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+#saved-payment-methods-container h4 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.saved-payment-methods-list {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+.saved-payment-method {
+  padding: 12px;
+  background-color: #f9f9f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s ease;
+}
+
+.saved-payment-method:last-child {
+  border-bottom: none;
+}
+
+.saved-payment-method:hover {
+  background-color: #f0f8ff !important;
+}
+
+.saved-payment-method-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.saved-payment-method-details {
+  flex: 1;
+}
+
+.saved-payment-method-brand {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.saved-payment-method-meta {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.saved-payment-method-token {
+  font-size: 0.8em;
+  color: #999;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .saved-payment-method {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .saved-payment-method-token {
+    text-align: left;
+    margin-top: 5px;
+  }
+}
+
 /* Checkout Responsive Design */
 @media (max-width: 768px) {
   .checkout-layout {

@@ -19,6 +19,12 @@ import {
   createBillingAgreement,
   captureOrderWithBillingAgreement,
 } from '../controllers/billingController.js';
+import {
+  handleWebhook,
+  getWebhookInfo,
+  getWebhookEvents,
+  testWebhook,
+} from '../controllers/webhookController.js';
 import { handleShippingCallback } from '../services/shippingCallback.js';
 
 const router = express.Router();
@@ -45,5 +51,11 @@ router.post('/ba/capture-order', captureOrderWithBillingAgreement);
 
 // Shipping callback route
 router.post('/shipping-callback', handleShippingCallback);
+
+// Webhook routes
+router.post('/webhooks', handleWebhook);
+router.get('/webhooks/info', getWebhookInfo);
+router.get('/webhooks/events', getWebhookEvents);
+router.post('/webhooks/test', testWebhook);
 
 export default router;

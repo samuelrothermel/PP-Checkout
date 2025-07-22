@@ -1,4 +1,10 @@
 import * as paypal from '../services/paypal-api.js';
+import {
+  createVaultSetupToken as createVaultSetupTokenApi,
+  createVaultPaymentToken as createVaultPaymentTokenApi,
+  createPaymentTokenFromCustomerId as createPaymentTokenFromCustomerIdApi,
+  fetchPaymentTokens,
+} from '../services/tokensApi.js';
 
 // Create vault setup token
 export const createVaultSetupToken = async (req, res, next) => {
@@ -6,7 +12,7 @@ export const createVaultSetupToken = async (req, res, next) => {
   console.log('');
   try {
     const { paymentSource } = req.body;
-    const vaultSetupToken = await paypal.createVaultSetupToken({
+    const vaultSetupToken = await createVaultSetupTokenApi({
       paymentSource,
     });
     res.json(vaultSetupToken);
@@ -21,7 +27,7 @@ export const createVaultPaymentToken = async (req, res, next) => {
   console.log('');
   try {
     const { vaultSetupToken } = req.params;
-    const paymentToken = await paypal.createVaultPaymentToken(vaultSetupToken);
+    const paymentToken = await createVaultPaymentTokenApi(vaultSetupToken);
     res.json(paymentToken);
   } catch (err) {
     next(err);
@@ -34,9 +40,7 @@ export const createPaymentTokenFromCustomerId = async (req, res, next) => {
   console.log('');
   const { customerId } = req.body;
   try {
-    const paymentToken = await paypal.createPaymentTokenFromCustomerId(
-      customerId
-    );
+    const paymentToken = await createPaymentTokenFromCustomerIdApi(customerId);
     res.json(paymentToken);
   } catch (err) {
     next(err);
@@ -49,7 +53,7 @@ export const getPaymentTokens = async (req, res, next) => {
   console.log('');
   const customerId = req.query.customer_id;
   try {
-    const paymentTokens = await paypal.fetchPaymentTokens(customerId);
+    const paymentTokens = await fetchPaymentTokens(customerId);
     res.json(paymentTokens);
   } catch (err) {
     next(err);
