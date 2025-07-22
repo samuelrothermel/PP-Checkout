@@ -19,7 +19,7 @@ import {
   createBillingAgreement,
   captureOrderWithBillingAgreement,
 } from '../controllers/billingController.js';
-import { handleShippingCallback } from '../../services/shippingService.js';
+import { handleShippingCallback } from '../services/shippingCallback.js';
 
 const router = express.Router();
 

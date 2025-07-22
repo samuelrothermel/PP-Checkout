@@ -49,7 +49,7 @@ function loadPayPalComponents() {
 }
 
 function loadPayPalSDK() {
-  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields,messages&client-id=${clientId}&enable-funding=venmo`;
+  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,messages&client-id=${clientId}&enable-funding=venmo&disable-funding=card`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   scriptElement.onload = () => {
@@ -124,19 +124,19 @@ const onError = err => {
 };
 
 document
-  .getElementById('change-total-checkbox')
+  .getElementById('returning-user-checkbox')
   .addEventListener('change', function () {
-    const newTotalInput = document.getElementById('new-total-input');
+    const customerIdInput = document.getElementById('customer-id-input');
     if (this.checked) {
-      newTotalInput.style.display = 'block';
+      customerIdInput.style.display = 'block';
     } else {
-      newTotalInput.style.display = 'none';
-      newTotalInput.value = '';
+      customerIdInput.style.display = 'none';
+      customerIdInput.value = '';
     }
   });
 
 document
-  .getElementById('new-total-input')
+  .getElementById('customer-id-input')
   .addEventListener('change', function () {
     const newTotal = parseFloat(this.value).toFixed(2);
     if (!isNaN(newTotal) && newTotal > 0) {

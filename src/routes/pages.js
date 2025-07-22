@@ -10,6 +10,7 @@ import {
   renderMixedCheckout,
   renderQlTest,
   renderBaReference,
+  renderProductCart,
 } from '../controllers/pageController.js';
 
 const router = express.Router();
@@ -25,5 +26,6 @@ router.get('/subscriptions-api', renderSubscriptionsApi);
 router.get('/mixed-checkout', renderMixedCheckout);
 router.get('/ql-test', renderQlTest);
 router.get('/ba_reference', renderBaReference);
+router.get('/product-cart', renderProductCart);
 
 export default router;

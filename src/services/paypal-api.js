@@ -183,7 +183,7 @@ export const createUpstreamOrder = async totalAmount => {
   return handleResponse(response);
 };
 
-// create upstream QL order request (server-side shipping callbacks)
+// create upstream order request (server-side shipping callbacks)
 export const createUpstreamQlOrder = async totalAmount => {
   const accessToken = await generateAccessToken();
   const payload = {

@@ -3,60 +3,117 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
-    <title>One-Time Payments - Product/Cart Page</title>
+    <title>Product Cart - Acacia Salad Bowl</title>
   </head>
 
   <body>
     <div class="container">
-      <section>
-        <div class="or-text">One-Time Payments - Product/Cart Page</div>
-        
-        <!-- Product Image -->
-        <div style="text-align: center; margin: 20px 0;">
+      <header>
+        <h1>Product/Cart Demo</h1>
+      </header>
+      
+      <div class="product-layout">
+        <!-- Left Side: Image, Title, Total -->
+        <div class="product-left">
           <img src="https://assets.wsimgs.com/wsimgs/ab/images/dp/wcm/202525/0148/img115z.jpg" 
-               alt="Product Image" 
-               style="max-width: 300px; width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+               alt="Acacia Salad Bowl" 
+               class="product-image">
+          
+          <h2 class="product-title">Acacia Salad Bowl</h2>
+          <div class="product-price">$<span id="cart-total">50.00</span></div>
+          
+          <div class="cart-details">
+            <div class="cart-row">
+              <span>Subtotal:</span>
+              <span>$<span id="cart-total">50.00</span></span>
+            </div>
+            <div class="cart-row">
+              <span>Shipping:</span>
+              <span>$<span id="shipping-amount">0.00</span></span>
+            </div>
+            <div class="cart-row total">
+              <span>Pre-Tax Total:</span>
+              <span>$<span id="amount-total">50.00</span></span>
+            </div>
+          </div>
+          
+          <!-- PayPal Pay Later Messages -->
+          <div style="margin-top: 20px;">
+            <div
+              data-pp-message
+              data-pp-style-layout="text"
+              data-pp-style-logo-type="inline"
+              data-pp-style-text-color="black"
+              data-pp-style-text-size="12"
+              data-pp-amount="50"
+              data-pp-placement="cart">
+            </div>
+          </div>
+          
+          <!-- Development Controls -->
+          <div class="controls-section">
+            <div class="checkbox-control">
+              <input type="checkbox" id="returning-user-checkbox">
+              <label for="returning-user-checkbox">Returning User Flow</label>
+            </div>
+            <div class="customer-id-input" id="customer-id-input">
+              <input type="number" placeholder="Enter Customer ID" step="1" min="1">
+            </div>
+          </div>
         </div>
-        <h1><center>Acacia Salad Bowl</center></h1>
-        <h2>Pre-Tax Total: $50</span></h2>
-  
         
-        <div
-        data-pp-message
-        data-pp-style-layout="text"
-        data-pp-style-logo-type="inline"
-        data-pp-style-text-color="black"
-        data-pp-style-text-size="12"
-        data-pp-amount="50"
-        data-pp-placement="cart">
+        <!-- Right Side: Product Description and PayPal Buttons -->
+        <div class="product-right">
+          <div class="product-description">
+            <h3>Product Description</h3>
+            <p>
+              This beautiful acacia wood salad bowl brings natural elegance to your dining experience. 
+              Handcrafted from sustainably sourced acacia wood, each bowl features unique grain patterns 
+              that make it truly one-of-a-kind.
+            </p>
+            <p>
+              Perfect for serving salads, fruits, or as a decorative centerpiece, this bowl combines 
+              functionality with style. The smooth finish and ergonomic design make it both beautiful 
+              and practical for everyday use.
+            </p>
+            <ul>
+              <li>Made from sustainable acacia wood</li>
+              <li>Unique natural grain patterns</li>
+              <li>Food-safe finish</li>
+              <li>Easy to clean and maintain</li>
+              <li>Dimensions: 12" diameter x 4" height</li>
+              <li>Hand wash recommended</li>
+            </ul>
+          </div>
+          
+          <div class="paypal-section">
+            <div id="paypal-button-container" class="paypal-button-container"></div>
+          </div>
+        </div>
       </div>
-        <div class="separator"></div>
-        <div id="order-info-section" style="display: none;">
-            <div class="separator"></div>
+      
+      <!-- Order Information Sections -->
+      <div class="info-sections">
+        <div id="order-info-section" class="info-section" style="display: none;">
           <div id="create-order-info"></div>
         </div>
-        <div id="capture-info-section" style="display: none;">
-            <div class="separator"></div>
+        <div id="capture-info-section" class="info-section" style="display: none;">
           <div id="capture-order-info"></div>
         </div>
-        <div id="payment-source-section" style="display: none;">
-            <div class="separator"></div>
-            <div id="payment-source-type-info"></div>
+        <div id="payment-source-section" class="info-section" style="display: none;">
+          <div id="payment-source-type-info"></div>
           <div id="vault-payment-info"></div>
           <div id="vault-status-info"></div>
           <div id="customer-id-info"></div>
           <div id="payment-token-id-info"></div>
-          <p>Check Console Log full API Response</p>
+          <p>Check Console Log for full API Response</p>
         </div>
-        <!-- <div id="saved-payment-methods-container"></div> -->
-        <!-- <div class="separator"></div> -->
-        <div id="paypal-button-container" class="paypal-button-container"></div>
-      </section>
-      
+      </div>
     </div>
+    
     <script>
       const clientId = '<%= clientId %>';
     </script>
-    <script src="/one-time-payments-cart-ql.js"></script>
+    <script src="/product-cart.js"></script>
   </body>
 </html>

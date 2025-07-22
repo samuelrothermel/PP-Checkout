@@ -24,3 +24,4 @@ export const renderSubscriptionsApi = renderPage('subscriptions-api');
 export const renderMixedCheckout = renderPage('mixed-checkout');
 export const renderQlTest = renderPage('ql-test');
 export const renderBaReference = renderPage('ba_reference');
+export const renderProductCart = renderPage('product-cart');

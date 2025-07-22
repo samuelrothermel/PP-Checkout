@@ -1,4 +1,4 @@
-import * as paypal from '../../services/paypal-api.js';
+import * as paypal from '../services/paypal-api.js';
 
 // Create order request
 export const createOrder = async (req, res, next) => {

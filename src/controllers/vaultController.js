@@ -1,4 +1,4 @@
-import * as paypal from '../../services/paypal-api.js';
+import * as paypal from '../services/paypal-api.js';
 
 // Create vault setup token
 export const createVaultSetupToken = async (req, res, next) => {
