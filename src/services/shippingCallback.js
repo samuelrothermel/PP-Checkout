@@ -40,24 +40,9 @@ export const handleShippingCallback = async (req, res) => {
       purchase_units[0].amount.breakdown.item_total.value
     );
 
-    // Determine base shipping amounts for both options
-    const baseFreeShipping = 0;
-    const baseExpressShipping = parseFloat(
-      purchase_units[0].amount.breakdown.shipping.value
-    );
-
-    // Calculate surcharge
-    const customerState = shipping_address?.admin_area_1 || null;
-    console.log('Customer State:', customerState);
-
-    let shippingSurcharge = 0;
-    if (customerState === 'CA') {
-      shippingSurcharge = 10;
-    }
-
-    // Add surcharge to both shipping options
-    const freeShippingAmount = baseFreeShipping + shippingSurcharge;
-    const expressShippingAmount = baseExpressShipping + shippingSurcharge;
+    // Define shipping amounts for both options
+    const freeShippingAmount = 0;
+    const expressShippingAmount = 10; // Express shipping is $10.00
 
     // Determine which shipping option is selected
     let selectedShippingAmount = expressShippingAmount; // default to express

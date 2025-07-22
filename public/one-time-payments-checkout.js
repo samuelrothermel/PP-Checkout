@@ -133,9 +133,6 @@ function loadPayPalSDK() {
     });
 
     if (cardField.isEligible()) {
-      const nameField = cardField.NameField();
-      nameField.render('#card-name-field-container');
-
       const numberField = cardField.NumberField();
       numberField.render('#card-number-field-container');
 

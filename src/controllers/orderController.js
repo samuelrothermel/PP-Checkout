@@ -1,4 +1,5 @@
 import * as paypal from '../services/paypal-api.js';
+import { createCheckoutOrder as createCheckoutOrderApi } from '../services/ordersApi.js';
 
 // Create order request
 export const createOrder = async (req, res, next) => {
@@ -17,7 +18,7 @@ export const createCheckoutOrder = async (req, res, next) => {
   console.log('Checkout Create Order Request');
   console.log('');
   try {
-    const order = await paypal.createCheckoutOrder(req.body);
+    const order = await createCheckoutOrderApi(req.body);
     res.json(order);
   } catch (err) {
     next(err);
