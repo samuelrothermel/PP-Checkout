@@ -1,32 +1,6 @@
-const createOrder = (data, actions) => {
-  console.log('Client-Side Create Order Raw Request: ', data);
-  return fetch('/api/checkout-orders', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      totalAmount: '10.00', // or whatever amount you want
-      // add other fields as needed
-    }),
-  })
-    .then(response => response.json())
-    .then(orderData => {
-      console.log('Create Order Raw Response: ', orderData);
-      const orderId = orderData.id;
-      document.getElementById(
-        'create-order-info'
-      ).textContent = `Order ID: ${orderId}`;
-      document.getElementById('order-info-section').style.display = 'block';
-      return orderId;
-    })
-    .catch(error => {
-      document.getElementById(
-        'create-order-info'
-      ).textContent = `Error: ${error}`;
-      document.getElementById('order-info-section').style.display = 'block';
-    });
-};
+// Global variable to store customer ID when returning user is detected
+let globalCustomerId = null;
+let hasPaymentMethods = false;
 
 document.addEventListener('DOMContentLoaded', function () {
   const customerIdForm = document.getElementById('customer-id-form');
@@ -43,6 +17,13 @@ document.addEventListener('DOMContentLoaded', function () {
       customerIdForm.style.display = 'block';
     } else {
       customerIdForm.style.display = 'none';
+      // Hide saved payment methods when unchecking returning user
+      const container = document.getElementById(
+        'saved-payment-methods-container'
+      );
+      container.style.display = 'none';
+      globalCustomerId = null;
+      hasPaymentMethods = false;
     }
   });
 
@@ -50,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
   customerIdForm.addEventListener('submit', function (event) {
     event.preventDefault();
     const customerId = customerIdInput.value;
+    globalCustomerId = customerId; // Store globally
 
     fetch('/api/returning-user-token', {
       method: 'POST',
@@ -71,7 +53,119 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('Error:', error);
       });
   });
+
+  // Add event listeners to shipping options
+  document.querySelectorAll('input[name="shipping-option"]').forEach(option => {
+    option.addEventListener('change', function () {
+      const shippingAmount = parseFloat(this.value).toFixed(2);
+      document.getElementById('shipping-amount').textContent = shippingAmount;
+      updateAmountTotal();
+      updatePayPalMessages();
+    });
+  });
+
+  document
+    .getElementById('billing-info-toggle')
+    .addEventListener('change', function () {
+      const billingInfo = document.getElementById('billing-info');
+      if (this.checked) {
+        billingInfo.style.display = 'block';
+      } else {
+        billingInfo.style.display = 'none';
+      }
+    });
 });
+
+const createOrder = (data, actions) => {
+  console.log('Client-Side Create Order Raw Request: ', data);
+
+  const shippingInfo = {
+    firstName: document.getElementById('shipping-first-name').value,
+    lastName: document.getElementById('shipping-last-name').value,
+    email: document.getElementById('shipping-email').value,
+    phone: document.getElementById('shipping-phone').value,
+    address: {
+      addressLine1: document.getElementById('shipping-address-line1').value,
+      adminArea2: document.getElementById('shipping-admin-area2').value,
+      adminArea1: document.getElementById('shipping-admin-area1').value,
+      postalCode: document.getElementById('shipping-postal-code').value,
+      countryCode: document.getElementById('shipping-country-code').value,
+    },
+  };
+
+  // Collect billing information if different from shipping
+  let billingInfo = null;
+  const billingToggle = document.getElementById('billing-info-toggle');
+  if (billingToggle.checked) {
+    billingInfo = {
+      firstName: document.getElementById('billing-first-name').value,
+      lastName: document.getElementById('billing-last-name').value,
+      email: document.getElementById('billing-email').value,
+      phone: document.getElementById('billing-phone').value,
+      address: {
+        addressLine1: document.getElementById('billing-address-line1').value,
+        adminArea2: document.getElementById('billing-admin-area2').value,
+        adminArea1: document.getElementById('billing-admin-area1').value,
+        postalCode: document.getElementById('billing-postal-code').value,
+        countryCode: document.getElementById('billing-country-code').value,
+      },
+    };
+  }
+
+  const requestBody = {
+    source: data.paymentSource, //paypal / venmo / etc.
+    cart: [
+      {
+        sku: '123456789',
+        quantity: '1',
+      },
+    ],
+    totalAmount: parseFloat(
+      document.getElementById('amount-total').textContent
+    ).toFixed(2),
+    shippingInfo: shippingInfo,
+  };
+
+  // Include billing info if different from shipping
+  if (billingInfo) {
+    requestBody.billingInfo = billingInfo;
+  }
+
+  // Include customer ID if returning user has payment methods
+  if (globalCustomerId && hasPaymentMethods) {
+    requestBody.customerId = globalCustomerId;
+    console.log(
+      'Including customer ID for returning user with payment methods:',
+      globalCustomerId
+    );
+  }
+
+  console.log('Final request body:', requestBody);
+
+  return fetch('/api/checkout-orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  })
+    .then(response => response.json())
+    .then(orderData => {
+      console.log('Create Order Raw Response: ', orderData);
+      const orderId = orderData.id;
+      document.getElementById(
+        'create-order-info'
+      ).textContent = `Created Order ID: ${orderId}`;
+      document.getElementById('order-info-section').style.display = 'block';
+      return orderId;
+    })
+    .catch(error => {
+      document.getElementById(
+        'create-order-info'
+      ).textContent = `Error: ${error}`;
+      document.getElementById('order-info-section').style.display = 'block';
+    });
+};
 
 function loadPayPalComponents(idToken = null, customerId = null) {
   console.log('idToken:', idToken);
@@ -99,40 +193,83 @@ function displaySavedPaymentMethods(paymentTokens) {
   container.innerHTML = ''; // Clear any existing content
 
   if (paymentTokens.length === 0) {
-    container.textContent = 'No saved payment methods found';
+    container.style.display = 'none';
+    hasPaymentMethods = false;
     return;
   } else {
-    container.textContent = 'Saved payment methods found';
+    hasPaymentMethods = true;
+    container.style.display = 'block';
   }
 
-  // Create a list of radio buttons for each saved payment method
-  // DISABLED: This is for demonstration purposes only
-  // const list = document.createElement('ul');
-  // paymentTokens.forEach(token => {
-  //   const listItem = document.createElement('li');
-  //   const radioInput = document.createElement('input');
-  //   radioInput.type = 'radio';
-  //   radioInput.name = 'paymentToken';
-  //   radioInput.value = token.id;
-  //   listItem.appendChild(radioInput);
+  // Create the section wrapper
+  const sectionDiv = document.createElement('div');
+  sectionDiv.className = 'checkout-section';
 
-  //   const label = document.createElement('label');
-  //   const card = token.payment_source.card || {};
-  //   const brand = card.brand || 'N/A';
-  //   const expiration = card.expiry || 'N/A';
-  //   const name = card.name || 'N/A';
-  //   const lastDigits = card.last_digits || 'N/A';
-  //   label.textContent = `Brand: ${brand}, Expiry: ${expiration}, Name: ${name}, Last 4: ${lastDigits}`;
-  //   listItem.appendChild(label);
+  // Create a header
+  const header = document.createElement('h4');
+  header.textContent = 'Your Saved Payment Methods';
+  header.style.marginBottom = '15px';
+  sectionDiv.appendChild(header);
 
-  //   list.appendChild(listItem);
-  // });
+  // Create a list of saved payment methods
+  const list = document.createElement('div');
+  list.className = 'saved-payment-methods-list';
 
-  // container.appendChild(list);
+  paymentTokens.forEach((token, index) => {
+    const methodDiv = document.createElement('div');
+    methodDiv.className = 'saved-payment-method';
+
+    // Extract payment method details
+    let paymentSource = 'Unknown';
+    let brand = 'N/A';
+    let expiration = 'N/A';
+    let lastDigits = 'N/A';
+
+    if (token.payment_source.card) {
+      paymentSource = 'Card';
+      const card = token.payment_source.card;
+      brand = card.brand || 'N/A';
+      expiration = card.expiry || 'N/A';
+      lastDigits = card.last_digits || 'N/A';
+    } else if (token.payment_source.paypal) {
+      paymentSource = 'PayPal';
+      const paypal = token.payment_source.paypal;
+      brand = 'PayPal';
+      // PayPal doesn't typically have expiration or last digits
+      expiration = 'N/A';
+      lastDigits = 'N/A';
+    }
+
+    // Create the display content
+    const methodInfo = document.createElement('div');
+    methodInfo.className = 'saved-payment-method-details';
+    methodInfo.innerHTML = `
+      <div class="saved-payment-method-brand">${paymentSource} - ${brand}</div>
+      <div class="saved-payment-method-meta">
+        ${
+          paymentSource === 'Card'
+            ? `**** **** **** ${lastDigits} | Exp: ${expiration}`
+            : 'PayPal Account'
+        }
+      </div>
+    `;
+
+    // Create token ID display (for reference)
+    const tokenId = document.createElement('div');
+    tokenId.className = 'saved-payment-method-token';
+    tokenId.textContent = `Token: ${token.id.substring(0, 12)}...`;
+
+    methodDiv.appendChild(methodInfo);
+    methodDiv.appendChild(tokenId);
+    list.appendChild(methodDiv);
+  });
+
+  sectionDiv.appendChild(list);
+  container.appendChild(sectionDiv);
 }
 
 function loadPayPalSDK(idToken) {
-  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields&client-id=${clientId}&enable-funding=venmo`;
+  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields,messages&client-id=${clientId}&enable-funding=venmo`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   if (idToken) {
@@ -159,9 +296,6 @@ function loadPayPalSDK(idToken) {
     });
 
     if (cardField.isEligible()) {
-      const nameField = cardField.NameField();
-      nameField.render('#card-name-field-container');
-
       const numberField = cardField.NumberField();
       numberField.render('#card-number-field-container');
 
@@ -183,14 +317,17 @@ function loadPayPalSDK(idToken) {
 }
 
 const onApprove = (data, actions) => {
-  console.log('onApprove capture triggered');
+  console.log('onApprove callback triggered');
 
   return fetch(`/api/orders/${data.orderID}/capture`, {
     method: 'POST',
   })
     .then(response => response.json())
     .then(orderData => {
-      console.log('Capture Order Raw Response: ', orderData);
+      console.log(
+        'Capture Order Response: ',
+        JSON.stringify(orderData, null, 2)
+      );
       const captureId = orderData.purchase_units[0].payments.captures[0].id;
       const paymentSource = orderData.payment_source;
       const paymentSourceType = paymentSource.card ? 'card' : 'paypal';
@@ -229,7 +366,7 @@ const onApprove = (data, actions) => {
     .catch(error => {
       document.getElementById(
         'capture-info-section'
-      ).textContent = `ERROR: ${error}`;
+      ).textContent = `Capture Order ERROR: ${error}`;
     });
 };
 
@@ -240,3 +377,34 @@ const onCancel = (data, actions) => {
 const onError = err => {
   console.error(err);
 };
+
+const onShippingOptionsChange = (data, actions) => {
+  console.log('Shipping Options Change:', data);
+};
+
+const onShippingAddressChange = (data, actions) => {
+  console.log('Shipping Address Change:', data);
+};
+
+function updateAmountTotal() {
+  const cartTotal = parseFloat(
+    document.getElementById('cart-total').textContent
+  );
+  const shippingAmount = parseFloat(
+    document.getElementById('shipping-amount').textContent
+  );
+  const amountTotal = (cartTotal + shippingAmount).toFixed(2);
+  document.getElementById('amount-total').textContent = amountTotal;
+}
+
+function updatePayPalMessages() {
+  const amount = parseFloat(
+    document.getElementById('amount-total').textContent
+  ).toFixed(2);
+  console.log('updatePayPalMessages amount:', amount);
+  const messageContainer = document.querySelector('[data-pp-message]');
+  messageContainer.setAttribute('data-pp-amount', amount);
+  paypal.Messages().render(messageContainer);
+}
+
+updateAmountTotal();

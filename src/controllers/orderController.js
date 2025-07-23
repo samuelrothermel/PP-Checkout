@@ -1,4 +1,3 @@
-import * as paypal from '../services/paypal-api.js';
 import { createCheckoutOrder as createCheckoutOrderApi } from '../services/ordersApi.js';
 
 // Create order request

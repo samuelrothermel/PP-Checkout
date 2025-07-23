@@ -2,13 +2,8 @@ import express from 'express';
 import {
   renderIndex,
   renderCheckout,
+  renderSubscriptions,
   renderSaveWoPurchase,
-  renderOneTimePaymentsCart,
-  renderOneTimePaymentsCartQl,
-  renderOneTimePaymentsCheckout,
-  renderSubscriptionsApi,
-  renderMixedCheckout,
-  renderQlTest,
   renderBaReference,
   renderProductCart,
   renderWebhookTesting,
@@ -18,16 +13,11 @@ const router = express.Router();
 
 // Page routes
 router.get('/', renderIndex);
+router.get('/product-cart', renderProductCart);
 router.get('/checkout', renderCheckout);
 router.get('/save-wo-purchase', renderSaveWoPurchase);
-router.get('/one-time-payments-cart', renderOneTimePaymentsCart);
-router.get('/one-time-payments-cart-ql', renderOneTimePaymentsCartQl);
-router.get('/one-time-payments-checkout', renderOneTimePaymentsCheckout);
-router.get('/subscriptions-api', renderSubscriptionsApi);
-router.get('/mixed-checkout', renderMixedCheckout);
-router.get('/ql-test', renderQlTest);
+router.get('/subscriptions', renderSubscriptions);
 router.get('/ba_reference', renderBaReference);
-router.get('/product-cart', renderProductCart);
 router.get('/webhook-testing', renderWebhookTesting);
 
 export default router;

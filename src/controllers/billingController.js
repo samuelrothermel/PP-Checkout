@@ -1,5 +1,3 @@
-import * as paypal from '../services/paypal-api.js';
-
 // Create Billing Agreement Token
 export const createBillingToken = async (req, res, next) => {
   try {

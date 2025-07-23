@@ -1,8 +1,9 @@
 import fetch from 'node-fetch';
-import { generateAccessToken } from './paypal-api.js';
+import { generateAccessToken } from './authApi.js';
 
 // set some important variables
 const base = 'https://api-m.sandbox.paypal.com';
+const CALLBACK_URL = 'https://pp-checkout.onrender.com/api/shipping-callback';
 
 // handle response from PayPal API
 const handleResponse = async response => {
@@ -155,3 +156,138 @@ export const createCheckoutOrder = async orderData => {
 
   return handleResponse(response);
 };
+
+// create upstream order request (server-side shipping callbacks)
+export const createUpstreamQlOrder = async totalAmount => {
+  const accessToken = await generateAccessToken();
+  const payload = {
+    intent: 'CAPTURE',
+    payment_source: {
+      paypal: {
+        experience_context: {
+          user_action: 'PAY_NOW',
+          shipping_preference: 'GET_FROM_FILE',
+          return_url: 'https://pp-checkout.onrender.com/product-cart',
+          cancel_url: 'https://pp-checkout.onrender.com/product-cart',
+          app_switch_preference: {
+            launch_paypal_app: true,
+          },
+          order_update_callback_config: {
+            callback_events: ['SHIPPING_ADDRESS'],
+            // callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'],
+            callback_url: CALLBACK_URL,
+          },
+        },
+      },
+    },
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: totalAmount,
+          breakdown: {
+            item_total: {
+              currency_code: 'USD',
+              value: totalAmount,
+            },
+            shipping: {
+              currency_code: 'USD',
+              value: '0.00',
+            },
+          },
+        },
+        shipping: {
+          options: [
+            {
+              id: '1',
+              amount: {
+                currency_code: 'USD',
+                value: '0.00',
+              },
+              type: 'SHIPPING',
+              label: 'Free Shipping',
+              selected: true,
+            },
+            {
+              id: '2',
+              amount: {
+                currency_code: 'USD',
+                value: '10.00',
+              },
+              type: 'SHIPPING',
+              label: 'Express Shipping',
+              selected: false,
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const response = await fetch(`${base}/v2/checkout/orders`, {
+    method: 'post',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  console.log('Create Order Response: ', await response.clone().json());
+  return await handleResponse(response);
+};
+
+// capture payment request
+export const capturePayment = async orderId => {
+  // console.log('capturing payment with order ID:', orderId);
+  const accessToken = await generateAccessToken();
+  const url = `${base}/v2/checkout/orders/${orderId}/capture`;
+  const response = await fetch(url, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return handleResponse(response);
+};
+
+// Create order with Billing Agreement ID
+export async function createOrderWithBillingAgreement(
+  billingAgreementId,
+  amount = '10.00'
+) {
+  const accessToken = await generateAccessToken();
+  console.log('billingAgreementId: ', billingAgreementId);
+  const payload = {
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: amount,
+        },
+      },
+    ],
+    payment_source: {
+      token: {
+        id: billingAgreementId,
+        type: 'BILLING_AGREEMENT',
+      },
+    },
+  };
+  console.log('Order payload:', JSON.stringify(payload, null, 2));
+  const response = await fetch(
+    'https://api-m.sandbox.paypal.com/v2/checkout/orders',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+  console.log('Create Order with Billing Agreement Response: ', response);
+  return handleResponse(response);
+}

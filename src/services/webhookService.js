@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { generateAccessToken } from './paypal-api.js';
+import { generateAccessToken } from './authApi.js';
 import { WEBHOOK_ID } from '../config/constants.js';
 
 // PayPal webhook configuration

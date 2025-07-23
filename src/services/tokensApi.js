@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { generateAccessToken } from './paypal-api.js';
+import { generateAccessToken } from './authApi.js';
 
 // set some important variables
 const base = 'https://api-m.sandbox.paypal.com';

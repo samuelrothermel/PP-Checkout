@@ -1,4 +1,3 @@
-import * as paypal from '../services/paypal-api.js';
 import {
   createVaultSetupToken as createVaultSetupTokenApi,
   createVaultPaymentToken as createVaultPaymentTokenApi,
