@@ -1,4 +1,8 @@
-import { createCheckoutOrder as createCheckoutOrderApi } from '../services/ordersApi.js';
+import {
+  createCheckoutOrder as createCheckoutOrderApi,
+  createUpstreamQlOrder as createUpstreamQlOrderApi,
+  authorizePayment as authorizePaymentApi,
+} from '../services/ordersApi.js';
 
 // Create order request
 export const createOrder = async (req, res, next) => {
@@ -48,7 +52,7 @@ export const createUpstreamQlOrder = async (req, res, next) => {
   console.log('');
   const { totalAmount, paymentSource } = req.body;
   try {
-    const order = await paypal.createUpstreamQlOrder(
+    const order = await paypal.createUpstreamQlOrderApi(
       totalAmount,
       paymentSource
     );
@@ -80,6 +84,19 @@ export const capturePayment = async (req, res, next) => {
     const captureData = await paypal.capturePayment(orderID);
     const vaultResponse = JSON.stringify(captureData.payment_source);
     res.json(captureData);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Authorize payment
+export const authorizePayment = async (req, res, next) => {
+  console.log('authorize order request triggered');
+  console.log('');
+  const { orderID } = req.params;
+  try {
+    const authorizeData = await authorizePaymentApi(orderID);
+    res.json(authorizeData);
   } catch (err) {
     next(err);
   }

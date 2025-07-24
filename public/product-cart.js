@@ -49,7 +49,7 @@ function loadPayPalComponents() {
 }
 
 function loadPayPalSDK() {
-  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,messages&client-id=${clientId}&enable-funding=venmo&disable-funding=card`;
+  const scriptUrl = `https://www.paypal.com/sdk/js?commit=true&components=buttons,messages&client-id=${clientId}&enable-funding=venmo&disable-funding=card`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   scriptElement.onload = () => {

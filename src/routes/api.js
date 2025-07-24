@@ -6,6 +6,7 @@ import {
   createUpstreamQlOrder,
   createQuantumOrder,
   capturePayment,
+  authorizePayment,
 } from '../controllers/orderController.js';
 import {
   createVaultSetupToken,
@@ -36,6 +37,7 @@ router.post('/upstream-orders', createUpstreamOrder);
 router.post('/upstream-ql-orders', createUpstreamQlOrder);
 router.post('/quantum-test', createQuantumOrder);
 router.post('/orders/:orderID/capture', capturePayment);
+router.post('/orders/:orderID/authorize', authorizePayment);
 
 // Vault routes
 router.post('/vault/setup-token', createVaultSetupToken);

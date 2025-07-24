@@ -70,9 +70,9 @@ export const createCheckoutOrder = async orderData => {
         },
       },
       experience_context: {
-        return_url: 'https://example.com/return',
+        return_url: 'http://localhost:8888/',
         cancel_url: 'https://example.com/cancel',
-        user_action: 'PAY_NOW',
+        user_action: 'CONTINUE',
         shipping_preference: shippingPreference,
       },
     };
@@ -148,7 +148,7 @@ export const createCheckoutOrder = async orderData => {
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      intent: 'CAPTURE',
+      intent: 'AUTHORIZE',
       purchase_units: [purchaseUnit],
       payment_source,
     }),
@@ -167,6 +167,7 @@ export const createUpstreamQlOrder = async totalAmount => {
         experience_context: {
           user_action: 'PAY_NOW',
           shipping_preference: 'GET_FROM_FILE',
+          // contact_preference: 'UPDATE_CONTACT_INFO',
           return_url: 'https://pp-checkout.onrender.com/product-cart',
           cancel_url: 'https://pp-checkout.onrender.com/product-cart',
           app_switch_preference: {
@@ -241,6 +242,22 @@ export const capturePayment = async orderId => {
   // console.log('capturing payment with order ID:', orderId);
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders/${orderId}/capture`;
+  const response = await fetch(url, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return handleResponse(response);
+};
+
+// authorize payment request
+export const authorizePayment = async orderId => {
+  console.log('authorizing payment with order ID:', orderId);
+  const accessToken = await generateAccessToken();
+  const url = `${base}/v2/checkout/orders/${orderId}/authorize`;
   const response = await fetch(url, {
     method: 'post',
     headers: {

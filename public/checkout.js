@@ -269,7 +269,7 @@ function displaySavedPaymentMethods(paymentTokens) {
 }
 
 function loadPayPalSDK(idToken) {
-  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields,messages&client-id=${clientId}&enable-funding=venmo`;
+  const scriptUrl = `https://www.paypal.com/sdk/js?commit=false&components=buttons,card-fields,messages&intent=authorize&client-id=${clientId}&enable-funding=venmo`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   if (idToken) {
@@ -319,16 +319,17 @@ function loadPayPalSDK(idToken) {
 const onApprove = (data, actions) => {
   console.log('onApprove callback triggered');
 
-  return fetch(`/api/orders/${data.orderID}/capture`, {
+  return fetch(`/api/orders/${data.orderID}/authorize`, {
     method: 'POST',
   })
     .then(response => response.json())
     .then(orderData => {
       console.log(
-        'Capture Order Response: ',
+        'Authorize Order Response: ',
         JSON.stringify(orderData, null, 2)
       );
-      const captureId = orderData.purchase_units[0].payments.captures[0].id;
+      const authorizationId =
+        orderData.purchase_units[0].payments.authorizations[0].id;
       const paymentSource = orderData.payment_source;
       const paymentSourceType = paymentSource.card ? 'card' : 'paypal';
       const vaultStatus =
@@ -340,7 +341,7 @@ const onApprove = (data, actions) => {
 
       document.getElementById(
         'capture-order-info'
-      ).textContent = `Capture ID: ${captureId}`;
+      ).textContent = `Authorization ID: ${authorizationId}`;
       document.getElementById(
         'payment-source-type-info'
       ).textContent = `Payment Source: ${paymentSourceType}`;
@@ -366,7 +367,7 @@ const onApprove = (data, actions) => {
     .catch(error => {
       document.getElementById(
         'capture-info-section'
-      ).textContent = `Capture Order ERROR: ${error}`;
+      ).textContent = `Authorize Order ERROR: ${error}`;
     });
 };
 
