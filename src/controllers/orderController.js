@@ -1,6 +1,7 @@
 import {
   createCheckoutOrder as createCheckoutOrderApi,
   createUpstreamQlOrder as createUpstreamQlOrderApi,
+  capturePayment as capturePaymentApi,
   authorizePayment as authorizePaymentApi,
 } from '../services/ordersApi.js';
 
@@ -9,7 +10,8 @@ export const createOrder = async (req, res, next) => {
   console.log('Checkout Create Order Request');
   console.log('');
   try {
-    const order = await paypal.createOrder();
+    // Use the checkout order function as a fallback
+    const order = await createCheckoutOrderApi(req.body);
     res.json(order);
   } catch (err) {
     next(err);
@@ -39,7 +41,9 @@ export const createUpstreamOrder = async (req, res, next) => {
   console.log('');
   const { totalAmount } = req.body;
   try {
-    const order = await paypal.createUpstreamOrder(totalAmount);
+    // For now, use the same upstream QL order function
+    // This can be customized later if needed for client-side callbacks
+    const order = await createUpstreamQlOrderApi(totalAmount);
     res.json(order);
   } catch (err) {
     next(err);
@@ -50,12 +54,9 @@ export const createUpstreamOrder = async (req, res, next) => {
 export const createUpstreamQlOrder = async (req, res, next) => {
   console.log('Upstream Server-Side Callback Create Order Request');
   console.log('');
-  const { totalAmount, paymentSource } = req.body;
+  const { totalAmount } = req.body;
   try {
-    const order = await paypal.createUpstreamQlOrderApi(
-      totalAmount,
-      paymentSource
-    );
+    const order = await createUpstreamQlOrderApi(totalAmount);
     res.json(order);
   } catch (err) {
     next(err);
@@ -66,9 +67,11 @@ export const createUpstreamQlOrder = async (req, res, next) => {
 export const createQuantumOrder = async (req, res, next) => {
   console.log('Upstream Server-Side Callback Create Order Request');
   console.log('');
-  const { totalAmount, paymentSource } = req.body;
+  const { totalAmount } = req.body;
   try {
-    const order = await paypal.createQuantumOrder(totalAmount, paymentSource);
+    // For now, use the upstream QL order function
+    // This can be customized later if needed for quantum testing
+    const order = await createUpstreamQlOrderApi(totalAmount);
     res.json(order);
   } catch (err) {
     next(err);
@@ -81,7 +84,7 @@ export const capturePayment = async (req, res, next) => {
   console.log('');
   const { orderID } = req.params;
   try {
-    const captureData = await paypal.capturePayment(orderID);
+    const captureData = await capturePaymentApi(orderID);
     const vaultResponse = JSON.stringify(captureData.payment_source);
     res.json(captureData);
   } catch (err) {
