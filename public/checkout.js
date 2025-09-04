@@ -268,6 +268,22 @@ document.addEventListener('DOMContentLoaded', function () {
   // Always load PayPal components first - Apple Pay is optional
   loadPayPalComponents();
 
+  // Early device check - completely skip Apple Pay setup on non-Apple devices
+  const isAppleDevice = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isSafari =
+    /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+
+  if (!isAppleDevice || !isSafari) {
+    console.log(
+      'Non-Apple device or non-Safari browser detected - hiding Apple Pay container'
+    );
+    const applePayContainer = document.getElementById('applepay-container');
+    if (applePayContainer) {
+      applePayContainer.style.display = 'none';
+    }
+    return; // Skip all Apple Pay setup
+  }
+
   // Try to set up Apple Pay but don't let it break other functionality
   try {
     // Check if Apple Pay is available before trying to set it up
@@ -305,11 +321,12 @@ document.addEventListener('DOMContentLoaded', function () {
       console.log(
         'Apple Pay is not available on this device/browser - likely PC/Windows'
       );
-      // Show informational message for PC users
+      // Hide the Apple Pay container completely on non-Apple devices
       const applePayContainer = document.getElementById('applepay-container');
       if (applePayContainer) {
-        applePayContainer.innerHTML =
-          '<p style="padding: 10px; background: #f0f0f0; border-radius: 4px; margin: 10px 0;">Apple Pay is only available on Mac/iOS devices with Safari over HTTPS</p>';
+        applePayContainer.style.display = 'none';
+        // Optionally show a message for debugging (comment out for production)
+        // applePayContainer.innerHTML = '<p style="padding: 10px; background: #f0f0f0; border-radius: 4px; margin: 10px 0;">Apple Pay is only available on Mac/iOS devices with Safari over HTTPS</p>';
       }
     }
   } catch (applePaySetupError) {
@@ -587,8 +604,26 @@ function displaySavedPaymentMethods(paymentTokens) {
 }
 
 function loadPayPalSDK(idToken) {
-  // Use PayPal SDK with proper domain configuration for hosted environments
-  const scriptUrl = `https://www.paypal.com/sdk/js?commit=false&components=buttons,card-fields,messages,applepay&intent=authorize&client-id=${clientId}&enable-funding=venmo&integration-date=2023-01-01&debug=false`;
+  // Only include Apple Pay component on devices that support it
+  const isAppleDevice =
+    /Mac|iPhone|iPad|iPod/.test(navigator.userAgent) &&
+    /Safari/.test(navigator.userAgent) &&
+    typeof ApplePaySession !== 'undefined';
+
+  const components = isAppleDevice
+    ? 'buttons,card-fields,messages,applepay'
+    : 'buttons,card-fields,messages';
+
+  console.log(
+    'Loading PayPal SDK with components:',
+    components,
+    '(Apple device detected:',
+    isAppleDevice,
+    ')'
+  );
+
+  // Use PayPal SDK with conditional Apple Pay component
+  const scriptUrl = `https://www.paypal.com/sdk/js?commit=false&components=${components}&intent=authorize&client-id=${clientId}&enable-funding=venmo&integration-date=2023-01-01&debug=false`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   if (idToken) {
