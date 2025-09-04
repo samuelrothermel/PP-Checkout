@@ -6,6 +6,7 @@ import { BASE_URL, PORT } from './src/config/constants.js';
 import { handleError } from './src/config/errorHandler.js';
 import pageRoutes from './src/routes/pages.js';
 import apiRoutes from './src/routes/api.js';
+import path from 'path';
 
 const app = express();
 
@@ -33,6 +34,21 @@ app.use((req, res, next) => {
 // Routes
 app.use('/', pageRoutes);
 app.use('/api', apiRoutes);
+// Attempt to Host Apple Domain Association File
+app.get(
+  '/.well-known/apple-developer-merchantid-domain-association',
+  (req, res) => {
+    const filePath = path.join(
+      __dirname,
+      'public',
+      '.well-known',
+      'apple-developer-merchantid-domain-association'
+    );
+    // Serve the file as a binary object
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.sendFile(filePath);
+  }
+);
 
 // Error handling middleware (must be last)
 app.use(handleError);
