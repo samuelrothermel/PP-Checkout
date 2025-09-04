@@ -7,10 +7,6 @@ import { handleError } from './src/config/errorHandler.js';
 import pageRoutes from './src/routes/pages.js';
 import apiRoutes from './src/routes/api.js';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -30,7 +26,7 @@ app.use(cors(corsOptions));
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.sandbox.paypal.com https://www.paypal.com https://applepay.cdn-apple.com; connect-src 'self' https://www.sandbox.paypal.com https://www.paypal.com https://cn-geo1.uber.com; frame-src https://www.sandbox.paypal.com https://www.paypal.com;"
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.sandbox.paypal.com https://www.paypal.com"
   );
   next();
 });
@@ -48,17 +44,9 @@ app.get(
       '.well-known',
       'apple-developer-merchantid-domain-association'
     );
-
-    // Check if file exists
-    res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('Cache-Control', 'max-age=3600');
-
-    try {
-      res.sendFile(filePath);
-    } catch (error) {
-      console.error('Error serving Apple domain association file:', error);
-      res.status(404).send('Domain association file not found');
-    }
+    // Serve the file as a binary object
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.sendFile(filePath);
   }
 );
 
