@@ -3,43 +3,64 @@ let globalCustomerId = null;
 let hasPaymentMethods = false;
 
 async function setupApplepay() {
-  const applepay = paypal.Applepay();
-  const {
-    isEligible,
-    countryCode,
-    currencyCode,
-    merchantCapabilities,
-    supportedNetworks,
-  } = await applepay.config();
+  try {
+    console.log('Starting Apple Pay setup...');
+    
+    // Check if PayPal SDK is loaded
+    if (!window.paypal || !window.paypal.Applepay) {
+      throw new Error('PayPal SDK or Apple Pay component not loaded');
+    }
 
-  if (!isEligible) {
-    throw new Error('applepay is not eligible');
-  }
-
-  document.getElementById('applepay-container').innerHTML =
-    '<apple-pay-button id="btn-appl" buttonstyle="black" type="buy" locale="en">';
-
-  document.getElementById('btn-appl').addEventListener('click', onClick);
-
-  async function onClick() {
-    console.log({ merchantCapabilities, currencyCode, supportedNetworks });
-
-    const paymentRequest = {
+    const applepay = paypal.Applepay();
+    const config = await applepay.config();
+    
+    console.log('Apple Pay config:', config);
+    
+    const {
+      isEligible,
       countryCode,
-      currencyCode: 'USD',
+      currencyCode,
       merchantCapabilities,
       supportedNetworks,
-      requiredBillingContactFields: ['name', 'phone', 'email', 'postalAddress'],
-      requiredShippingContactFields: [],
-      total: {
-        label: 'Demo (Card is not charged)',
-        amount: '10.00',
-        type: 'final',
-      },
-    };
+    } = config;
 
-    // eslint-disable-next-line no-undef
-    let session = new ApplePaySession(4, paymentRequest);
+    if (!isEligible) {
+      console.warn('Apple Pay is not eligible on this device/browser');
+      throw new Error('applepay is not eligible');
+    }
+
+    console.log('Apple Pay is eligible, setting up button...');
+    
+    document.getElementById('applepay-container').innerHTML =
+      '<apple-pay-button id="btn-appl" buttonstyle="black" type="buy" locale="en">';
+
+    document.getElementById('btn-appl').addEventListener('click', onClick);
+
+  async function onClick() {
+    try {
+      console.log({ merchantCapabilities, currencyCode, supportedNetworks });
+
+      const paymentRequest = {
+        countryCode,
+        currencyCode: 'USD',
+        merchantCapabilities,
+        supportedNetworks,
+        requiredBillingContactFields: ['name', 'phone', 'email', 'postalAddress'],
+        requiredShippingContactFields: [],
+        total: {
+          label: 'Demo (Card is not charged)',
+          amount: '10.00',
+          type: 'final',
+        },
+      };
+
+      // Check if Apple Pay is available before creating session
+      if (!window.ApplePaySession) {
+        throw new Error('Apple Pay is not available on this device/browser');
+      }
+
+      // eslint-disable-next-line no-undef
+      const session = new ApplePaySession(4, paymentRequest);
 
     session.onvalidatemerchant = event => {
       applepay
@@ -69,12 +90,26 @@ async function setupApplepay() {
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            source: 'applepay',
+            totalAmount: '10.00',
+            paymentSource: 'applepay'
+          }),
         });
+        
         if (!orderResponse.ok) {
-          throw new Error('error creating order');
+          const errorText = await orderResponse.text();
+          console.error('Order creation failed:', errorText);
+          throw new Error(`Error creating order: ${orderResponse.status} - ${errorText}`);
         }
 
-        const { id } = await orderResponse.json();
+        const orderData = await orderResponse.json();
+        if (!orderData.id) {
+          throw new Error('Order ID not received from server');
+        }
+
+        console.log('Order created:', orderData);
+        const { id } = orderData;
         console.log({ id });
         /**
          * Confirm Payment
@@ -108,7 +143,18 @@ async function setupApplepay() {
       console.log('Apple Pay Cancelled !!');
     };
 
-    session.begin();
+      session.begin();
+    } catch (error) {
+      console.error('Apple Pay session error:', error);
+      alert('Apple Pay is not available or there was an error setting it up.');
+    }
+  } catch (error) {
+    console.error('Apple Pay setup failed:', error);
+    // Hide the Apple Pay container if setup fails
+    const container = document.getElementById('applepay-container');
+    if (container) {
+      container.style.display = 'none';
+    }
   }
 }
 
