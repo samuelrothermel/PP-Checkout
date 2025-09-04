@@ -26,7 +26,7 @@ app.use(cors(corsOptions));
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.sandbox.paypal.com https://www.paypal.com"
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.sandbox.paypal.com https://www.paypal.com https://applepay.cdn-apple.com; connect-src 'self' https://www.sandbox.paypal.com https://www.paypal.com https://cn-geo1.uber.com; frame-src https://www.sandbox.paypal.com https://www.paypal.com;"
   );
   next();
 });

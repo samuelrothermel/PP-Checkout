@@ -15,6 +15,9 @@ const router = express.Router();
 router.get('/', renderIndex);
 router.get('/product-cart', renderProductCart);
 router.get('/checkout', renderCheckout);
+router.get('/test-no-applepay', (req, res) => {
+  res.render('test-no-applepay', { clientId: process.env.CLIENT_ID });
+});
 router.get('/save-wo-purchase', renderSaveWoPurchase);
 router.get('/subscriptions', renderSubscriptions);
 router.get('/ba_reference', renderBaReference);

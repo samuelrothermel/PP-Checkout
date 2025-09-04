@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPal Test (No Apple Pay)</title>
+    <link rel="stylesheet" href="/styles/custom.css">
+</head>
+<body>
+    <div class="container">
+        <h1>PayPal Integration Test</h1>
+        <p>This page tests PayPal components without Apple Pay to verify basic functionality.</p>
+        
+        <div class="checkout-section">
+            <h4>Pay with PayPal</h4>
+            <div id="paypal-button-container"></div>
+        </div>
+        
+        <div class="checkout-section">
+            <h4>Pay with Card</h4>
+            <div id="card-number-field-container"></div>
+            <div id="card-cvv-field-container"></div>
+            <div id="card-expiry-field-container"></div>
+            <button id="multi-card-field-button">Pay with Card</button>
+        </div>
+        
+        <div id="order-info-section" style="display: none;">
+            <div id="create-order-info"></div>
+        </div>
+    </div>
+
+    <script>
+        const clientId = '<%= clientId %>';
+        
+        // Simple PayPal integration without Apple Pay
+        function loadPayPalSDK() {
+            const scriptUrl = `https://www.paypal.com/sdk/js?commit=false&components=buttons,card-fields&intent=authorize&client-id=${clientId}&enable-funding=venmo`;
+            const scriptElement = document.createElement('script');
+            scriptElement.src = scriptUrl;
+            scriptElement.onload = () => {
+                console.log('PayPal SDK loaded successfully');
+                
+                // PayPal Buttons
+                paypal.Buttons({
+                    style: { layout: 'vertical' },
+                    createOrder: function(data, actions) {
+                        return fetch('/api/orders', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ source: 'paypal', totalAmount: '10.00' })
+                        }).then(res => res.json()).then(data => data.id);
+                    },
+                    onApprove: function(data, actions) {
+                        console.log('Payment approved:', data.orderID);
+                        document.getElementById('create-order-info').textContent = `Order ID: ${data.orderID}`;
+                        document.getElementById('order-info-section').style.display = 'block';
+                    }
+                }).render('#paypal-button-container');
+
+                // Card Fields
+                const cardField = paypal.CardFields({
+                    createOrder: function(data, actions) {
+                        return fetch('/api/orders', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ source: 'card', totalAmount: '10.00' })
+                        }).then(res => res.json()).then(data => data.id);
+                    },
+                    onApprove: function(data, actions) {
+                        console.log('Card payment approved:', data.orderID);
+                        document.getElementById('create-order-info').textContent = `Card Order ID: ${data.orderID}`;
+                        document.getElementById('order-info-section').style.display = 'block';
+                    }
+                });
+
+                if (cardField.isEligible()) {
+                    const numberField = cardField.NumberField();
+                    numberField.render('#card-number-field-container');
+
+                    const cvvField = cardField.CVVField();
+                    cvvField.render('#card-cvv-field-container');
+
+                    const expiryField = cardField.ExpiryField();
+                    expiryField.render('#card-expiry-field-container');
+
+                    document.getElementById('multi-card-field-button').addEventListener('click', () => {
+                        cardField.submit();
+                    });
+                } else {
+                    console.log('Card fields not eligible');
+                }
+            };
+            
+            scriptElement.onerror = () => {
+                console.error('Failed to load PayPal SDK');
+            };
+
+            document.head.appendChild(scriptElement);
+        }
+
+        // Load PayPal SDK when page loads
+        document.addEventListener('DOMContentLoaded', loadPayPalSDK);
+    </script>
+</body>
+</html>
