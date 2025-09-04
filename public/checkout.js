@@ -16,6 +16,18 @@ console.error = function (...args) {
 let globalCustomerId = null;
 let hasPaymentMethods = false;
 
+// Helper function to get current total amount from the DOM
+function getCurrentTotalAmount() {
+  const totalElement = document.getElementById('amount-total');
+  if (!totalElement) {
+    console.warn('Could not find amount-total element, defaulting to 10.00');
+    return '10.00';
+  }
+  const amount = parseFloat(totalElement.textContent).toFixed(2);
+  console.log('Apple Pay using dynamic total amount:', amount);
+  return amount;
+}
+
 async function setupApplepay() {
   try {
     console.log('Starting Apple Pay setup...');
@@ -126,7 +138,7 @@ async function setupApplepay() {
             requiredShippingContactFields: [],
             total: {
               label: 'Demo (Card is not charged)',
-              amount: '10.00',
+              amount: getCurrentTotalAmount(),
               type: 'final',
             },
           };
@@ -163,7 +175,7 @@ async function setupApplepay() {
                 },
                 body: JSON.stringify({
                   source: 'applepay',
-                  totalAmount: '10.00',
+                  totalAmount: getCurrentTotalAmount(),
                   paymentSource: 'applepay',
                 }),
               });
