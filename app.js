@@ -48,11 +48,11 @@ app.get(
       '.well-known',
       'apple-developer-merchantid-domain-association'
     );
-    
+
     // Check if file exists
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Cache-Control', 'max-age=3600');
-    
+
     try {
       res.sendFile(filePath);
     } catch (error) {
