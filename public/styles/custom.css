@@ -620,3 +620,53 @@ header h1 {
     padding: 15px;
   }
 }
+
+/* Apple Pay Button Styling */
+#applepay-container {
+  margin-top: 10px;
+  width: 100%;
+}
+
+#btn-appl,
+apple-pay-button {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  height: 40px !important;
+  border-radius: 4px !important;
+  margin: 0 !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  /* Ensure it matches PayPal button styling */
+  appearance: -webkit-appearance;
+  -webkit-appearance: -apple-pay-button;
+  -apple-pay-button-style: black;
+  -apple-pay-button-type: buy;
+}
+
+/* Ensure both PayPal and Apple Pay button containers have consistent width */
+#paypal-button-container,
+#applepay-container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Override any default PayPal button styling to ensure consistency */
+#paypal-button-container > div,
+#paypal-button-container iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Style the informational message for non-Apple devices */
+#applepay-container p {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin: 10px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}

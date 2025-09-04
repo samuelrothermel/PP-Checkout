@@ -76,7 +76,17 @@ async function setupApplepay() {
     console.log('Apple Pay is eligible, setting up button...');
 
     document.getElementById('applepay-container').innerHTML =
-      '<apple-pay-button id="btn-appl" buttonstyle="black" type="buy" locale="en">';
+      '<apple-pay-button id="btn-appl" buttonstyle="black" type="buy" locale="en"></apple-pay-button>';
+
+    // Ensure the Apple Pay button gets proper styling
+    const applePayButton = document.getElementById('btn-appl');
+    if (applePayButton) {
+      applePayButton.style.width = '100%';
+      applePayButton.style.height = '40px';
+      applePayButton.style.borderRadius = '4px';
+      applePayButton.style.margin = '0';
+      applePayButton.style.display = 'block';
+    }
 
     document
       .getElementById('btn-appl')
@@ -132,7 +142,7 @@ async function setupApplepay() {
           session.onpaymentauthorized = async event => {
             try {
               /* Create Order on the Server Side */
-              const orderResponse = await fetch(`/api/orders`, {
+              const orderResponse = await fetch(`/api/checkout-orders`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
