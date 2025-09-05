@@ -83,6 +83,29 @@ export const createCheckoutOrder = async orderData => {
         id: customerId,
       };
     }
+  } else if (paymentSource === 'venmo') {
+    payment_source.venmo = {
+      // attributes: {
+      //   vault: {
+      //     store_in_vault: 'ON_SUCCESS',
+      //     usage_type: 'MERCHANT',
+      //     customer_type: 'CONSUMER',
+      //   },
+      // },
+      experience_context: {
+        return_url: 'http://localhost:8888/',
+        cancel_url: 'https://example.com/cancel',
+
+        shipping_preference: shippingPreference,
+      },
+    };
+
+    // Add customer ID if provided for returning users with payment methods
+    if (customerId) {
+      payment_source.venmo.attributes.customer = {
+        id: customerId,
+      };
+    }
   } else if (paymentSource === 'card') {
     payment_source.card = {
       attributes: {

@@ -685,7 +685,17 @@ const onApprove = (data, actions) => {
       const authorizationId =
         orderData.purchase_units[0].payments.authorizations[0].id;
       const paymentSource = orderData.payment_source;
-      const paymentSourceType = paymentSource.card ? 'card' : 'paypal';
+
+      // Determine payment source type by checking which property exists
+      let paymentSourceType = 'unknown';
+      if (paymentSource.card) {
+        paymentSourceType = 'card';
+      } else if (paymentSource.paypal) {
+        paymentSourceType = 'paypal';
+      } else if (paymentSource.venmo) {
+        paymentSourceType = 'venmo';
+      }
+
       const vaultStatus =
         paymentSource[paymentSourceType]?.attributes?.vault?.status;
       const customerId =
