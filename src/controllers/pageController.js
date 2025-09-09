@@ -16,5 +16,6 @@ export const renderProductCart = renderPage('product-cart');
 export const renderSaveWoPurchase = renderPage('save-wo-purchase');
 export const renderSubscriptions = renderPage('subscriptions');
 export const renderBaReference = renderPage('ba_reference');
+export const renderFastlane = renderPage('fastlane');
 
 export const renderWebhookTesting = renderPage('webhook-testing');

@@ -7,6 +7,7 @@ import {
   renderBaReference,
   renderProductCart,
   renderWebhookTesting,
+  renderFastlane,
 } from '../controllers/pageController.js';
 
 const router = express.Router();
@@ -21,6 +22,7 @@ router.get('/test-no-applepay', (req, res) => {
 router.get('/save-wo-purchase', renderSaveWoPurchase);
 router.get('/subscriptions', renderSubscriptions);
 router.get('/ba_reference', renderBaReference);
+router.get('/fastlane', renderFastlane);
 router.get('/webhook-testing', renderWebhookTesting);
 
 export default router;

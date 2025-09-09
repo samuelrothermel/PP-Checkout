@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.paypalobjects.com/webstatic/en_US/developer/docs/css/cardfields.css"
+    />
+    <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
+    <title>PayPal Fastlane Integration</title>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>PayPal Fastlane Integration</h1>
+            <p>Experience PayPal's Fastlane - the next generation of accelerated checkout</p>
+        </header>
+        
+        <div class="checkout-layout">
+            <!-- Left Side: Order Summary -->
+            <div class="checkout-left">
+                <div class="order-summary">
+                    <h3>Order Summary</h3>
+                    <div class="order-row">
+                        <span>Subtotal:</span>
+                        <span>$<span id="cart-total">99.99</span></span>
+                    </div>
+                    <div class="order-row">
+                        <span>Shipping:</span>
+                        <span>$<span id="shipping-amount">5.99</span></span>
+                    </div>
+                    <div class="order-row">
+                        <span>Tax:</span>
+                        <span>$<span id="tax-amount">8.75</span></span>
+                    </div>
+                    <div class="order-row total">
+                        <span>Total:</span>
+                        <span>$<span id="amount-total">114.73</span></span>
+                    </div>
+                </div>
+                
+                <!-- Fastlane Features -->
+                <div class="fastlane-features">
+                    <h4>Fastlane Benefits</h4>
+                    <ul>
+                        <li>🚀 One-click guest checkout acceleration</li>
+                        <li>🔒 Secure payment processing</li>
+                        <li>📱 Mobile-optimized experience</li>
+                        <li>⚡ Instant payment method recognition</li>
+                        <li>🎯 Higher conversion rates</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Right Side: Fastlane Checkout Form -->
+            <div class="checkout-right">
+                <!-- Customer Information -->
+                <div class="checkout-section">
+                    <h4>Customer Information</h4>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" required />
+                        <div id="email-lookup-result" class="fastlane-lookup-result"></div>
+                    </div>
+                </div>
+                
+                <!-- Fastlane Identity Component -->
+                <div class="checkout-section" id="fastlane-identity-section">
+                    <h4>Fastlane Express Checkout</h4>
+                    <div id="fastlane-identity-container">
+                        <!-- Fastlane Identity Component will render here -->
+                    </div>
+                </div>
+                
+                <!-- Shipping Information -->
+                <div class="checkout-section" id="shipping-section">
+                    <h4>Shipping Information</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="shipping-first-name">First Name</label>
+                            <input type="text" id="shipping-first-name" name="shipping-first-name" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="shipping-last-name">Last Name</label>
+                            <input type="text" id="shipping-last-name" name="shipping-last-name" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="shipping-address">Street Address</label>
+                        <input type="text" id="shipping-address" name="shipping-address" class="form-control" required />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="shipping-city">City</label>
+                            <input type="text" id="shipping-city" name="shipping-city" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="shipping-state">State</label>
+                            <select id="shipping-state" name="shipping-state" class="form-control" required>
+                                <option value="">Select State</option>
+                                <option value="CA">California</option>
+                                <option value="NY">New York</option>
+                                <option value="TX">Texas</option>
+                                <option value="FL">Florida</option>
+                                <!-- Add more states as needed -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="shipping-zip">ZIP Code</label>
+                            <input type="text" id="shipping-zip" name="shipping-zip" class="form-control" required />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Information -->
+                <div class="checkout-section" id="payment-section">
+                    <h4>Payment Information</h4>
+                    
+                    <!-- Fastlane Card Component -->
+                    <div id="fastlane-card-container">
+                        <!-- Fastlane Card Component will render here -->
+                    </div>
+                    
+                    <!-- Fallback Payment Form -->
+                    <div id="manual-payment-form" style="display: none;">
+                        <div class="form-group">
+                            <label for="card-number">Card Number</label>
+                            <div id="card-number-field" class="card-field"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expiry-date">Expiry Date</label>
+                                <div id="expiry-date-field" class="card-field"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cvv">CVV</label>
+                                <div id="cvv-field" class="card-field"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="checkout-section">
+                    <div class="button-group">
+                        <button id="fastlane-pay-button" class="btn btn-primary btn-large" disabled>
+                            Complete Purchase with Fastlane
+                        </button>
+                        <button id="manual-pay-button" class="btn btn-secondary" style="display: none;">
+                            Pay with Card
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Messages -->
+        <div id="payment-status" class="status-message" style="display: none;"></div>
+        <div id="debug-info" class="debug-info" style="display: none;"></div>
+        <div id="result-message" class="result-message" style="display: none;"></div>
+    </div>
+
+    <!-- PayPal SDK will be loaded dynamically -->
+    <!-- Fastlane Integration Script -->
+    <script src="/fastlane.js"></script>
+    
+    <script>
+        let fastlaneApp = null;
+
+        // Initialize Fastlane when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                fastlaneApp = new FastlaneIntegration('<%= clientId %>');
+                await fastlaneApp.init();
+            } catch (error) {
+                console.error('Failed to initialize Fastlane:', error);
+                document.getElementById('payment-status').innerHTML = 
+                    '<div class="status-message error">❌ Failed to load Fastlane. Please refresh the page.</div>';
+                document.getElementById('payment-status').style.display = 'block';
+            }
+        });
+    </script>
+
+    <style>
+        /* Fastlane-specific styles */
+        .fastlane-features {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #0070ba, #003087);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .fastlane-features h4 {
+            margin-bottom: 18px;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        
+        .fastlane-features ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .fastlane-features li {
+            margin-bottom: 12px;
+            padding: 8px 0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Identity lookup results */
+        .fastlane-lookup-result {
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .fastlane-profile-found {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .fastlane-new-customer {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .checkmark {
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        .info-icon {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fastlane-welcome-animation {
+            animation: pulse 1s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        /* Form validation styles */
+        .form-control.valid {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        
+        .form-control.invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+        
+        .form-control.prefilled {
+            background-color: #f8f9fa;
+            border-color: #0070ba;
+        }
+        
+        /* Status messages */
+        .status-message {
+            margin-top: 20px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 15px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .status-message.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        /* Debug info styles */
+        .debug-info {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .debug-info h4 {
+            margin-bottom: 10px;
+            color: #495057;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* Result messages */
+        .result-message {
+            margin-top: 25px;
+            padding: 25px;
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .payment-success {
+            text-align: center;
+        }
+        
+        .payment-success h3 {
+            color: #155724;
+            margin-bottom: 20px;
+        }
+        
+        .payment-success p {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+        
+        .success-actions {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .payment-error {
+            text-align: center;
+        }
+        
+        .payment-error h3 {
+            color: #721c24;
+            margin-bottom: 15px;
+        }
+        
+        .error-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        /* Card fields and components */
+        .card-field {
+            height: 45px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            padding: 10px 12px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .card-field:focus-within {
+            border-color: #0070ba;
+            box-shadow: 0 0 0 0.2rem rgba(0, 112, 186, 0.25);
+        }
+        
+        /* Button styles */
+        .btn-large {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-large:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-large.ready-to-pay {
+            background: linear-gradient(135deg, #0070ba, #003087);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px rgba(0, 112, 186, 0.5); }
+            to { box-shadow: 0 0 20px rgba(0, 112, 186, 0.8); }
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        /* Fastlane component containers */
+        #fastlane-identity-container,
+        #fastlane-card-container {
+            min-height: 60px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #ffffff;
+            transition: border-color 0.2s ease;
+        }
+        
+        #fastlane-identity-container:has(:focus-within),
+        #fastlane-card-container:has(:focus-within) {
+            border-color: #0070ba;
+            box-shadow: 0 0 0 0.2rem rgba(0, 112, 186, 0.25);
+        }
+        
+        /* Order summary enhancements */
+        .order-summary {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .order-row.total {
+            border-top: 2px solid #0070ba;
+            padding-top: 15px;
+            margin-top: 15px;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .checkout-layout {
+                flex-direction: column;
+            }
+            
+            .checkout-left,
+            .checkout-right {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+            
+            .success-actions,
+            .error-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+        
+        /* Loading states */
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loading::before {
+            content: '⏳';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            z-index: 1;
+        }
+    </style>
+</body>
+</html>
