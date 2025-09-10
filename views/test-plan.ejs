@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Plan Creation</title>
+</head>
+<body>
+    <h1>Test Subscription Plan Creation</h1>
+    <button id="createPlan">Create Plan</button>
+    <button id="testExistingPlan">Test Existing Plan</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('createPlan').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/subscriptions/create-plan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        });
+
+        document.getElementById('testExistingPlan').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/subscriptions/plan/P-3AE601370M1075509M7VM2RQ');
+                if (response.ok) {
+                    const result = await response.json();
+                    document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('result').innerHTML = 'Plan not found: ' + errorText;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

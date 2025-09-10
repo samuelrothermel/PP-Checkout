@@ -21,6 +21,9 @@ router.get('/test-no-applepay', (req, res) => {
 });
 router.get('/save-wo-purchase', renderSaveWoPurchase);
 router.get('/subscriptions', renderSubscriptions);
+router.get('/test-plan', (req, res) => {
+  res.render('test-plan');
+});
 router.get('/ba_reference', renderBaReference);
 router.get('/fastlane', renderFastlane);
 router.get('/webhook-testing', renderWebhookTesting);
