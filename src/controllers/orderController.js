@@ -26,7 +26,7 @@ export const createCheckoutOrder = async (req, res, next) => {
     // Map 'source' field from frontend to 'paymentSource' for backend
     const orderData = {
       ...req.body,
-      paymentSource: req.body.source || req.body.paymentSource || 'paypal',
+      paymentSource: req.body.source || req.body.paymentSource,
     };
     const order = await createCheckoutOrderApi(orderData);
     res.json(order);

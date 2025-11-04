@@ -1,0 +1,114 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
+    <link rel="stylesheet" type="text/css" href="/styles/recurring-payment.css" />
+    <title>Recurring Payment</title>
+  </head>
+
+  <body>
+    <div class="container">
+      <header>
+        <h1>Recurring Payment</h1>
+      </header>
+      
+      <div class="checkout-layout">
+        <!-- Left Side: Plan Summary -->
+        <div class="checkout-left">
+          <div class="order-summary">
+            <h3>Plan Summary</h3>
+            <div class="order-row">
+              <span>Monthly Fee:</span>
+              <span>$<span id="monthly-fee">10</span></span>
+            </div>
+            <div class="order-row">
+              <span>Duration:</span>
+              <span><span id="billing-duration">1</span> month</span>
+            </div>
+            <div class="order-row total">
+              <span>Total Commitment:</span>
+              <span>$<span id="total-commitment">10</span></span>
+            </div>
+          </div>
+          
+          <div class="plan-details">
+            <h4>Plan Details</h4>
+            <p>
+              By subscribing, you will be charged $10 today, followed by $10
+              per month for 12 months. Your subscription will begin on 
+              September 23, 2025 and will be processed automatically each month.
+            </p>
+            <p>
+              <strong>Plan Name:</strong> Sam's Recurring Payment Plan<br>
+              <strong>Description:</strong> Monthly Membership
+            </p>
+            
+            <div class="implementation-notes">
+              <h5>Implementation Details</h5>
+              <ol>
+                <li>We create a vault setup token with billing plan details</li>
+                <li>After user approval, we convert it to a permanent payment token</li>
+                <li>This token can be used for future recurring billing without additional authentication</li>
+                <li>The demonstration will show how to use the token for recurring payments</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right Side: Payment Options -->
+        <div class="checkout-right">
+          <!-- PayPal Payment -->
+          <div class="checkout-section">
+            <h4>Subscribe with PayPal</h4>
+            <div id="paypal-button-container" class="paypal-button-container"></div>
+          </div>
+          
+          <!-- Card Payment -->
+          <div class="checkout-section">
+            <h4>Or Subscribe with Card</h4>
+            <div class="card-fields">
+              <div id="card-name-field-container"></div>
+              <div id="card-number-field-container"></div>
+              <div id="card-expiry-field-container"></div>
+              <div id="card-cvv-field-container"></div>
+              <button id="multi-card-field-button" type="button">Subscribe with Card</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Status Information Sections -->
+      <div class="info-sections">
+        <div id="vault-info-section" style="display: none;">
+          <div class="separator"></div>
+          <h4>Setup Token Created</h4>
+          <div id="vault-setup-info"></div>
+          <div id="vault-setup-status"></div>
+          <p class="info-text">A setup token has been created. This token expires after 3 days if not used.</p>
+        </div>
+        <div id="payment-source-section" style="display: none;">
+          <div class="separator"></div>
+          <h4>Payment Method Token Created</h4>
+          <div id="payment-source-type-info"></div>
+          <div id="customer-id-info"></div>
+          <p class="info-text">The setup token has been successfully upgraded to a payment method token. This token can now be used for recurring billing.</p>
+        </div>
+        
+        <div id="flow-explanation" class="info-section">
+          <h4>Recurring Billing Flow</h4>
+          <ol>
+            <li><strong>Create Setup Token</strong> - When page loads, we prepare a setup token configuration with billing plan details</li>
+            <li><strong>Get Buyer Approval</strong> - When customer clicks the PayPal or Card button, they approve the setup</li>
+            <li><strong>Create Payment Token</strong> - After approval, the setup token is converted to a permanent payment token</li>
+            <li><strong>Use for Billing</strong> - The payment token can then be used for future recurring charges</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <script>
+      const clientId = '<%= clientId %>';
+    </script>
+    <script src="/recurring-payment.js"></script>
+  </body>
+</html>

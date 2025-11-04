@@ -6,6 +6,7 @@
 class FastlaneIntegration {
   constructor(clientId) {
     this.clientId = clientId;
+    this.clientToken = null;
     this.fastlaneInstance = null;
     this.cardComponent = null;
     this.identityComponent = null;
@@ -52,9 +53,16 @@ class FastlaneIntegration {
       const envCheck = this.checkEnvironment();
       this.showDebugInfo('Initial Environment Check', envCheck);
 
-      // Load PayPal SDK with Fastlane component
-      await this.loadPayPalSDK();
-      this.debugLog('PayPal SDK loaded successfully');
+      // Load PayPal SDK with client token
+      try {
+        await this.loadPayPalSDK();
+        this.debugLog('PayPal SDK loaded successfully with client token');
+      } catch (tokenError) {
+        console.error('Failed to initialize with client token:', tokenError);
+        this.showStatus('⚠️ Using fallback initialization method', 'warning');
+        // Use fallback method without token if token generation fails
+        await this.loadPayPalSDKFallback();
+      }
 
       // Wait for PayPal SDK to be fully loaded
       await this.waitForPayPalReady();
@@ -91,26 +99,19 @@ class FastlaneIntegration {
         locale: 'en_US',
       };
 
-      // Try with FraudNet first, then fallback without it
+      // Initialize without FraudNet due to Braintree client issues
+      this.debugLog(
+        'Initializing Fastlane without FraudNet due to client loading issues'
+      );
       try {
-        this.debugLog('Attempting Fastlane initialization with FraudNet...');
         this.fastlaneInstance = await window.paypal.Fastlane({
           ...fastlaneConfig,
-          fraudNet: { sandbox: true },
+          fraudNet: false, // Explicitly disable FraudNet
         });
-      } catch (fraudNetError) {
-        this.debugLog(
-          'FraudNet initialization failed, trying without it:',
-          fraudNetError
-        );
-        this.fastlaneInstance = await window.paypal.Fastlane({
-          ...fastlaneConfig,
-          fraudNet: false,
-        });
-        this.showStatus(
-          '⚠️ Advanced fraud protection unavailable, using standard security',
-          'warning'
-        );
+        this.showStatus('Fastlane initialized with standard security', 'info');
+      } catch (error) {
+        this.debugLog('Fastlane initialization failed:', error);
+        throw error; // Propagate error for fallback handling
       }
 
       console.log('✅ Fastlane initialized successfully');
@@ -145,34 +146,48 @@ class FastlaneIntegration {
    * Initialize FraudNet with retry mechanism
    */
   async initializeFraudNetWithRetry(maxRetries = 3) {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        this.debugLog(
-          `FraudNet initialization attempt ${attempt}/${maxRetries}`
-        );
+    try {
+      this.debugLog(
+        'Skipping FraudNet initialization due to Braintree client issues'
+      );
+      console.log(
+        'ℹ️ Proceeding without FraudNet due to client loading issues'
+      );
+      return; // Skip FraudNet initialization completely
 
-        if (window.paypal && window.paypal.FraudNet) {
-          await window.paypal.FraudNet();
-          console.log('✅ FraudNet initialized successfully');
-          this.debugLog('FraudNet initialized on attempt', attempt);
-          return;
-        } else {
-          this.debugLog('FraudNet not available in SDK');
-          return; // FraudNet not available, continue without error
-        }
-      } catch (error) {
-        this.debugLog(`FraudNet attempt ${attempt} failed:`, error);
-
-        if (attempt === maxRetries) {
-          console.warn(
-            '⚠️ FraudNet initialization failed after all retries, continuing without it:',
-            error
+      /* Original code commented out due to Braintree client loading issues
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          this.debugLog(
+            `FraudNet initialization attempt ${attempt}/${maxRetries}`
           );
-        } else {
-          // Wait before retry
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+
+          if (window.paypal && window.paypal.FraudNet) {
+            await window.paypal.FraudNet();
+            console.log('✅ FraudNet initialized successfully');
+            this.debugLog('FraudNet initialized on attempt', attempt);
+            return;
+          } else {
+            this.debugLog('FraudNet not available in SDK');
+            return; // FraudNet not available, continue without error
+          }
+        } catch (error) {
+          this.debugLog(`FraudNet attempt ${attempt} failed:`, error);
+
+          if (attempt === maxRetries) {
+            console.warn(
+              '⚠️ FraudNet initialization failed after all retries, continuing without it:',
+              error
+            );
+          } else {
+            // Wait before retry
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
         }
       }
+      */
+    } catch (error) {
+      console.warn('⚠️ Error in FraudNet initialization:', error);
     }
   }
 
@@ -193,9 +208,10 @@ class FastlaneIntegration {
   }
 
   /**
-   * Load PayPal SDK dynamically
+   * Fallback method to load PayPal SDK without client token
+   * This is used only if client token generation fails
    */
-  async loadPayPalSDK() {
+  async loadPayPalSDKFallback() {
     return new Promise((resolve, reject) => {
       if (window.paypal) {
         resolve();
@@ -203,17 +219,84 @@ class FastlaneIntegration {
       }
 
       const script = document.createElement('script');
-      // Correct PayPal SDK URL for Fastlane - simplified and clean
-      script.src = `https://www.paypal.com/sdk/js?client-id=${this.clientId}&components=fastlane`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${this.clientId}&components=fastlane&disable-funding=credit`;
+
       script.onload = () => {
-        console.log('✅ PayPal SDK loaded successfully');
+        console.log('✅ PayPal SDK loaded successfully (fallback mode)');
         resolve();
       };
+
       script.onerror = error => {
-        console.error('❌ Failed to load PayPal SDK:', error);
+        console.error('❌ Failed to load PayPal SDK in fallback mode:', error);
         reject(error);
       };
+
       document.head.appendChild(script);
+    });
+  }
+
+  /**
+   * Fetch client token from server
+   */
+  async fetchClientToken() {
+    try {
+      this.debugLog('Fetching client token from server...');
+      const response = await fetch('/api/client-token');
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to fetch client token: ${response.status} - ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      this.debugLog('Client token received:', data);
+      return data;
+    } catch (error) {
+      this.debugLog('Error fetching client token:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Load PayPal SDK dynamically with client token
+   */
+  async loadPayPalSDK() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (window.paypal) {
+          resolve();
+          return;
+        }
+
+        // Get client token from server
+        const { clientId, clientToken } = await this.fetchClientToken();
+        this.debugLog('Using clientId and token for SDK initialization', {
+          clientId,
+          tokenReceived: !!clientToken,
+        });
+
+        const script = document.createElement('script');
+        // Use SDK URL with client token for Fastlane
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=fastlane&disable-funding=credit`;
+        script.setAttribute('data-sdk-client-token', clientToken);
+
+        script.onload = () => {
+          console.log('✅ PayPal SDK loaded successfully with client token');
+          resolve();
+        };
+
+        script.onerror = error => {
+          console.error('❌ Failed to load PayPal SDK:', error);
+          reject(error);
+        };
+
+        document.head.appendChild(script);
+      } catch (error) {
+        console.error('❌ Error during SDK loading:', error);
+        reject(error);
+      }
     });
   }
 
@@ -222,13 +305,25 @@ class FastlaneIntegration {
    */
   async renderComponents() {
     try {
-      // Render Identity Component with error handling
+      // Set up initial UI state
+      // Start with only customer section active
+      document.getElementById('customer').classList.add('active');
+      document.getElementById('shipping').classList.remove('active');
+      document.getElementById('payment').classList.remove('active');
+
+      // First initialize the watermark and identity component
       this.identityComponent = await this.renderIdentityComponent();
       console.log('✅ Identity component rendered');
 
-      // Render Card Component with error handling
+      // Then initialize the card component
       this.cardComponent = await this.renderCardComponent();
       console.log('✅ Card component rendered');
+
+      // Set up all event listeners
+      this.setupEventListeners();
+
+      // Fastlane is ready
+      console.log('✅ Fastlane is fully initialized and ready');
     } catch (error) {
       console.error('❌ Error rendering Fastlane components:', error);
 
@@ -246,22 +341,181 @@ class FastlaneIntegration {
    * Render Identity Component with proper error handling
    */
   async renderIdentityComponent() {
-    const identityComponent = await this.fastlaneInstance.Identity({
-      onLookupComplete: lookupResult => {
-        console.log('👤 Identity lookup complete:', lookupResult);
-        this.handleIdentityLookup(lookupResult);
-      },
-      onError: error => {
-        console.error('🚨 Identity component error:', error);
-        this.showStatus(
-          '⚠️ Identity lookup temporarily unavailable',
-          'warning'
-        );
-      },
-    });
+    try {
+      // Extract required components from the Fastlane instance
+      const { identity, profile, FastlaneWatermarkComponent } =
+        this.fastlaneInstance;
 
-    await identityComponent.render('#fastlane-identity-container');
-    return identityComponent;
+      this.debugLog('Setting up identity components...');
+
+      // Store identity instance for later use
+      this.identity = identity;
+
+      // Initialize watermark component
+      const watermarkComponent = await FastlaneWatermarkComponent({
+        includeAdditionalInfo: true,
+      });
+      await watermarkComponent.render('#watermark-container');
+      this.debugLog('Watermark component rendered');
+
+      // Set up the email input and submit button
+      const emailInput = document.getElementById('email-input');
+      const emailSubmitButton = document.getElementById('email-submit-button');
+      const summaryElement = document.querySelector('#customer .summary');
+      const editButton = document.getElementById('email-edit-button');
+
+      // Handle email input validation
+      emailInput.addEventListener('input', () => {
+        // Enable the continue button when email is valid
+        emailSubmitButton.disabled = !this.validateEmail(emailInput.value);
+      });
+
+      // Handle email submission
+      emailSubmitButton.addEventListener('click', async () => {
+        try {
+          // Validate email format
+          if (!this.validateEmail(emailInput.value)) {
+            emailInput.classList.add('invalid');
+            emailInput.focus();
+            return;
+          }
+
+          // Disable the button to prevent multiple clicks
+          emailSubmitButton.disabled = true;
+          emailSubmitButton.textContent = 'Processing...';
+
+          // Get the email value
+          const email = emailInput.value;
+          this.debugLog('Looking up email:', email);
+
+          // Lookup customer by email
+          const { customerContextId } = await identity.lookupCustomerByEmail(
+            email
+          );
+          this.debugLog('Email lookup result:', { customerContextId, email });
+
+          if (customerContextId) {
+            // Customer found, trigger authentication flow
+            try {
+              const authResponse = await identity.triggerAuthenticationFlow(
+                customerContextId
+              );
+              console.log('👤 Authentication response:', authResponse);
+
+              if (authResponse?.authenticationState === 'succeeded') {
+                // Authentication successful
+                this.handleSuccessfulAuthentication(authResponse, email);
+              } else {
+                // Authentication failed or was cancelled
+                this.handleUnsuccessfulAuthentication(email);
+              }
+            } catch (authError) {
+              console.error('Authentication flow error:', authError);
+              this.handleUnsuccessfulAuthentication(email);
+            }
+          } else {
+            // New customer - set the email in the summary
+            summaryElement.textContent = email;
+            document.getElementById('customer').classList.add('completed');
+            document.getElementById('shipping').classList.add('active');
+            document.querySelector('.email-container').style.display = 'none';
+          }
+        } catch (error) {
+          console.error('Email lookup error:', error);
+          this.handleLookupError();
+        } finally {
+          emailSubmitButton.disabled = false;
+          emailSubmitButton.textContent = 'Continue';
+        }
+      });
+
+      // Handle edit button
+      editButton.addEventListener('click', () => {
+        document.querySelector('.email-container').style.display = 'flex';
+        summaryElement.textContent = '';
+        document.getElementById('customer').classList.remove('completed');
+      });
+
+      // Return a placeholder component object
+      return {
+        render: () => Promise.resolve(),
+        identity: identity,
+      };
+    } catch (error) {
+      console.error('Error setting up identity component:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Validate email format
+   */
+  validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  /**
+   * Handle successful authentication
+   */
+  handleSuccessfulAuthentication(authResponse, email) {
+    // Set the email in the summary
+    const summaryElement = document.querySelector('#customer .summary');
+    summaryElement.textContent = email;
+
+    // Mark customer section as completed and move to shipping
+    document.getElementById('customer').classList.add('completed');
+    document.getElementById('shipping').classList.add('active');
+
+    // Hide the email container
+    document.querySelector('.email-container').style.display = 'none';
+
+    // Pre-fill shipping information if available
+    if (authResponse.profileData?.shippingAddress) {
+      this.prefillShippingInfo(authResponse.profileData);
+    }
+
+    this.debugLog('Authentication successful, customer info updated');
+  }
+
+  /**
+   * Handle unsuccessful authentication
+   */
+  handleUnsuccessfulAuthentication(email) {
+    // Set the email in the summary
+    const summaryElement = document.querySelector('#customer .summary');
+    summaryElement.textContent = email;
+
+    // Mark customer section as completed and move to shipping
+    document.getElementById('customer').classList.add('completed');
+    document.getElementById('shipping').classList.add('active');
+
+    // Hide the email container
+    document.querySelector('.email-container').style.display = 'none';
+
+    this.debugLog('Authentication unsuccessful, continuing as new user');
+  }
+
+  /**
+   * Handle lookup error
+   */
+  handleLookupError() {
+    const emailInput = document.getElementById('email-input');
+    emailInput.classList.add('invalid');
+
+    // Show error message
+    const errorMessage = document.createElement('div');
+    errorMessage.className = 'error-message';
+    errorMessage.textContent = 'Could not verify email. Please try again.';
+
+    const container = document.querySelector('.email-container');
+    // Remove any existing error message
+    const existingError = container.querySelector('.error-message');
+    if (existingError) {
+      existingError.remove();
+    }
+
+    container.appendChild(errorMessage);
+    emailInput.focus();
   }
 
   /**
@@ -282,7 +536,7 @@ class FastlaneIntegration {
       },
     });
 
-    await cardComponent.render('#fastlane-card-container');
+    await cardComponent.render('#payment-component');
     return cardComponent;
   }
 
@@ -425,7 +679,6 @@ class FastlaneIntegration {
    */
   validateCheckoutForm() {
     const requiredFields = [
-      'email',
       'shipping-first-name',
       'shipping-last-name',
       'shipping-address',
@@ -453,12 +706,15 @@ class FastlaneIntegration {
    */
   async handlePayment() {
     try {
+      // Show processing status
+      const checkoutButton = document.getElementById('checkout-button');
+      checkoutButton.disabled = true;
+      checkoutButton.textContent = 'Processing...';
+
       this.showStatus('🔄 Processing payment with Fastlane...', 'info');
 
       // Get payment token from card component
-      const paymentToken = await this.cardComponent.getPaymentToken({
-        billingAddress: this.getBillingAddress(),
-      });
+      const paymentToken = await this.cardComponent.getPaymentToken();
 
       console.log('🔐 Payment token generated:', paymentToken);
 
@@ -474,27 +730,13 @@ class FastlaneIntegration {
           {
             amount: {
               currency_code: 'USD',
-              value: document.getElementById('amount-total').textContent,
-              breakdown: {
-                item_total: {
-                  currency_code: 'USD',
-                  value: document.getElementById('cart-total').textContent,
-                },
-                shipping: {
-                  currency_code: 'USD',
-                  value: document.getElementById('shipping-amount').textContent,
-                },
-                tax_total: {
-                  currency_code: 'USD',
-                  value: document.getElementById('tax-amount').textContent,
-                },
-              },
+              value: '50.00', // Fixed test amount since we don't have amount elements
             },
             shipping: {
               name: {
                 full_name: `${
-                  document.getElementById('shipping-first-name').value
-                } ${document.getElementById('shipping-last-name').value}`,
+                  document.querySelector('input[name="given-name"]').value
+                } ${document.querySelector('input[name="family-name"]').value}`,
               },
               address: this.getShippingAddress(),
             },
@@ -511,6 +753,11 @@ class FastlaneIntegration {
       console.error('❌ Fastlane payment error:', error);
       this.showStatus('❌ Payment failed. Please try again.', 'error');
       this.showPaymentError(error);
+    } finally {
+      // Reset button state
+      const checkoutButton = document.getElementById('checkout-button');
+      checkoutButton.disabled = false;
+      checkoutButton.textContent = 'Checkout';
     }
   }
 
@@ -519,11 +766,15 @@ class FastlaneIntegration {
    */
   getShippingAddress() {
     return {
-      address_line_1: document.getElementById('shipping-address').value,
-      locality: document.getElementById('shipping-city').value,
-      region: document.getElementById('shipping-state').value,
-      postal_code: document.getElementById('shipping-zip').value,
-      country_code: 'US',
+      address_line_1: document.querySelector('input[name="address-line1"]')
+        .value,
+      address_line_2:
+        document.querySelector('input[name="address-line2"]').value || '',
+      locality: document.querySelector('input[name="address-level2"]').value,
+      region: document.querySelector('input[name="address-level1"]').value,
+      postal_code: document.querySelector('input[name="postal-code"]').value,
+      country_code:
+        document.querySelector('input[name="country"]').value || 'US',
     };
   }
 
@@ -677,24 +928,61 @@ class FastlaneIntegration {
    * Setup event listeners
    */
   setupEventListeners() {
-    // Pay button event listener
-    document
-      .getElementById('fastlane-pay-button')
-      .addEventListener('click', () => {
+    // Checkout button event listener
+    const checkoutButton = document.getElementById('checkout-button');
+    if (checkoutButton) {
+      checkoutButton.addEventListener('click', () => {
         this.handlePayment();
       });
+    }
 
-    // Form validation listeners
-    const formFields = document.querySelectorAll('input, select');
-    formFields.forEach(field => {
-      field.addEventListener('input', () => {
-        this.updatePayButtonState({
-          isValid: this.cardComponent ? true : false,
-        });
+    // Shipping button event listener
+    const shippingButton = document.getElementById('shipping-submit-button');
+    if (shippingButton) {
+      shippingButton.addEventListener('click', () => {
+        document.getElementById('shipping').classList.add('completed');
+        document.getElementById('payment').classList.add('active');
       });
+    }
 
-      field.addEventListener('blur', () => {
-        this.validateField(field);
+    // Shipping edit button
+    const shippingEditButton = document.getElementById('shipping-edit-button');
+    if (shippingEditButton) {
+      shippingEditButton.addEventListener('click', () => {
+        document.getElementById('shipping').classList.remove('completed');
+        document.getElementById('payment').classList.remove('active');
+      });
+    }
+
+    // Payment edit button
+    const paymentEditButton = document.getElementById('payment-edit-button');
+    if (paymentEditButton) {
+      paymentEditButton.addEventListener('click', () => {
+        document.getElementById('payment').classList.remove('completed');
+      });
+    }
+
+    // Email input validation for enter key
+    const emailInput = document.getElementById('email-input');
+    if (emailInput) {
+      emailInput.addEventListener('keypress', event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          const submitButton = document.getElementById('email-submit-button');
+          if (!submitButton.disabled) {
+            submitButton.click();
+          }
+        }
+      });
+    }
+
+    // Form validation for shipping inputs
+    const shippingInputs = document.querySelectorAll(
+      '#shipping input, #shipping select'
+    );
+    shippingInputs.forEach(input => {
+      input.addEventListener('input', () => {
+        this.validateShippingForm();
       });
     });
   }
@@ -716,22 +1004,53 @@ class FastlaneIntegration {
   }
 
   /**
+   * Validate shipping form fields
+   */
+  validateShippingForm() {
+    const requiredFields = [
+      'given-name',
+      'family-name',
+      'address-line1',
+      'address-level2',
+      'address-level1',
+      'postal-code',
+    ];
+
+    const isFormValid = requiredFields.every(name => {
+      const field = document.querySelector(`input[name="${name}"]`);
+      return field && field.value.trim() !== '';
+    });
+
+    // Enable/disable continue button based on form validity
+    const submitButton = document.getElementById('shipping-submit-button');
+    if (submitButton) {
+      submitButton.disabled = !isFormValid;
+    }
+
+    return isFormValid;
+  }
+
+  /**
    * Show payment success
    */
   showPaymentSuccess(captureResult) {
     const resultDiv = document.getElementById('result-message');
     resultDiv.innerHTML = `
-            <div class="payment-success">
-                <h3>🎉 Payment Successful!</h3>
-                <p><strong>Order ID:</strong> ${captureResult.id}</p>
-                <p><strong>Status:</strong> ${captureResult.status}</p>
-                <p><strong>Amount:</strong> $${captureResult.purchase_units[0].payments.captures[0].amount.value} USD</p>
-                <div class="success-actions">
-                    <button onclick="window.print()" class="btn btn-secondary">Print Receipt</button>
-                    <button onclick="window.location.href='/'" class="btn btn-primary">Continue Shopping</button>
-                </div>
-            </div>
-        `;
+      <div class="payment-result">
+        <div class="result-content result-success">
+          <h3>🎉 Payment Successful!</h3>
+          <div class="result-details">
+            <p><strong>Order ID:</strong> ${captureResult.id}</p>
+            <p><strong>Status:</strong> ${captureResult.status}</p>
+            <p><strong>Amount:</strong> $${captureResult.purchase_units[0].payments.captures[0].amount.value} USD</p>
+          </div>
+          <div class="result-actions">
+            <button onclick="window.print()" class="btn-action btn-secondary">Print Receipt</button>
+            <button onclick="window.location.href='/'" class="btn-action btn-primary">Continue Shopping</button>
+          </div>
+        </div>
+      </div>
+    `;
     resultDiv.style.display = 'block';
   }
 
@@ -741,18 +1060,21 @@ class FastlaneIntegration {
   showPaymentError(error) {
     const resultDiv = document.getElementById('result-message');
     resultDiv.innerHTML = `
-            <div class="payment-error">
-                <h3>❌ Payment Failed</h3>
-                <p>${
-                  error.message ||
-                  'An unexpected error occurred. Please try again.'
-                }</p>
-                <div class="error-actions">
-                    <button onclick="location.reload()" class="btn btn-primary">Try Again</button>
-                    <button onclick="window.location.href='/'" class="btn btn-secondary">Return to Home</button>
-                </div>
-            </div>
-        `;
+      <div class="payment-result">
+        <div class="result-content result-error">
+          <h3>❌ Payment Failed</h3>
+          <div class="result-details">
+            <p>${
+              error.message || 'An unexpected error occurred. Please try again.'
+            }</p>
+          </div>
+          <div class="result-actions">
+            <button onclick="location.reload()" class="btn-action btn-primary">Try Again</button>
+            <button onclick="window.location.href='/'" class="btn-action btn-secondary">Return to Home</button>
+          </div>
+        </div>
+      </div>
+    `;
     resultDiv.style.display = 'block';
   }
 

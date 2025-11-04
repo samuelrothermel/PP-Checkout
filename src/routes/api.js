@@ -14,7 +14,10 @@ import {
   createPaymentTokenFromCustomerId,
   getPaymentTokens,
   createReturningUserToken,
+  createRecurringSetupToken,
+  createRecurringOrder,
 } from '../controllers/vaultController.js';
+import { generateClientToken } from '../controllers/tokenController.js';
 import {
   createBillingToken,
   createBillingAgreement,
@@ -28,6 +31,12 @@ import {
 } from '../controllers/webhookController.js';
 import { createPlan, getPlan } from '../controllers/subscriptionController.js';
 import { handleShippingCallback } from '../services/shippingCallback.js';
+import {
+  testOneTimePayee,
+  testVaultedPayee,
+  testVaultedSameMerchantDifferentPayee,
+  captureOneTimePayee,
+} from '../controllers/payeeTestController.js';
 
 const router = express.Router();
 
@@ -42,10 +51,15 @@ router.post('/orders/:orderID/authorize', authorizePayment);
 
 // Vault routes
 router.post('/vault/setup-token', createVaultSetupToken);
+router.post('/vault/recurring-setup-token', createRecurringSetupToken);
 router.post('/vault/payment-token/:vaultSetupToken', createVaultPaymentToken);
 router.post('/vault/payment-token', createPaymentTokenFromCustomerId);
+router.post('/vault/recurring-order', createRecurringOrder);
 router.get('/payment-tokens', getPaymentTokens);
 router.post('/returning-user-token', createReturningUserToken);
+
+// Client Token route for SDK initialization
+router.get('/client-token', generateClientToken);
 
 // Billing Agreement routes
 router.post('/ba/create-billing-token', createBillingToken);
@@ -75,5 +89,14 @@ router.post('/webhooks', handleWebhook);
 router.get('/webhooks/info', getWebhookInfo);
 router.get('/webhooks/events', getWebhookEvents);
 router.post('/webhooks/test', testWebhook);
+
+// Payee testing routes
+router.post('/test-onetime-payee', testOneTimePayee);
+router.post('/capture-onetime-payee', captureOneTimePayee);
+router.post('/test-vaulted-payee', testVaultedPayee);
+router.post(
+  '/test-vaulted-same-merchant-different-payee',
+  testVaultedSameMerchantDifferentPayee
+);
 
 export default router;

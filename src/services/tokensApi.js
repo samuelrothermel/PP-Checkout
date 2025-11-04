@@ -128,3 +128,135 @@ export const fetchPaymentTokens = async customerId => {
   console.log('Payment Tokens Response: ', data);
   return data.payment_tokens || [];
 };
+
+// create order with payment token for recurring payment
+export const createRecurringOrder = async paymentTokenId => {
+  console.log(
+    'Creating order with payment token for recurring payment:',
+    paymentTokenId
+  );
+
+  const accessToken = await generateAccessToken();
+  const response = await fetch(`${base}/v2/checkout/orders`, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      intent: 'CAPTURE',
+      purchase_units: [
+        {
+          amount: {
+            currency_code: 'USD',
+            value: '100.00', // Monthly fee
+          },
+        },
+      ],
+      payment_source: {
+        token: {
+          id: paymentTokenId,
+          type: 'PAYMENT_METHOD_TOKEN',
+        },
+        stored_credential: {
+          payment_initiator: 'MERCHANT',
+          payment_type: 'RECURRING',
+          usage: 'SUBSEQUENT',
+        },
+      },
+    }),
+  });
+
+  console.log(
+    'Create Recurring Order Response: ',
+    await response.clone().text()
+  );
+  return handleResponse(response);
+};
+
+// create recurring payment setup token
+export const createRecurringSetupToken = async ({ paymentSource }) => {
+  console.log(
+    'Creating recurring payment setup token for payment source:',
+    paymentSource
+  );
+
+  // Current date
+  const today = new Date();
+  const formattedDate = today.toISOString().split('T')[0];
+
+  const paymentSources = {
+    paypal: {
+      usage_type: 'MERCHANT',
+      usage_pattern: 'UNSCHEDULED_POSTPAID',
+      billing_plan: {
+        billing_cycles: [
+          {
+            tenure_type: 'REGULAR',
+            pricing_scheme: {
+              pricing_model: 'AUTO_RELOAD',
+              price: {
+                value: '10',
+                currency_code: 'USD',
+              },
+            },
+            frequency: {
+              interval_unit: 'MONTH',
+              interval_count: '1',
+            },
+            total_cycles: '1',
+            start_date: formattedDate,
+          },
+        ],
+        one_time_charges: {
+          product_price: {
+            value: '10',
+            currency_code: 'USD',
+          },
+          total_amount: {
+            value: '10',
+            currency_code: 'USD',
+          },
+        },
+        product: {
+          description: 'Monthly Membership',
+          quantity: '1',
+        },
+        name: "Sam's Recurring Monthly Membership Plan",
+      },
+      experience_context: {
+        return_url: 'https://example.com/returnUrl',
+        cancel_url: 'https://example.com/cancelUrl',
+        shipping_preference: 'NO_SHIPPING',
+        payment_method_preference: 'IMMEDIATE_PAYMENT_REQUIRED',
+        brand_name: 'EXAMPLE INC',
+        locale: 'en-US',
+      },
+    },
+    card: {
+      verification_method: 'SCA_WHEN_REQUIRED',
+      experience_context: {
+        shipping_preference: 'NO_SHIPPING',
+      },
+    },
+  };
+
+  const response = await fetch(`${base}/v3/vault/setup-tokens`, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${await generateAccessToken()}`,
+    },
+    body: JSON.stringify({
+      payment_source: {
+        [paymentSource]: paymentSources[paymentSource],
+      },
+    }),
+  });
+
+  console.log(
+    'Create Recurring Setup Token Response: ',
+    JSON.stringify(await response.clone().json(), null, 2)
+  );
+  return handleResponse(response);
+};

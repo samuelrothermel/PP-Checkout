@@ -8,6 +8,8 @@ import {
   renderProductCart,
   renderWebhookTesting,
   renderFastlane,
+  renderRecurringPayment,
+  renderPayeeTest,
 } from '../controllers/pageController.js';
 
 const router = express.Router();
@@ -20,6 +22,7 @@ router.get('/test-no-applepay', (req, res) => {
   res.render('test-no-applepay', { clientId: process.env.CLIENT_ID });
 });
 router.get('/save-wo-purchase', renderSaveWoPurchase);
+router.get('/recurring-payment', renderRecurringPayment);
 router.get('/subscriptions', renderSubscriptions);
 router.get('/test-plan', (req, res) => {
   res.render('test-plan');
@@ -27,5 +30,6 @@ router.get('/test-plan', (req, res) => {
 router.get('/ba_reference', renderBaReference);
 router.get('/fastlane', renderFastlane);
 router.get('/webhook-testing', renderWebhookTesting);
+router.get('/payee-test', renderPayeeTest);
 
 export default router;

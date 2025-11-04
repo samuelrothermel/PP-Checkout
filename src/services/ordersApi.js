@@ -1,5 +1,8 @@
 import fetch from 'node-fetch';
-import { generateAccessToken } from './authApi.js';
+import {
+  generateAccessToken,
+  generateAccessTokenForMerchant,
+} from './authApi.js';
 
 // set some important variables
 const base = 'https://api-m.sandbox.paypal.com';
@@ -22,14 +25,9 @@ export const createCheckoutOrder = async orderData => {
     'creating order from Checkout Page with data:',
     JSON.stringify(orderData)
   );
-  const {
-    shippingInfo,
-    billingInfo,
-    totalAmount,
-    paymentSource = 'paypal',
-    customerId,
-  } = orderData;
-  const purchaseAmount = totalAmount || '100.00'; // Use provided amount or default to 100.00
+  const { shippingInfo, billingInfo, totalAmount, paymentSource, customerId } =
+    orderData;
+  const purchaseAmount = totalAmount || '100.00'; // Use provided amount or default to 100.00 (minimum $30 for Pay Later)
   const accessToken = await generateAccessToken();
 
   let shippingPreference = 'GET_FROM_FILE';
@@ -62,25 +60,23 @@ export const createCheckoutOrder = async orderData => {
   let payment_source = {};
   if (paymentSource === 'paypal') {
     payment_source.paypal = {
-      attributes: {
-        vault: {
-          store_in_vault: 'ON_SUCCESS',
-          usage_type: 'MERCHANT',
-          customer_type: 'CONSUMER',
-        },
-      },
       experience_context: {
         return_url: 'http://localhost:8888/',
         cancel_url: 'https://example.com/cancel',
-        user_action: 'CONTINUE',
+        user_action: 'PAY_NOW',
         shipping_preference: shippingPreference,
+        brand_name: 'Your Store Name',
+        locale: 'en-US',
+        landing_page: 'LOGIN',
       },
     };
 
     // Add customer ID if provided for returning users with payment methods
     if (customerId) {
-      payment_source.paypal.attributes.customer = {
-        id: customerId,
+      payment_source.paypal.attributes = {
+        customer: {
+          id: customerId,
+        },
       };
     }
   } else if (paymentSource === 'venmo') {
@@ -171,7 +167,7 @@ export const createCheckoutOrder = async orderData => {
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      intent: 'AUTHORIZE',
+      intent: 'CAPTURE',
       purchase_units: [purchaseUnit],
       payment_source,
     }),
@@ -331,3 +327,234 @@ export async function createOrderWithBillingAgreement(
   console.log('Create Order with Billing Agreement Response: ', response);
   return handleResponse(response);
 }
+
+// Test function: Create one-time order with different payee
+export const createOneTimeOrderWithPayee = async (
+  payeeMerchantId,
+  amount = '10.00'
+) => {
+  const accessToken = await generateAccessToken();
+
+  const payload = {
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: amount,
+        },
+        payee: {
+          merchant_id: payeeMerchantId,
+        },
+      },
+    ],
+    payment_source: {
+      paypal: {
+        experience_context: {
+          return_url: 'http://localhost:8888/success',
+          cancel_url: 'http://localhost:8888/cancel',
+          user_action: 'CONTINUE',
+          shipping_preference: 'NO_SHIPPING',
+        },
+      },
+    },
+  };
+
+  console.log(
+    'Creating one-time order with payee:',
+    JSON.stringify(payload, null, 2)
+  );
+
+  const response = await fetch(`${base}/v2/checkout/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      'PayPal-Request-Id': Date.now().toString(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+};
+
+// Test function: Create vaulted order with different payee
+export const createVaultedOrderWithPayee = async (
+  vaultedToken,
+  payeeMerchantId,
+  amount = '10.00'
+) => {
+  const accessToken = await generateAccessToken();
+
+  const payload = {
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: amount,
+        },
+        payee: {
+          merchant_id: payeeMerchantId,
+        },
+      },
+    ],
+    payment_source: {
+      paypal: {
+        vault_id: vaultedToken,
+      },
+    },
+  };
+
+  console.log(
+    'Creating vaulted order with payee:',
+    JSON.stringify(payload, null, 2)
+  );
+
+  const response = await fetch(`${base}/v2/checkout/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      'PayPal-Request-Id': Date.now().toString(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+};
+
+// Test 2A: Create order with vaulting enabled and return order for approval
+export const createOrderWithVaulting = async (
+  amount = '10.00',
+  merchantNumber = 1
+) => {
+  const accessToken = await generateAccessTokenForMerchant(merchantNumber);
+
+  const createPayload = {
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: amount,
+        },
+      },
+    ],
+    payment_source: {
+      paypal: {
+        attributes: {
+          vault: {
+            store_in_vault: 'ON_SUCCESS',
+            usage_type: 'MERCHANT',
+            customer_type: 'CONSUMER',
+          },
+        },
+        experience_context: {
+          return_url: 'http://localhost:8888/success',
+          cancel_url: 'http://localhost:8888/cancel',
+          user_action: 'CONTINUE',
+          shipping_preference: 'NO_SHIPPING',
+        },
+      },
+    },
+  };
+
+  console.log(
+    `Creating order with vaulting for merchant ${merchantNumber}:`,
+    JSON.stringify(createPayload, null, 2)
+  );
+
+  const createResponse = await fetch(`${base}/v2/checkout/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      'PayPal-Request-Id': Date.now().toString(),
+    },
+    body: JSON.stringify(createPayload),
+  });
+
+  const orderResult = await handleResponse(createResponse);
+  console.log(
+    `Order created: ${orderResult.id}, status: ${orderResult.status}`
+  );
+
+  return {
+    orderId: orderResult.id,
+    status: orderResult.status,
+    approvalUrl: orderResult.links.find(link => link.rel === 'approve')?.href,
+    merchantNumber: merchantNumber,
+    orderDetails: orderResult,
+  };
+};
+
+// Test 2B & 2C: Create order using vault_id with different payee/merchant
+export const createOrderWithVaultId = async (
+  vaultId,
+  payeeMerchantId,
+  amount = '10.00',
+  merchantNumber = 1
+) => {
+  const accessToken = await generateAccessTokenForMerchant(merchantNumber);
+
+  const payload = {
+    intent: 'AUTHORIZE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: amount,
+        },
+        payee: {
+          merchant_id: payeeMerchantId,
+        },
+      },
+    ],
+    payment_source: {
+      paypal: {
+        vault_id: vaultId,
+      },
+    },
+  };
+
+  console.log(
+    `Creating order with vault_id for merchant ${merchantNumber}:`,
+    JSON.stringify(payload, null, 2)
+  );
+
+  const response = await fetch(`${base}/v2/checkout/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      'PayPal-Request-Id': Date.now().toString(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+};
+
+// Capture payment with specific merchant credentials
+export const capturePaymentWithMerchant = async (
+  orderId,
+  merchantNumber = 1
+) => {
+  const accessToken = await generateAccessTokenForMerchant(merchantNumber);
+  const url = `${base}/v2/checkout/orders/${orderId}/capture`;
+
+  console.log(
+    `Capturing order ${orderId} with merchant ${merchantNumber} credentials`
+  );
+
+  const response = await fetch(url, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return handleResponse(response);
+};

@@ -17,5 +17,7 @@ export const renderSaveWoPurchase = renderPage('save-wo-purchase');
 export const renderSubscriptions = renderPage('subscriptions');
 export const renderBaReference = renderPage('ba_reference');
 export const renderFastlane = renderPage('fastlane');
+export const renderRecurringPayment = renderPage('recurring-payment');
 
 export const renderWebhookTesting = renderPage('webhook-testing');
+export const renderPayeeTest = renderPage('payee-test');

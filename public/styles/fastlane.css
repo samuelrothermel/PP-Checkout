@@ -1,0 +1,142 @@
+/* Fastlane-specific styles */
+form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+section {
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  display: none;
+}
+
+section.active {
+  display: block;
+}
+
+section.visited {
+  border-color: #ccc;
+}
+
+section.completed .summary {
+  display: block;
+}
+
+section.completed fieldset,
+section.completed .email-container {
+  display: none;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.edit-button {
+  background: none;
+  border: none;
+  color: #0070ba;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+.summary {
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  display: none;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 30px 0;
+}
+
+.email-container {
+  display: flex;
+  gap: 10px;
+}
+
+.email-input-with-watermark {
+  flex: 1;
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0;
+  margin: 0;
+}
+
+#email-input {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+#watermark-container {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.submit-button {
+  background-color: #0070ba;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.submit-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+fieldset input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+fieldset span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 5px;
+}

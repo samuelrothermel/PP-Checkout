@@ -2,6 +2,8 @@ import {
   createVaultSetupToken as createVaultSetupTokenApi,
   createVaultPaymentToken as createVaultPaymentTokenApi,
   createPaymentTokenFromCustomerId as createPaymentTokenFromCustomerIdApi,
+  createRecurringSetupToken as createRecurringSetupTokenApi,
+  createRecurringOrder as createRecurringOrderApi,
   fetchPaymentTokens,
 } from '../services/tokensApi.js';
 
@@ -67,6 +69,34 @@ export const createReturningUserToken = async (req, res, next) => {
     const { customerId } = req.body;
     const idToken = await paypal.returningAccessToken(customerId);
     res.json({ idToken });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Create recurring payment setup token
+export const createRecurringSetupToken = async (req, res, next) => {
+  console.log('create recurring payment setup token triggered');
+  console.log('');
+  try {
+    const { paymentSource } = req.body;
+    const vaultSetupToken = await createRecurringSetupTokenApi({
+      paymentSource,
+    });
+    res.json(vaultSetupToken);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Create order with payment token for recurring billing
+export const createRecurringOrder = async (req, res, next) => {
+  console.log('create recurring order with payment token triggered');
+  console.log('');
+  try {
+    const { paymentTokenId } = req.body;
+    const order = await createRecurringOrderApi(paymentTokenId);
+    res.json(order);
   } catch (err) {
     next(err);
   }

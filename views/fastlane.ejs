@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,8 +9,12 @@
         href="https://www.paypalobjects.com/webstatic/en_US/developer/docs/css/cardfields.css"
     />
     <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
+    <link rel="stylesheet" type="text/css" href="/styles/fastlane.css" />
+    <link rel="stylesheet" type="text/css" href="/styles/payment-result.css" />
     <title>PayPal Fastlane Integration</title>
-</head>
+    
+    <!-- The SDK will be dynamically loaded with the client token in fastlane.js -->
+    <script src="/fastlane.js" defer></script>
 
 <body>
     <div class="container">
@@ -19,143 +23,154 @@
             <p>Experience PayPal's Fastlane - the next generation of accelerated checkout</p>
         </header>
         
-        <div class="checkout-layout">
-            <!-- Left Side: Order Summary -->
-            <div class="checkout-left">
-                <div class="order-summary">
-                    <h3>Order Summary</h3>
-                    <div class="order-row">
-                        <span>Subtotal:</span>
-                        <span>$<span id="cart-total">99.99</span></span>
-                    </div>
-                    <div class="order-row">
-                        <span>Shipping:</span>
-                        <span>$<span id="shipping-amount">5.99</span></span>
-                    </div>
-                    <div class="order-row">
-                        <span>Tax:</span>
-                        <span>$<span id="tax-amount">8.75</span></span>
-                    </div>
-                    <div class="order-row total">
-                        <span>Total:</span>
-                        <span>$<span id="amount-total">114.73</span></span>
-                    </div>
-                </div>
-                
-                <!-- Fastlane Features -->
-                <div class="fastlane-features">
-                    <h4>Fastlane Benefits</h4>
-                    <ul>
-                        <li>🚀 One-click guest checkout acceleration</li>
-                        <li>🔒 Secure payment processing</li>
-                        <li>📱 Mobile-optimized experience</li>
-                        <li>⚡ Instant payment method recognition</li>
-                        <li>🎯 Higher conversion rates</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- Right Side: Fastlane Checkout Form -->
-            <div class="checkout-right">
-                <!-- Customer Information -->
-                <div class="checkout-section">
-                    <h4>Customer Information</h4>
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" class="form-control" required />
-                        <div id="email-lookup-result" class="fastlane-lookup-result"></div>
-                    </div>
-                </div>
-                
+        <form>
+            <h1>PayPal Fastlane</h1>
                 <!-- Fastlane Identity Component -->
-                <div class="checkout-section" id="fastlane-identity-section">
-                    <h4>Fastlane Express Checkout</h4>
-                    <div id="fastlane-identity-container">
-                        <!-- Fastlane Identity Component will render here -->
+                <section id="customer" class="checkout-section active visited">
+                    <div class="header">
+                        <h2>Customer</h2>
+                        <button
+                            id="email-edit-button"
+                            type="button"
+                            class="edit-button"
+                        >
+                            Edit
+                        </button>
                     </div>
-                </div>
+                    <div class="summary"></div>
+                    <div class="email-container">
+                        <fieldset class="email-input-with-watermark">
+                            <input
+                                id="email-input"
+                                name="email"
+                                type="email"
+                                placeholder="Email"
+                                autocomplete="email"
+                            />
+                            <div id="watermark-container"></div>
+                        </fieldset>
+                        <button
+                            id="email-submit-button"
+                            type="button"
+                            class="submit-button"
+                            disabled
+                        >
+                            Continue
+                        </button>
+                    </div>
+                </section>
+                
+                <hr />
                 
                 <!-- Shipping Information -->
-                <div class="checkout-section" id="shipping-section">
-                    <h4>Shipping Information</h4>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="shipping-first-name">First Name</label>
-                            <input type="text" id="shipping-first-name" name="shipping-first-name" class="form-control" required />
-                        </div>
-                        <div class="form-group">
-                            <label for="shipping-last-name">Last Name</label>
-                            <input type="text" id="shipping-last-name" name="shipping-last-name" class="form-control" required />
-                        </div>
+                <section id="shipping">
+                    <div class="header">
+                        <h2>Shipping</h2>
+                        <button
+                            id="shipping-edit-button"
+                            type="button"
+                            class="edit-button"
+                        >
+                            Edit
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label for="shipping-address">Street Address</label>
-                        <input type="text" id="shipping-address" name="shipping-address" class="form-control" required />
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="shipping-city">City</label>
-                            <input type="text" id="shipping-city" name="shipping-city" class="form-control" required />
-                        </div>
-                        <div class="form-group">
-                            <label for="shipping-state">State</label>
-                            <select id="shipping-state" name="shipping-state" class="form-control" required>
-                                <option value="">Select State</option>
-                                <option value="CA">California</option>
-                                <option value="NY">New York</option>
-                                <option value="TX">Texas</option>
-                                <option value="FL">Florida</option>
-                                <!-- Add more states as needed -->
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="shipping-zip">ZIP Code</label>
-                            <input type="text" id="shipping-zip" name="shipping-zip" class="form-control" required />
-                        </div>
-                    </div>
-                </div>
+                    <div class="summary"></div>
+                    <fieldset>
+                        <span>
+                            <input
+                                id="shipping-required-checkbox"
+                                name="shipping-required"
+                                type="checkbox"
+                                checked
+                            />
+                            <label for="shipping-required-checkbox"
+                                >This purchase requires shipping</label
+                            >
+                        </span>
+                        <input
+                            name="given-name"
+                            placeholder="First name"
+                            autocomplete="given-name"
+                        />
+                        <input
+                            name="family-name"
+                            placeholder="Last name"
+                            autocomplete="family-name"
+                        />
+                        <input
+                            name="address-line1"
+                            placeholder="Street address"
+                            autocomplete="address-line1"
+                        />
+                        <input
+                            name="address-line2"
+                            placeholder="Apt., ste., bldg. (optional)"
+                            autocomplete="address-line2"
+                        />
+                        <input
+                            name="address-level2"
+                            placeholder="City"
+                            autocomplete="address-level2"
+                        />
+                        <input
+                            name="address-level1"
+                            placeholder="State"
+                            autocomplete="address-level1"
+                        />
+                        <input
+                            name="postal-code"
+                            placeholder="ZIP code"
+                            autocomplete="postal-code"
+                        />
+                        <input
+                            name="country"
+                            placeholder="Country"
+                            autocomplete="country"
+                        />
+                        <input
+                            name="tel-country-code"
+                            placeholder="Country calling code"
+                            autocomplete="tel-country-code"
+                        />
+                        <input
+                            name="tel-national"
+                            type="tel"
+                            placeholder="Phone number"
+                            autocomplete="tel-national"
+                        />
+                    </fieldset>
+                    <button
+                        id="shipping-submit-button"
+                        type="button"
+                        class="submit-button"
+                    >
+                        Continue
+                    </button>
+                </section>
                 
+                <hr />
+
                 <!-- Payment Information -->
-                <div class="checkout-section" id="payment-section">
-                    <h4>Payment Information</h4>
-                    
-                    <!-- Fastlane Card Component -->
-                    <div id="fastlane-card-container">
-                        <!-- Fastlane Card Component will render here -->
-                    </div>
-                    
-                    <!-- Fallback Payment Form -->
-                    <div id="manual-payment-form" style="display: none;">
-                        <div class="form-group">
-                            <label for="card-number">Card Number</label>
-                            <div id="card-number-field" class="card-field"></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="expiry-date">Expiry Date</label>
-                                <div id="expiry-date-field" class="card-field"></div>
-                            </div>
-                            <div class="form-group">
-                                <label for="cvv">CVV</label>
-                                <div id="cvv-field" class="card-field"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="checkout-section">
-                    <div class="button-group">
-                        <button id="fastlane-pay-button" class="btn btn-primary btn-large" disabled>
-                            Complete Purchase with Fastlane
-                        </button>
-                        <button id="manual-pay-button" class="btn btn-secondary" style="display: none;">
-                            Pay with Card
+                <section id="payment">
+                    <div class="header">
+                        <h2>Payment</h2>
+                        <button
+                            id="payment-edit-button"
+                            type="button"
+                            class="edit-button"
+                        >
+                            Edit
                         </button>
                     </div>
-                </div>
-            </div>
-        </div>
+                    <fieldset>
+                        <div id="payment-component"></div>
+                    </fieldset>
+                </section>
+
+                <button id="checkout-button" type="button" class="submit-button">
+                    Checkout
+                </button>
+        </form>
         
         <!-- Status Messages -->
         <div id="payment-status" class="status-message" style="display: none;"></div>
@@ -164,17 +179,20 @@
     </div>
 
     <!-- PayPal SDK will be loaded dynamically -->
-    <!-- Fastlane Integration Script -->
-    <script src="/fastlane.js"></script>
-    
+    <!-- Fastlane Integration Script is loaded in the head with defer attribute -->
     <script>
         let fastlaneApp = null;
 
         // Initialize Fastlane when page loads
         document.addEventListener('DOMContentLoaded', async function() {
             try {
+                // We'll use clientId as a fallback, but the SDK will primarily use the client token
                 fastlaneApp = new FastlaneIntegration('<%= clientId %>');
+                
+                // The init method will fetch the client token and initialize with it
                 await fastlaneApp.init();
+                
+                console.log('✅ Fastlane initialized successfully with client token');
             } catch (error) {
                 console.error('Failed to initialize Fastlane:', error);
                 document.getElementById('payment-status').innerHTML = 
@@ -515,6 +533,27 @@
             transform: translate(-50%, -50%);
             font-size: 24px;
             z-index: 1;
+        }
+        
+        /* Identity form styles */
+        .identity-form {
+            margin-bottom: 15px;
+        }
+        
+        .button-container {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        #email-submit-button {
+            padding: 8px 20px;
+            font-weight: 500;
+        }
+        
+        .watermark-container {
+            margin-top: 20px;
+            text-align: center;
         }
     </style>
 </body>

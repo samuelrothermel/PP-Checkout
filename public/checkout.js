@@ -623,7 +623,7 @@ function loadPayPalSDK(idToken) {
   );
 
   // Use PayPal SDK with conditional Apple Pay component
-  const scriptUrl = `https://www.paypal.com/sdk/js?commit=false&components=${components}&intent=authorize&client-id=${clientId}&enable-funding=venmo&integration-date=2023-01-01&debug=false`;
+  const scriptUrl = `https://www.paypal.com/sdk/js?commit=false&components=${components}&intent=capture&client-id=${clientId}&enable-funding=venmo&integration-date=2023-01-01&debug=false`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   if (idToken) {
