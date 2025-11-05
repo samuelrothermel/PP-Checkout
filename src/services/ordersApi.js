@@ -498,6 +498,57 @@ export const createOrderWithVaultId = async (
 ) => {
   const accessToken = await generateAccessTokenForMerchant(merchantNumber);
 
+  // Import the function to get payment token details
+  const { getPaymentTokenDetails } = await import('./tokensApi.js');
+
+  // Get the payment token details to determine the correct payment source
+  let tokenDetails;
+  try {
+    tokenDetails = await getPaymentTokenDetails(vaultId);
+    console.log(
+      'Token details for vault_id:',
+      JSON.stringify(tokenDetails, null, 2)
+    );
+  } catch (error) {
+    console.error('Error fetching token details:', error);
+    throw new Error(
+      `Unable to retrieve payment token details for vault_id: ${vaultId}`
+    );
+  }
+
+  // Determine the payment source based on the token details
+  let payment_source = {};
+
+  if (tokenDetails.payment_source?.apple_pay) {
+    payment_source = {
+      apple_pay: {
+        vault_id: vaultId,
+      },
+    };
+  } else if (tokenDetails.payment_source?.card) {
+    payment_source = {
+      card: {
+        vault_id: vaultId,
+      },
+    };
+  } else if (tokenDetails.payment_source?.paypal) {
+    payment_source = {
+      paypal: {
+        vault_id: vaultId,
+      },
+    };
+  } else {
+    // Fallback to paypal if we can't determine the source
+    console.warn(
+      'Unable to determine payment source from token details, defaulting to paypal'
+    );
+    payment_source = {
+      paypal: {
+        vault_id: vaultId,
+      },
+    };
+  }
+
   const payload = {
     intent: 'AUTHORIZE',
     purchase_units: [
@@ -511,11 +562,7 @@ export const createOrderWithVaultId = async (
         },
       },
     ],
-    payment_source: {
-      paypal: {
-        vault_id: vaultId,
-      },
-    },
+    payment_source: payment_source,
   };
 
   console.log(
@@ -557,4 +604,96 @@ export const capturePaymentWithMerchant = async (
   });
 
   return handleResponse(response);
+};
+
+// Create and capture order using vault_id (for Apple Pay and other vaulted payment methods)
+export const createOrderWithVaultIdAndCapture = async (
+  vaultId,
+  amount = '10.00',
+  merchantNumber = 1
+) => {
+  const accessToken = await generateAccessTokenForMerchant(merchantNumber);
+
+  // Import the function to get payment token details
+  const { getPaymentTokenDetails } = await import('./tokensApi.js');
+
+  // Get the payment token details to determine the correct payment source
+  let tokenDetails;
+  try {
+    tokenDetails = await getPaymentTokenDetails(vaultId);
+    console.log('Token details:', JSON.stringify(tokenDetails, null, 2));
+  } catch (error) {
+    console.error('Error fetching token details:', error);
+    throw new Error(
+      `Unable to retrieve payment token details for vault_id: ${vaultId}`
+    );
+  }
+
+  // Determine the payment source based on the token details
+  let payment_source = {};
+
+  if (tokenDetails.payment_source?.apple_pay) {
+    payment_source = {
+      apple_pay: {
+        vault_id: vaultId,
+      },
+    };
+  } else if (tokenDetails.payment_source?.card) {
+    payment_source = {
+      card: {
+        vault_id: vaultId,
+      },
+    };
+  } else if (tokenDetails.payment_source?.paypal) {
+    payment_source = {
+      paypal: {
+        vault_id: vaultId,
+      },
+    };
+  } else {
+    // Fallback to paypal if we can't determine the source
+    console.warn(
+      'Unable to determine payment source from token details, defaulting to paypal'
+    );
+    payment_source = {
+      paypal: {
+        vault_id: vaultId,
+      },
+    };
+  }
+
+  const createPayload = {
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: amount,
+        },
+      },
+    ],
+    payment_source: payment_source,
+  };
+
+  console.log(
+    `Creating and capturing order with vault_id for merchant ${merchantNumber}:`,
+    JSON.stringify(createPayload, null, 2)
+  );
+
+  const response = await fetch(`${base}/v2/checkout/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      'PayPal-Request-Id': Date.now().toString(),
+    },
+    body: JSON.stringify(createPayload),
+  });
+
+  const result = await handleResponse(response);
+  console.log(
+    `Order created and captured: ${result.id}, status: ${result.status}`
+  );
+
+  return result;
 };

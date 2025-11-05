@@ -7,6 +7,10 @@ import { handleError } from './src/config/errorHandler.js';
 import pageRoutes from './src/routes/pages.js';
 import apiRoutes from './src/routes/api.js';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -26,7 +30,7 @@ app.use(cors(corsOptions));
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.sandbox.paypal.com https://www.paypal.com https://applepay.cdn-apple.com; connect-src 'self' https://www.sandbox.paypal.com https://www.paypal.com https://cn-geo1.uber.com https://api-m.sandbox.paypal.com; frame-src https://www.sandbox.paypal.com https://www.paypal.com; frame-ancestors 'self' https://www.paypal.com https://www.sandbox.paypal.com;"
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.sandbox.paypal.com https://www.paypal.com https://applepay.cdn-apple.com https://appleid.cdn-apple.com; connect-src 'self' https://www.sandbox.paypal.com https://www.paypal.com https://cn-geo1.uber.com https://api-m.sandbox.paypal.com https://applepay.cdn-apple.com https://appleid.apple.com; frame-src https://www.sandbox.paypal.com https://www.paypal.com https://appleid.apple.com; frame-ancestors 'self' https://www.paypal.com https://www.sandbox.paypal.com;"
   );
   next();
 });
@@ -34,7 +38,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/', pageRoutes);
 app.use('/api', apiRoutes);
-// Attempt to Host Apple Domain Association File
+// Apple Domain Association File for Apple Pay
 app.get(
   '/.well-known/apple-developer-merchantid-domain-association',
   (req, res) => {
@@ -44,11 +48,65 @@ app.get(
       '.well-known',
       'apple-developer-merchantid-domain-association'
     );
-    // Serve the file as a binary object
+
+    // Set correct headers for Apple domain association
     res.setHeader('Content-Type', 'application/octet-stream');
-    res.sendFile(filePath);
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    console.log(`Serving Apple domain association file from: ${filePath}`);
+
+    res.sendFile(filePath, err => {
+      if (err) {
+        console.error('Error serving Apple domain association file:', err);
+        res.status(404).send('Apple domain association file not found');
+      } else {
+        console.log('Apple domain association file served successfully');
+      }
+    });
   }
 );
+
+// Test endpoint to verify Apple domain association setup
+app.get('/test-apple-pay-setup', (req, res) => {
+  const filePath = path.join(
+    __dirname,
+    'public',
+    '.well-known',
+    'apple-developer-merchantid-domain-association'
+  );
+
+  // Check if file exists and get its size
+  const fs = require('fs');
+  try {
+    const stats = fs.statSync(filePath);
+    res.json({
+      status: 'success',
+      message: 'Apple domain association file is properly configured',
+      file: {
+        path: filePath,
+        size: stats.size,
+        exists: true,
+      },
+      url: `${req.protocol}://${req.get(
+        'host'
+      )}/.well-known/apple-developer-merchantid-domain-association`,
+      instructions: [
+        '1. Deploy this app to pp-checkout.onrender.com',
+        '2. Test the domain association at: https://pp-checkout.onrender.com/.well-known/apple-developer-merchantid-domain-association',
+        '3. The file should return binary content (not 404)',
+        '4. Apple Pay will validate this file automatically',
+      ],
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Apple domain association file not found',
+      error: error.message,
+      filePath: filePath,
+    });
+  }
+});
 
 // Error handling middleware (must be last)
 app.use(handleError);

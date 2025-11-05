@@ -39,6 +39,20 @@ export const createVaultSetupToken = async ({ paymentSource }) => {
         shipping_preference: 'NO_SHIPPING',
       },
     },
+    apple_pay: {
+      usage_pattern: 'IMMEDIATE',
+      usage_type: 'MERCHANT',
+      customer_type: 'CONSUMER',
+      verification_method: 'SCA_WHEN_REQUIRED',
+      experience_context: {
+        shipping_preference: 'NO_SHIPPING',
+        payment_method_preference: 'IMMEDIATE_PAYMENT_REQUIRED',
+        brand_name: 'EXAMPLE INC',
+        locale: 'en-US',
+        return_url: 'https://example.com/returnUrl',
+        cancel_url: 'https://example.com/cancelUrl',
+      },
+    },
   };
 
   const response = await fetch(`${base}/v3/vault/setup-tokens`, {
@@ -127,6 +141,20 @@ export const fetchPaymentTokens = async customerId => {
   const data = await response.json();
   console.log('Payment Tokens Response: ', data);
   return data.payment_tokens || [];
+};
+
+// get payment token details by vault_id
+export const getPaymentTokenDetails = async vaultId => {
+  console.log('Fetching payment token details for vault_id:', vaultId);
+  const accessToken = await generateAccessToken();
+  const response = await fetch(`${base}/v3/vault/payment-tokens/${vaultId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  const data = await response.json();
+  console.log('Payment Token Details Response: ', data);
+  return data;
 };
 
 // create order with payment token for recurring payment

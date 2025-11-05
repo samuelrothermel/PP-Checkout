@@ -16,6 +16,7 @@ import {
   createReturningUserToken,
   createRecurringSetupToken,
   createRecurringOrder,
+  createOrderWithVaultId,
 } from '../controllers/vaultController.js';
 import { generateClientToken } from '../controllers/tokenController.js';
 import {
@@ -55,6 +56,7 @@ router.post('/vault/recurring-setup-token', createRecurringSetupToken);
 router.post('/vault/payment-token/:vaultSetupToken', createVaultPaymentToken);
 router.post('/vault/payment-token', createPaymentTokenFromCustomerId);
 router.post('/vault/recurring-order', createRecurringOrder);
+router.post('/vault/create-order', createOrderWithVaultId);
 router.get('/payment-tokens', getPaymentTokens);
 router.post('/returning-user-token', createReturningUserToken);
 

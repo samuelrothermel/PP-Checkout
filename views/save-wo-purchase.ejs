@@ -25,8 +25,25 @@
           <div id="card-verification-cvv-info"></div>
           <div id="card-verification-avs-info"></div>
         </div>
+        <div id="vault-testing-section" style="display: none;">
+          <div class="separator"></div>
+          <div class="or-text">TEST VAULT_ID ORDER CREATION</div>
+          <div>
+            <label for="vault-id-input">Vault ID:</label>
+            <input type="text" id="vault-id-input" placeholder="Enter vault_id" style="width: 300px; margin: 10px 0;">
+          </div>
+          <div>
+            <label for="amount-input">Amount:</label>
+            <input type="number" id="amount-input" value="10.00" step="0.01" style="width: 100px; margin: 10px 0;">
+          </div>
+          <button id="test-vault-order-button" type="button" style="margin: 10px 0;">Create & Capture Order with Vault ID</button>
+          <div id="vault-order-result" style="margin: 10px 0; padding: 10px; background: #f0f0f0; display: none;"></div>
+        </div>
         <div class="separator"></div>
         <div id="paypal-button-container" class="paypal-button-container"></div>
+        <div class="or-text">OR SAVE WITH APPLE PAY</div>
+        <div class="separator"></div>
+        <div id="applepay-container" class="paypal-button-container"></div>
         <div class="or-text">OR SAVE NEW CARD</div>
         <div class="separator"></div>
         <div class="card-fields">

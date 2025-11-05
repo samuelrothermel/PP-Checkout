@@ -101,3 +101,23 @@ export const createRecurringOrder = async (req, res, next) => {
     next(err);
   }
 };
+
+// Create and capture order using vault_id (for testing Apple Pay vaults)
+export const createOrderWithVaultId = async (req, res, next) => {
+  console.log('create order with vault_id triggered');
+  console.log('');
+  try {
+    const { vaultId, amount, merchantNumber = 1 } = req.body;
+    const { createOrderWithVaultIdAndCapture } = await import(
+      '../services/ordersApi.js'
+    );
+    const order = await createOrderWithVaultIdAndCapture(
+      vaultId,
+      amount,
+      merchantNumber
+    );
+    res.json(order);
+  } catch (err) {
+    next(err);
+  }
+};
