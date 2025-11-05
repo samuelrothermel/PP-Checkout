@@ -8,6 +8,7 @@ import pageRoutes from './src/routes/pages.js';
 import apiRoutes from './src/routes/api.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,7 +78,6 @@ app.get('/test-apple-pay-setup', (req, res) => {
   );
 
   // Check if file exists and get its size
-  const fs = require('fs');
   try {
     const stats = fs.statSync(filePath);
     res.json({

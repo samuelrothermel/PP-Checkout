@@ -17,7 +17,7 @@ const handleResponse = async response => {
 
 // create vault setup token
 export const createVaultSetupToken = async ({ paymentSource }) => {
-  // console.log('creating vault setup token for payment source:', paymentSource);
+  console.log('creating vault setup token for payment source:', paymentSource);
   const paymentSources = {
     paypal: {
       description: 'Description for PayPal to be shown to PayPal payer',

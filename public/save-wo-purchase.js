@@ -143,7 +143,8 @@ const onCancel = (data, actions) => {
 loadPayPalSDK();
 
 function loadPayPalSDK() {
-  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields,applepay&client-id=${clientId}&enable-funding=venmo`;
+  const scriptUrl = `https://www.paypal.com/sdk/js?components=buttons,card-fields,applepay&client-id=${clientId}&enable-funding=venmo&buyer-country=US&currency=USD`;
+  console.log('Loading PayPal SDK with URL:', scriptUrl);
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   scriptElement.onload = () => {
@@ -161,42 +162,52 @@ function loadPayPalSDK() {
 
     // Apple Pay button - with proper error handling for PC/non-Apple devices
     try {
+      console.log('Checking Apple Pay availability...');
+      console.log('paypal.Applepay available:', !!paypal.Applepay);
+
       if (paypal.Applepay) {
-        const applePayComponent = paypal.Applepay();
-        if (
-          applePayComponent &&
-          typeof applePayComponent.isEligible === 'function' &&
-          applePayComponent.isEligible()
-        ) {
-          applePayComponent.render(
-            {
-              style: {
-                layout: 'vertical',
-                color: 'black',
-                shape: 'rect',
-                type: 'plain',
-              },
-              createVaultSetupToken: () =>
-                createVaultSetupToken({ paymentSource: 'apple_pay' }),
-              onApprove,
-              onCancel,
-              onError,
+        console.log('Attempting to create Apple Pay component...');
+
+        paypal
+          .Applepay({
+            style: {
+              layout: 'vertical',
+              color: 'black',
+              shape: 'rect',
+              type: 'plain',
             },
-            '#applepay-container'
-          );
-        } else {
-          document.getElementById('applepay-container').style.display = 'none';
-          console.log('Apple Pay is not eligible on this device/browser');
-        }
+            createVaultSetupToken: () => {
+              console.log('Apple Pay createVaultSetupToken called');
+              return createVaultSetupToken({ paymentSource: 'apple_pay' });
+            },
+            onApprove: data => {
+              console.log('Apple Pay onApprove called with:', data);
+              return onApprove(data);
+            },
+            onCancel: data => {
+              console.log('Apple Pay onCancel called with:', data);
+              return onCancel(data);
+            },
+            onError: err => {
+              console.log('Apple Pay onError called with:', err);
+              return onError(err);
+            },
+          })
+          .render('#applepay-container')
+          .then(() => {
+            console.log('Apple Pay button rendered successfully');
+          })
+          .catch(error => {
+            console.log('Apple Pay render failed:', error);
+            document.getElementById('applepay-container').style.display =
+              'none';
+          });
       } else {
         document.getElementById('applepay-container').style.display = 'none';
-        console.log('Apple Pay component not available');
+        console.log('Apple Pay component not available in PayPal SDK');
       }
     } catch (error) {
-      console.log(
-        'Apple Pay initialization error (expected on PC):',
-        error.message
-      );
+      console.log('Apple Pay initialization error:', error.message);
       document.getElementById('applepay-container').style.display = 'none';
       // Don't let Apple Pay errors stop the rest of the page from loading
     }
