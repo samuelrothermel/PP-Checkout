@@ -168,40 +168,67 @@ function loadPayPalSDK() {
       if (paypal.Applepay) {
         console.log('Attempting to create Apple Pay component...');
 
-        paypal
-          .Applepay({
-            style: {
-              layout: 'vertical',
-              color: 'black',
-              shape: 'rect',
-              type: 'plain',
-            },
-            createVaultSetupToken: () => {
-              console.log('Apple Pay createVaultSetupToken called');
-              return createVaultSetupToken({ paymentSource: 'apple_pay' });
-            },
-            onApprove: data => {
-              console.log('Apple Pay onApprove called with:', data);
-              return onApprove(data);
-            },
-            onCancel: data => {
-              console.log('Apple Pay onCancel called with:', data);
-              return onCancel(data);
-            },
-            onError: err => {
-              console.log('Apple Pay onError called with:', err);
-              return onError(err);
-            },
-          })
-          .render('#applepay-container')
-          .then(() => {
-            console.log('Apple Pay button rendered successfully');
-          })
-          .catch(error => {
-            console.log('Apple Pay render failed:', error);
+        // Check if Apple Pay is eligible on this device
+        const applePayComponent = paypal.Applepay();
+        console.log('Apple Pay component created:', !!applePayComponent);
+        console.log(
+          'Apple Pay component methods:',
+          Object.getOwnPropertyNames(applePayComponent)
+        );
+
+        if (
+          applePayComponent &&
+          typeof applePayComponent.isEligible === 'function'
+        ) {
+          const isEligible = applePayComponent.isEligible();
+          console.log('Apple Pay isEligible result:', isEligible);
+
+          if (isEligible) {
+            // Use PayPal Buttons component with Apple Pay funding source
+            paypal
+              .Buttons({
+                fundingSource: paypal.FUNDING.APPLEPAY,
+                style: {
+                  layout: 'vertical',
+                  color: 'black',
+                  shape: 'rect',
+                  height: 55,
+                },
+                createVaultSetupToken: () => {
+                  console.log('Apple Pay createVaultSetupToken called');
+                  return createVaultSetupToken({ paymentSource: 'apple_pay' });
+                },
+                onApprove: data => {
+                  console.log('Apple Pay onApprove called with:', data);
+                  return onApprove(data);
+                },
+                onCancel: data => {
+                  console.log('Apple Pay onCancel called with:', data);
+                  return onCancel(data);
+                },
+                onError: err => {
+                  console.log('Apple Pay onError called with:', err);
+                  return onError(err);
+                },
+              })
+              .render('#applepay-container')
+              .then(() => {
+                console.log('Apple Pay button rendered successfully');
+              })
+              .catch(error => {
+                console.log('Apple Pay render failed:', error);
+                document.getElementById('applepay-container').style.display =
+                  'none';
+              });
+          } else {
+            console.log('Apple Pay is not eligible on this device/browser');
             document.getElementById('applepay-container').style.display =
               'none';
-          });
+          }
+        } else {
+          console.log('Apple Pay component does not have isEligible method');
+          document.getElementById('applepay-container').style.display = 'none';
+        }
       } else {
         document.getElementById('applepay-container').style.display = 'none';
         console.log('Apple Pay component not available in PayPal SDK');
