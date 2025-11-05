@@ -1,14 +1,24 @@
-// Suppress non-critical PayPal postMessage errors
+// Suppress non-critical PayPal postMessage errors (temporarily disabled for debugging)
 const originalConsoleError = console.error;
 console.error = function (...args) {
   const message = args[0] && args[0].toString ? args[0].toString() : '';
-  // Suppress specific PayPal cross-origin postMessage errors that don't affect functionality
+
+  // Log CSP errors specifically for debugging
+  if (message.includes('Content Security Policy') || message.includes('CSP')) {
+    console.warn('🔒 CSP Issue detected:', ...args);
+  }
+
+  // Suppress only very specific non-critical PayPal postMessage errors
   if (
     message.includes('unable to post message to') &&
-    (message.includes('sandbox.paypal.com') || message.includes('paypal.com'))
+    (message.includes('sandbox.paypal.com') ||
+      message.includes('paypal.com')) &&
+    !message.includes('CSP') &&
+    !message.includes('Content Security Policy')
   ) {
-    return; // Suppress these specific errors
+    return; // Suppress only postMessage errors, not CSP issues
   }
+
   originalConsoleError.apply(console, args);
 };
 
@@ -30,7 +40,9 @@ function getCurrentTotalAmount() {
 
 async function setupApplepay() {
   try {
-    console.log('Starting Apple Pay setup...');
+    console.log('🍎 Starting Apple Pay setup...');
+    console.log('🌐 Current protocol:', location.protocol);
+    console.log('🏠 Current hostname:', location.hostname);
 
     // Check if we're on HTTPS (required for Apple Pay)
     if (
@@ -38,16 +50,29 @@ async function setupApplepay() {
       location.hostname !== 'localhost' &&
       location.hostname !== '127.0.0.1'
     ) {
-      console.warn('Apple Pay requires HTTPS in production environments');
+      console.warn('⚠️ Apple Pay requires HTTPS in production environments');
       throw new Error('Apple Pay requires HTTPS connection');
     }
 
     // Check if PayPal SDK is loaded
+    console.log('🔍 Checking PayPal SDK availability...');
+    console.log('window.paypal exists:', !!window.paypal);
+    console.log(
+      'window.paypal.Applepay exists:',
+      !!(window.paypal && window.paypal.Applepay)
+    );
+
     if (!window.paypal || !window.paypal.Applepay) {
       throw new Error('PayPal SDK or Apple Pay component not loaded');
     }
 
     // Check if Apple Pay is available
+    console.log('🔍 Checking ApplePaySession availability...');
+    console.log(
+      'ApplePaySession exists:',
+      typeof ApplePaySession !== 'undefined'
+    );
+
     if (typeof ApplePaySession === 'undefined') {
       throw new Error(
         'ApplePaySession is not available - script may be blocked by CSP or device not supported'
@@ -167,17 +192,62 @@ async function setupApplepay() {
 
           session.onpaymentauthorized = async event => {
             try {
+              // Collect shipping and billing information (similar to createOrder function)
+              const shippingInfo = {
+                firstName: document.getElementById('shipping-first-name').value,
+                lastName: document.getElementById('shipping-last-name').value,
+                email: document.getElementById('shipping-email').value,
+                phone: document.getElementById('shipping-phone').value,
+                address: {
+                  addressLine1: document.getElementById(
+                    'shipping-address-line1'
+                  ).value,
+                  adminArea2: document.getElementById('shipping-admin-area2')
+                    .value,
+                  adminArea1: document.getElementById('shipping-admin-area1')
+                    .value,
+                  postalCode: document.getElementById('shipping-postal-code')
+                    .value,
+                  countryCode: document.getElementById('shipping-country-code')
+                    .value,
+                },
+              };
+
+              // Check if user wants to save payment method
+              const vaultToggle = document.getElementById('vault-toggle');
+              const vaultRequested = vaultToggle && vaultToggle.checked;
+
+              const requestBody = {
+                source: 'apple_pay',
+                totalAmount: getCurrentTotalAmount(),
+                paymentSource: 'apple_pay',
+                shippingInfo: shippingInfo,
+              };
+
+              // Add vault flag if requested
+              if (vaultRequested) {
+                requestBody.vault = true;
+                console.log(
+                  'Vault requested for Apple Pay: payment method will be saved'
+                );
+              }
+
+              // Include customer ID if returning user has payment methods
+              if (globalCustomerId && hasPaymentMethods) {
+                requestBody.customerId = globalCustomerId;
+                console.log(
+                  'Including customer ID for returning user with Apple Pay:',
+                  globalCustomerId
+                );
+              }
+
               /* Create Order on the Server Side */
               const orderResponse = await fetch(`/api/checkout-orders`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                  source: 'applepay',
-                  totalAmount: getCurrentTotalAmount(),
-                  paymentSource: 'applepay',
-                }),
+                body: JSON.stringify(requestBody),
               });
 
               if (!orderResponse.ok) {
@@ -209,9 +279,52 @@ async function setupApplepay() {
               /*
                * Capture order (must currently be made on server)
                */
-              await fetch(`/api/orders/${id}/capture`, {
+              const captureResponse = await fetch(`/api/orders/${id}/capture`, {
                 method: 'POST',
               });
+
+              if (captureResponse.ok) {
+                const captureData = await captureResponse.json();
+                console.log('Apple Pay capture response:', captureData);
+
+                // Check for vault information in the response
+                const paymentSource = captureData.payment_source;
+                if (paymentSource && paymentSource.apple_pay) {
+                  const vaultStatus =
+                    paymentSource.apple_pay.attributes?.vault?.status;
+                  const customerId =
+                    paymentSource.apple_pay.attributes?.vault?.customer?.id;
+                  const paymentTokenId =
+                    paymentSource.apple_pay.attributes?.vault?.id;
+
+                  // Update UI with Apple Pay specific information
+                  document.getElementById(
+                    'capture-order-info'
+                  ).textContent = `Apple Pay Payment Captured: ${id}`;
+                  document.getElementById(
+                    'payment-source-type-info'
+                  ).textContent = 'Payment Source: Apple Pay';
+
+                  if (vaultStatus) {
+                    document.getElementById(
+                      'vault-status-info'
+                    ).textContent = `Vault Status: ${vaultStatus}`;
+                  }
+                  if (customerId) {
+                    document.getElementById(
+                      'customer-id-info'
+                    ).textContent = `Customer ID: ${customerId}`;
+                  }
+                  if (paymentTokenId) {
+                    document.getElementById(
+                      'payment-token-id-info'
+                    ).textContent = `Payment Token ID: ${paymentTokenId}`;
+                  }
+
+                  document.getElementById('order-info-section').style.display =
+                    'block';
+                }
+              }
 
               session.completePayment({
                 status: window.ApplePaySession.STATUS_SUCCESS,
@@ -466,6 +579,13 @@ const createOrder = (data, actions) => {
     requestBody.billingInfo = billingInfo;
   }
 
+  // Include vault flag if user wants to save payment method
+  const vaultToggle = document.getElementById('vault-toggle');
+  if (vaultToggle && vaultToggle.checked) {
+    requestBody.vault = true;
+    console.log('Vault requested: payment method will be saved');
+  }
+
   // Include customer ID if returning user has payment methods
   if (globalCustomerId && hasPaymentMethods) {
     requestBody.customerId = globalCustomerId;
@@ -694,6 +814,8 @@ const onApprove = (data, actions) => {
         paymentSourceType = 'paypal';
       } else if (paymentSource.venmo) {
         paymentSourceType = 'venmo';
+      } else if (paymentSource.apple_pay) {
+        paymentSourceType = 'apple_pay';
       }
 
       const vaultStatus =

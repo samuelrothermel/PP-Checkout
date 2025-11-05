@@ -25,8 +25,14 @@ export const createCheckoutOrder = async orderData => {
     'creating order from Checkout Page with data:',
     JSON.stringify(orderData)
   );
-  const { shippingInfo, billingInfo, totalAmount, paymentSource, customerId } =
-    orderData;
+  const {
+    shippingInfo,
+    billingInfo,
+    totalAmount,
+    paymentSource,
+    customerId,
+    vault,
+  } = orderData;
   const purchaseAmount = totalAmount || '100.00'; // Use provided amount or default to 100.00 (minimum $30 for Pay Later)
   const accessToken = await generateAccessToken();
 
@@ -71,33 +77,51 @@ export const createCheckoutOrder = async orderData => {
       },
     };
 
+    // Add vault attributes if requested
+    if (vault) {
+      payment_source.paypal.attributes = {
+        vault: {
+          store_in_vault: 'ON_SUCCESS',
+          usage_type: 'MERCHANT',
+          customer_type: 'CONSUMER',
+        },
+      };
+    }
+
     // Add customer ID if provided for returning users with payment methods
     if (customerId) {
-      payment_source.paypal.attributes = {
-        customer: {
-          id: customerId,
-        },
+      if (!payment_source.paypal.attributes) {
+        payment_source.paypal.attributes = {};
+      }
+      payment_source.paypal.attributes.customer = {
+        id: customerId,
       };
     }
   } else if (paymentSource === 'venmo') {
     payment_source.venmo = {
-      // attributes: {
-      //   vault: {
-      //     store_in_vault: 'ON_SUCCESS',
-      //     usage_type: 'MERCHANT',
-      //     customer_type: 'CONSUMER',
-      //   },
-      // },
       experience_context: {
         return_url: 'http://localhost:8888/',
         cancel_url: 'https://example.com/cancel',
-
         shipping_preference: shippingPreference,
       },
     };
 
+    // Add vault attributes if requested
+    if (vault) {
+      payment_source.venmo.attributes = {
+        vault: {
+          store_in_vault: 'ON_SUCCESS',
+          usage_type: 'MERCHANT',
+          customer_type: 'CONSUMER',
+        },
+      };
+    }
+
     // Add customer ID if provided for returning users with payment methods
     if (customerId) {
+      if (!payment_source.venmo.attributes) {
+        payment_source.venmo.attributes = {};
+      }
       payment_source.venmo.attributes.customer = {
         id: customerId,
       };
@@ -135,6 +159,33 @@ export const createCheckoutOrder = async orderData => {
     if (customerId) {
       payment_source.card.attributes.customer = {
         id: customerId,
+      };
+    }
+  } else if (paymentSource === 'apple_pay') {
+    payment_source.apple_pay = {};
+
+    // Add vault attributes if requested
+    if (vault) {
+      payment_source.apple_pay.attributes = {
+        vault: {
+          store_in_vault: 'ON_SUCCESS',
+          usage_type: 'MERCHANT',
+          customer_type: 'CONSUMER',
+        },
+      };
+
+      // Add customer ID if provided for returning users with payment methods
+      if (customerId) {
+        payment_source.apple_pay.attributes.customer = {
+          id: customerId,
+        };
+      }
+    } else if (customerId) {
+      // Add customer ID even without vault if provided
+      payment_source.apple_pay.attributes = {
+        customer: {
+          id: customerId,
+        },
       };
     }
   }
