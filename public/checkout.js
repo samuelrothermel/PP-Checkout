@@ -39,49 +39,128 @@ function getCurrentTotalAmount() {
 let googlePayConfig = null;
 
 function onGooglePayLoaded() {
+  console.log('[Google Pay Debug] Google Pay SDK loaded callback triggered');
+  console.log('[Google Pay Debug] Document ready state:', document.readyState);
+
   if (document.readyState === 'loading') {
+    console.log(
+      '[Google Pay Debug] Document still loading, adding DOMContentLoaded listener'
+    );
     document.addEventListener('DOMContentLoaded', setupGooglePay);
   } else {
+    console.log(
+      '[Google Pay Debug] Document ready, setting up Google Pay immediately'
+    );
     setupGooglePay();
   }
 }
 
 async function setupGooglePay() {
+  console.log('[Google Pay Debug] Starting Google Pay setup...');
+
   try {
+    // Check SDK availability
+    console.log('[Google Pay Debug] Checking SDK availability...');
+    console.log('[Google Pay Debug] - typeof google:', typeof google);
+    console.log(
+      '[Google Pay Debug] - google.payments exists:',
+      !!(typeof google !== 'undefined' && google.payments)
+    );
+    console.log('[Google Pay Debug] - window.paypal exists:', !!window.paypal);
+    console.log(
+      '[Google Pay Debug] - window.paypal.Googlepay exists:',
+      !!(window.paypal && window.paypal.Googlepay)
+    );
+
     if (typeof google === 'undefined' || !google.payments) {
+      console.log('[Google Pay Debug] Google SDK not available, exiting setup');
       return;
     }
 
     if (!window.paypal || !window.paypal.Googlepay) {
+      console.log(
+        '[Google Pay Debug] PayPal Google Pay component not available, exiting setup'
+      );
       return;
     }
 
     // Get Google Pay configuration from PayPal
+    console.log(
+      '[Google Pay Debug] Getting PayPal Google Pay configuration...'
+    );
     try {
       googlePayConfig = await paypal.Googlepay().config();
+      console.log(
+        '[Google Pay Debug] Google Pay config received:',
+        googlePayConfig
+      );
+      console.log(
+        '[Google Pay Debug] Google Pay isEligible:',
+        googlePayConfig.isEligible
+      );
 
       if (!googlePayConfig.isEligible) {
+        console.log(
+          '[Google Pay Debug] Google Pay is not eligible on this device/browser'
+        );
         throw new Error('Google Pay is not eligible');
       }
 
-      // Initialize Google Pay button
+      // Check if we can create payments client
+      console.log('[Google Pay Debug] Creating Google Pay payments client...');
       const paymentsClient = new google.payments.api.PaymentsClient({
         environment: 'TEST', // Change to 'PRODUCTION' for live
       });
+      console.log('[Google Pay Debug] Payments client created successfully');
 
-      const button = paymentsClient.createButton({
-        onClick: onGooglePayButtonClicked,
+      // Check readiness
+      console.log('[Google Pay Debug] Checking Google Pay readiness...');
+      const isReadyToPayRequest = {
+        apiVersion: 2,
+        apiVersionMinor: 0,
         allowedPaymentMethods: googlePayConfig.allowedPaymentMethods,
-        buttonColor: 'default',
-        buttonType: 'buy',
-      });
+      };
 
-      const container = document.getElementById('googlepay-container');
-      if (container) {
-        container.innerHTML = '';
-        container.appendChild(button);
+      const isReadyToPay = await paymentsClient.isReadyToPay(
+        isReadyToPayRequest
+      );
+      console.log('[Google Pay Debug] isReadyToPay response:', isReadyToPay);
+
+      if (isReadyToPay.result) {
+        console.log(
+          '[Google Pay Debug] Google Pay is ready, creating button...'
+        );
+
+        const button = paymentsClient.createButton({
+          onClick: onGooglePayButtonClicked,
+          allowedPaymentMethods: googlePayConfig.allowedPaymentMethods,
+          buttonColor: 'default',
+          buttonType: 'buy',
+        });
+        console.log('[Google Pay Debug] Button created successfully');
+
+        const container = document.getElementById('googlepay-container');
+        if (container) {
+          container.innerHTML = '';
+          container.appendChild(button);
+          console.log(
+            '[Google Pay Debug] Button added to container successfully'
+          );
+        } else {
+          console.log(
+            '[Google Pay Debug] ERROR: googlepay-container not found'
+          );
+        }
+      } else {
+        console.log(
+          '[Google Pay Debug] Google Pay is not ready on this device/browser'
+        );
+        throw new Error('Google Pay is not ready');
       }
     } catch (configError) {
+      console.log('[Google Pay Debug] Configuration error:', configError);
+      console.log('[Google Pay Debug] Showing fallback placeholder...');
+
       // Fallback to placeholder for unsupported environments
       const container = document.getElementById('googlepay-container');
       if (container) {
@@ -100,18 +179,24 @@ async function setupGooglePay() {
             <small>Requires HTTPS and compatible browser</small>
           </div>
         `;
+        console.log('[Google Pay Debug] Fallback placeholder shown');
       }
     }
   } catch (error) {
+    console.log('[Google Pay Debug] Setup failed with error:', error);
     const container = document.getElementById('googlepay-container');
     if (container) {
       container.style.display = 'none';
+      console.log('[Google Pay Debug] Container hidden due to error');
     }
   }
 }
 
 async function onGooglePayButtonClicked() {
+  console.log('[Google Pay Debug] Google Pay button clicked');
+
   try {
+    console.log('[Google Pay Debug] Creating payment data request...');
     const paymentDataRequest = {
       ...googlePayConfig.paymentDataRequest,
       transactionInfo: {
@@ -120,19 +205,26 @@ async function onGooglePayButtonClicked() {
         currencyCode: 'USD',
       },
     };
+    console.log('[Google Pay Debug] Payment data request:', paymentDataRequest);
 
     const paymentsClient = new google.payments.api.PaymentsClient({
       environment: 'TEST',
     });
 
+    console.log('[Google Pay Debug] Loading payment data...');
     const paymentData = await paymentsClient.loadPaymentData(
       paymentDataRequest
     );
+    console.log(
+      '[Google Pay Debug] Payment data loaded successfully:',
+      paymentData
+    );
 
     // Process the payment with PayPal
+    console.log('[Google Pay Debug] Processing payment with PayPal...');
     await processGooglePayPayment(paymentData);
   } catch (error) {
-    // Handle Google Pay errors silently or show user-friendly message
+    console.log('[Google Pay Debug] Button click error:', error);
   }
 }
 
