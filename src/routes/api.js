@@ -7,6 +7,7 @@ import {
   createQuantumOrder,
   capturePayment,
   authorizePayment,
+  getOrdersByIds,
 } from '../controllers/orderController.js';
 import {
   createVaultSetupToken,
@@ -17,6 +18,7 @@ import {
   createRecurringSetupToken,
   createRecurringOrder,
   createOrderWithVaultId,
+  getPaymentTokensByCustomerIds,
 } from '../controllers/vaultController.js';
 import { generateClientToken } from '../controllers/tokenController.js';
 import {
@@ -45,6 +47,7 @@ import {
 const router = express.Router();
 
 // Order routes
+router.post('/orders/fetch', getOrdersByIds); // New route for fetching orders by ID array
 router.post('/orders', createOrder);
 router.post('/checkout-orders', createCheckoutOrder);
 router.post('/upstream-orders', createUpstreamOrder);
@@ -54,6 +57,7 @@ router.post('/orders/:orderID/capture', capturePayment);
 router.post('/orders/:orderID/authorize', authorizePayment);
 
 // Vault routes
+router.post('/vault/customers', getPaymentTokensByCustomerIds); // New route for fetching customers by ID array
 router.post('/vault/setup-token', createVaultSetupToken);
 router.post('/vault/recurring-setup-token', createRecurringSetupToken);
 router.post('/vault/payment-token/:vaultSetupToken', createVaultPaymentToken);

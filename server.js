@@ -1,8 +1,9 @@
 // Import required modules
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const paypal = require('@paypal/checkout-server-sdk');
+import express from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import paypal from '@paypal/checkout-server-sdk';
+import crypto from 'crypto';
 
 // Initialize Express app
 const app = express();
@@ -40,22 +41,17 @@ app.post('/api/orders', async (req, res) => {
     console.log('Fetching orders for IDs:', orderIds);
     const orders = [];
 
-    // Fetch each order individually from PayPal's Orders API
+    // Fetch each order individually from PayPal's Orders API using SDK
     for (const orderIdObj of orderIds) {
       const orderId = orderIdObj.id || orderIdObj;
       try {
         console.log(`Fetching order details for: ${orderId}`);
 
-        const request = {
-          id: orderId,
-        };
+        // Create the request using PayPal SDK
+        const request = new paypal.orders.OrdersGetRequest(orderId);
 
-        const order = await client.execute({
-          request: () => ({
-            verb: 'GET',
-            path: `/v2/checkout/orders/${orderId}`,
-          }),
-        });
+        // Execute the request using the PayPal client
+        const order = await client.execute(request);
 
         orders.push({
           ...order.result,
@@ -141,7 +137,7 @@ app.post('/api/vault/customers', async (req, res) => {
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${await getPayPalAccessToken()}`,
-              'PayPal-Request-Id': require('crypto').randomUUID(),
+              'PayPal-Request-Id': crypto.randomUUID(),
             },
           }
         );
@@ -230,7 +226,7 @@ app.get(
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${await getPayPalAccessToken()}`,
-            'PayPal-Request-Id': require('crypto').randomUUID(),
+            'PayPal-Request-Id': crypto.randomUUID(),
           },
         }
       );

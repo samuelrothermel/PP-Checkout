@@ -288,3 +288,48 @@ export const createRecurringSetupToken = async ({ paymentSource }) => {
   );
   return handleResponse(response);
 };
+
+// Fetch payment tokens for multiple customer IDs (for localStorage integration)
+export const getPaymentTokensByCustomerIds = async customerIds => {
+  console.log('Fetching payment tokens for customer IDs:', customerIds);
+  const customers = [];
+
+  if (!customerIds || !Array.isArray(customerIds) || customerIds.length === 0) {
+    return {
+      customers: [],
+      message:
+        'No customer IDs provided. Please provide an array of customer IDs to fetch.',
+    };
+  }
+
+  // Fetch payment tokens for each customer ID
+  for (const customerIdObj of customerIds) {
+    const customerId = customerIdObj.id || customerIdObj;
+    try {
+      console.log(`Fetching payment tokens for customer: ${customerId}`);
+
+      const paymentTokens = await fetchPaymentTokens(customerId);
+
+      customers.push({
+        customerId,
+        paymentTokens,
+        client_customer_timestamp: customerIdObj.timestamp || null,
+      });
+    } catch (error) {
+      console.error(`Error fetching tokens for customer ${customerId}:`, error);
+      // Continue with other customers even if one fails
+      customers.push({
+        customerId,
+        error: `Failed to fetch payment tokens: ${error.message}`,
+        paymentTokens: [],
+        client_customer_timestamp: customerIdObj.timestamp || null,
+      });
+    }
+  }
+
+  return {
+    customers: customers.reverse(), // Show most recent first
+    totalCount: customers.length,
+    message: customers.length > 0 ? null : 'No valid customers found.',
+  };
+};

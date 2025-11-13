@@ -1,8 +1,20 @@
 import fetch from 'node-fetch';
+import paypal from '@paypal/checkout-server-sdk';
 import {
   generateAccessToken,
   generateAccessTokenForMerchant,
 } from './authApi.js';
+
+// PayPal SDK configuration (reuse from authApi if available, otherwise define here)
+const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_PAYPAL_CLIENT_ID';
+const CLIENT_SECRET = process.env.CLIENT_SECRET || 'YOUR_PAYPAL_CLIENT_SECRET';
+
+// Create a PayPal environment
+const environment = new paypal.core.SandboxEnvironment(
+  CLIENT_ID,
+  CLIENT_SECRET
+);
+const client = new paypal.core.PayPalHttpClient(environment);
 
 // set some important variables
 const base = 'https://api-m.sandbox.paypal.com';
@@ -790,4 +802,51 @@ export const createOrderWithVaultIdAndCapture = async (
   );
 
   return result;
+};
+
+// Fetch multiple orders by ID array using PayPal SDK
+export const getOrdersByIds = async orderIds => {
+  console.log('Fetching orders for IDs:', orderIds);
+  const orders = [];
+
+  if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+    return {
+      orders: [],
+      message:
+        'No order IDs provided. Please provide an array of order IDs to fetch.',
+    };
+  }
+
+  // Fetch each order individually from PayPal's Orders API using SDK
+  for (const orderIdObj of orderIds) {
+    const orderId = orderIdObj.id || orderIdObj;
+    try {
+      console.log(`Fetching order details for: ${orderId}`);
+
+      // Create the request using PayPal SDK
+      const request = new paypal.orders.OrdersGetRequest(orderId);
+
+      // Execute the request using the PayPal client
+      const order = await client.execute(request);
+
+      orders.push({
+        ...order.result,
+        client_order_timestamp: orderIdObj.timestamp || null,
+      });
+    } catch (orderError) {
+      console.error(`Error fetching order ${orderId}:`, orderError);
+      // Continue with other orders even if one fails
+      orders.push({
+        id: orderId,
+        error: `Failed to fetch order details: ${orderError.message}`,
+        client_order_timestamp: orderIdObj.timestamp || null,
+      });
+    }
+  }
+
+  return {
+    orders: orders.reverse(), // Show most recent first
+    totalCount: orders.length,
+    message: orders.length > 0 ? null : 'No valid orders found.',
+  };
 };

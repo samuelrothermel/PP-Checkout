@@ -5,6 +5,7 @@ import {
   createRecurringSetupToken as createRecurringSetupTokenApi,
   createRecurringOrder as createRecurringOrderApi,
   fetchPaymentTokens,
+  getPaymentTokensByCustomerIds as getPaymentTokensByCustomerIdsApi,
 } from '../services/tokensApi.js';
 
 // Create vault setup token
@@ -117,6 +118,19 @@ export const createOrderWithVaultId = async (req, res, next) => {
       merchantNumber
     );
     res.json(order);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get payment tokens by customer ID array (for localStorage integration)
+export const getPaymentTokensByCustomerIds = async (req, res, next) => {
+  console.log('Get Payment Tokens by Customer IDs Request');
+  console.log('');
+  try {
+    const { customerIds } = req.body;
+    const result = await getPaymentTokensByCustomerIdsApi(customerIds);
+    res.json(result);
   } catch (err) {
     next(err);
   }

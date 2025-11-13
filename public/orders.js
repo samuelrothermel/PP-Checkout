@@ -36,7 +36,7 @@ async function loadOrders() {
       return;
     }
 
-    const response = await fetch('/api/orders', {
+    const response = await fetch('/api/orders/fetch', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

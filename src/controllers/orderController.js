@@ -3,6 +3,7 @@ import {
   createUpstreamQlOrder as createUpstreamQlOrderApi,
   capturePayment as capturePaymentApi,
   authorizePayment as authorizePaymentApi,
+  getOrdersByIds as getOrdersByIdsApi,
 } from '../services/ordersApi.js';
 
 // Create order request
@@ -100,6 +101,19 @@ export const authorizePayment = async (req, res, next) => {
   try {
     const authorizeData = await authorizePaymentApi(orderID);
     res.json(authorizeData);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get orders by ID array (for localStorage integration)
+export const getOrdersByIds = async (req, res, next) => {
+  console.log('Get Orders by IDs Request');
+  console.log('');
+  try {
+    const { orderIds } = req.body;
+    const result = await getOrdersByIdsApi(orderIds);
+    res.json(result);
   } catch (err) {
     next(err);
   }
