@@ -20,6 +20,10 @@ async function loadVaultData() {
     const data = await response.json();
     const customers = data.customers || [];
 
+    if (data.message) {
+      showMessage(data.message, 'info');
+    }
+
     displayVaultStats(data.stats);
     displayCustomers(customers);
 
@@ -62,8 +66,14 @@ function displayCustomers(customers) {
     container.innerHTML = `
             <div class="empty-state">
                 <h3>No Vaulted Customers</h3>
-                <p>When customers save their payment methods during checkout, they will appear here.</p>
-                <a href="index.html" class="nav-link">Go to Checkout</a>
+                <p style="margin-bottom: 15px;">PayPal's Payment Method Tokens API requires tracking customer IDs in your database.</p>
+                <div style="font-size: 14px; line-height: 1.5; color: #888; text-align: left; max-width: 600px; margin: 0 auto;">
+                    To implement vault management, you need to:<br><br>
+                    1. Store customer IDs when vaulting payment methods<br>
+                    2. Use PayPal's GET /v3/vault/payment-tokens API to fetch tokens<br>
+                    3. Track customer relationships in your database<br><br>
+                </div>
+                <a href="/checkout" class="nav-link" style="margin-top: 15px; display: inline-block;">Go to Checkout</a>
             </div>
         `;
     return;

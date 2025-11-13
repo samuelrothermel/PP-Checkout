@@ -52,7 +52,7 @@ function displayOrders(orders) {
                         1. Store order IDs in your database when orders are created<br>
                         2. Use PayPal's GET /v2/checkout/orders/{order_id} to fetch individual order details<br>
                         3. Track order statuses and display them here<br><br>
-                        <a href="index.html" style="color: #0070ba;">Create a new order</a> to see how individual orders work.
+                        <a href="/checkout" style="color: #0070ba;">Create a new order</a> to see how individual orders work.
                     </div>
                 </td>
             </tr>

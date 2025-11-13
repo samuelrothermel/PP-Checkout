@@ -10,6 +10,8 @@ import {
   renderFastlane,
   renderRecurringPayment,
   renderPayeeTest,
+  renderOrders,
+  renderVault,
 } from '../controllers/pageController.js';
 
 const router = express.Router();
@@ -31,5 +33,7 @@ router.get('/ba_reference', renderBaReference);
 router.get('/fastlane', renderFastlane);
 router.get('/webhook-testing', renderWebhookTesting);
 router.get('/payee-test', renderPayeeTest);
+router.get('/orders', renderOrders);
+router.get('/vault', renderVault);
 
 export default router;

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orders Management - PayPal Demo</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/styles/custom.css">
     <style>
         .orders-container {
             max-width: 1200px;
@@ -60,12 +60,12 @@
             color: #1976d2;
         }
         
-        .status-authorized {
+        .status-approved {
             background-color: #fff3e0;
             color: #f57c00;
         }
         
-        .status-captured {
+        .status-completed {
             background-color: #e8f5e8;
             color: #388e3c;
         }
@@ -126,6 +126,19 @@
             margin: 20px 0;
         }
         
+        .info {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 12px;
+        }
+        
         .nav-link {
             color: #0070ba;
             text-decoration: none;
@@ -133,6 +146,7 @@
             border: 1px solid #0070ba;
             border-radius: 4px;
             transition: all 0.2s;
+            font-size: 14px;
         }
         
         .nav-link:hover {
@@ -145,13 +159,16 @@
     <div class="orders-container">
         <div class="orders-header">
             <h1>Orders Management</h1>
-            <a href="index.html" class="nav-link">← Back to Checkout</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">🏠 Home</a>
+                <a href="/vault" class="nav-link">🏦 Vault</a>
+            </div>
         </div>
         
         <div id="message-container"></div>
         
         <div id="loading" class="loading">
-            Loading orders...
+            Loading orders from PayPal API...
         </div>
         
         <div id="orders-content" style="display: none;">
@@ -173,6 +190,6 @@
         </div>
     </div>
 
-    <script src="orders.js"></script>
+    <script src="/orders.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vault Management - PayPal Demo</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/styles/custom.css">
     <style>
         .vault-container {
             max-width: 1200px;
@@ -147,6 +147,14 @@
             margin: 20px 0;
         }
         
+        .info {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -212,15 +220,15 @@
         <div class="vault-header">
             <h1>Vault Management</h1>
             <div class="nav-links">
-                <a href="index.html" class="nav-link">Checkout</a>
-                <a href="orders.html" class="nav-link">Orders</a>
+                <a href="/" class="nav-link">🏠 Home</a>
+                <a href="/orders" class="nav-link">📋 Orders</a>
             </div>
         </div>
         
         <div id="message-container"></div>
         
         <div id="loading" class="loading">
-            Loading vault data...
+            Loading vault data from PayPal API...
         </div>
         
         <div id="vault-content" style="display: none;">
@@ -234,6 +242,6 @@
         </div>
     </div>
 
-    <script src="vault.js"></script>
+    <script src="/vault.js"></script>
 </body>
 </html>

@@ -21,3 +21,5 @@ export const renderRecurringPayment = renderPage('recurring-payment');
 
 export const renderWebhookTesting = renderPage('webhook-testing');
 export const renderPayeeTest = renderPage('payee-test');
+export const renderOrders = renderPage('orders');
+export const renderVault = renderPage('vault');

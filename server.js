@@ -10,12 +10,16 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // PayPal SDK configuration
-const clientId = 'YOUR_PAYPAL_CLIENT_ID';
-const clientSecret = 'YOUR_PAYPAL_CLIENT_SECRET';
+const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_PAYPAL_CLIENT_ID';
+const CLIENT_SECRET = process.env.CLIENT_SECRET || 'YOUR_PAYPAL_CLIENT_SECRET';
+const PAYPAL_API_BASE = 'https://api-m.sandbox.paypal.com'; // Use https://api-m.paypal.com for production
 
 // Create a PayPal environment
-const environment = new paypal.core.SandboxEnvironment(clientId, clientSecret);
-// const environment = new paypal.core.LiveEnvironment(clientId, clientSecret);
+const environment = new paypal.core.SandboxEnvironment(
+  CLIENT_ID,
+  CLIENT_SECRET
+);
+// const environment = new paypal.core.LiveEnvironment(CLIENT_ID, CLIENT_SECRET);
 const client = new paypal.core.PayPalHttpClient(environment);
 
 // Remove in-memory ordersStore and replace with PayPal API calls
