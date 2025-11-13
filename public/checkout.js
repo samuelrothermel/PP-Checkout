@@ -1,22 +1,22 @@
-// Suppress non-critical PayPal postMessage errors (temporarily disabled for debugging)
+// Suppress non-critical PayPal postMessage errors
 const originalConsoleError = console.error;
 console.error = function (...args) {
   const message = args[0] && args[0].toString ? args[0].toString() : '';
 
-  // Log CSP errors specifically for debugging
   if (message.includes('Content Security Policy') || message.includes('CSP')) {
-    console.warn('🔒 CSP Issue detected:', ...args);
+    console.warn('CSP Issue detected:', ...args);
   }
 
-  // Suppress only very specific non-critical PayPal postMessage errors
   if (
     message.includes('unable to post message to') &&
     (message.includes('sandbox.paypal.com') ||
-      message.includes('paypal.com')) &&
+      message.includes('paypal.com') ||
+      message.includes('google.com') ||
+      message.includes('pay.google.com')) &&
     !message.includes('CSP') &&
     !message.includes('Content Security Policy')
   ) {
-    return; // Suppress only postMessage errors, not CSP issues
+    return;
   }
 
   originalConsoleError.apply(console, args);
@@ -30,71 +30,82 @@ let hasPaymentMethods = false;
 function getCurrentTotalAmount() {
   const totalElement = document.getElementById('amount-total');
   if (!totalElement) {
-    console.warn('Could not find amount-total element, defaulting to 10.00');
     return '10.00';
   }
-  const amount = parseFloat(totalElement.textContent).toFixed(2);
-  console.log('Apple Pay using dynamic total amount:', amount);
-  return amount;
+  return parseFloat(totalElement.textContent).toFixed(2);
+}
+
+// Google Pay configuration
+let googlePayConfig = null;
+
+function onGooglePayLoaded() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupGooglePay);
+  } else {
+    setupGooglePay();
+  }
+}
+
+async function setupGooglePay() {
+  try {
+    if (typeof google === 'undefined' || !google.payments) {
+      return;
+    }
+
+    if (!window.paypal || !window.paypal.Googlepay) {
+      return;
+    }
+
+    const container = document.getElementById('googlepay-container');
+    if (container) {
+      container.innerHTML = `
+        <div style="
+          padding: 12px;
+          background: #f8f9fa;
+          border: 1px solid #dee2e6;
+          border-radius: 4px;
+          margin: 8px 0;
+          font-size: 14px;
+          color: #495057;
+          text-align: center;
+        ">
+          <strong>Google Pay</strong><br>
+          <small>Ready for HTTPS testing</small>
+        </div>
+      `;
+    }
+  } catch (error) {
+    const container = document.getElementById('googlepay-container');
+    if (container) {
+      container.style.display = 'none';
+    }
+  }
 }
 
 async function setupApplepay() {
   try {
-    console.log('🍎 Starting Apple Pay setup...');
-    console.log('🌐 Current protocol:', location.protocol);
-    console.log('🏠 Current hostname:', location.hostname);
-
-    // Check if we're on HTTPS (required for Apple Pay)
     if (
       location.protocol !== 'https:' &&
       location.hostname !== 'localhost' &&
       location.hostname !== '127.0.0.1'
     ) {
-      console.warn('⚠️ Apple Pay requires HTTPS in production environments');
       throw new Error('Apple Pay requires HTTPS connection');
     }
-
-    // Check if PayPal SDK is loaded
-    console.log('🔍 Checking PayPal SDK availability...');
-    console.log('window.paypal exists:', !!window.paypal);
-    console.log(
-      'window.paypal.Applepay exists:',
-      !!(window.paypal && window.paypal.Applepay)
-    );
 
     if (!window.paypal || !window.paypal.Applepay) {
       throw new Error('PayPal SDK or Apple Pay component not loaded');
     }
 
-    // Check if Apple Pay is available
-    console.log('🔍 Checking ApplePaySession availability...');
-    console.log(
-      'ApplePaySession exists:',
-      typeof ApplePaySession !== 'undefined'
-    );
-
     if (typeof ApplePaySession === 'undefined') {
-      throw new Error(
-        'ApplePaySession is not available - script may be blocked by CSP or device not supported'
-      );
+      throw new Error('ApplePaySession is not available');
     }
 
-    // Check if we're on a supported platform (wrap in try-catch to prevent crashes)
     try {
       if (!ApplePaySession.canMakePayments()) {
-        console.warn(
-          'Apple Pay is not available on this device/browser - likely testing on PC'
-        );
         throw new Error('Apple Pay is not supported on this device');
       }
     } catch (canMakePaymentsError) {
-      console.warn(
-        'ApplePaySession.canMakePayments() failed:',
-        canMakePaymentsError
-      );
-      throw new Error(
-        'Apple Pay availability check failed - likely not on Apple device'
-      );
+      throw new Error('Apple Pay availability check failed');
     }
 
     const applepay = paypal.Applepay();
@@ -103,13 +114,8 @@ async function setupApplepay() {
     try {
       config = await applepay.config();
     } catch (configError) {
-      console.error('Failed to get Apple Pay configuration:', configError);
-      throw new Error(
-        'Failed to configure Apple Pay - this is expected on PC/Windows'
-      );
+      throw new Error('Failed to configure Apple Pay');
     }
-
-    console.log('Apple Pay config:', config);
 
     const {
       isEligible,
@@ -120,11 +126,8 @@ async function setupApplepay() {
     } = config;
 
     if (!isEligible) {
-      console.warn('Apple Pay is not eligible on this device/browser');
       throw new Error('Apple Pay is not eligible');
     }
-
-    console.log('Apple Pay is eligible, setting up button...');
 
     document.getElementById('applepay-container').innerHTML =
       '<apple-pay-button id="btn-appl" buttonstyle="black" type="buy" locale="en"></apple-pay-button>';
@@ -143,12 +146,6 @@ async function setupApplepay() {
       .getElementById('btn-appl')
       .addEventListener('click', async function () {
         try {
-          console.log({
-            merchantCapabilities,
-            currencyCode,
-            supportedNetworks,
-          });
-
           const paymentRequest = {
             countryCode,
             currencyCode: 'USD',
@@ -179,7 +176,6 @@ async function setupApplepay() {
                 session.completeMerchantValidation(payload.merchantSession);
               })
               .catch(err => {
-                console.error('Merchant validation failed:', err);
                 session.abort();
               });
           };
@@ -224,21 +220,12 @@ async function setupApplepay() {
                 shippingInfo: shippingInfo,
               };
 
-              // Add vault flag if requested
               if (vaultRequested) {
                 requestBody.vault = true;
-                console.log(
-                  'Vault requested for Apple Pay: payment method will be saved'
-                );
               }
 
-              // Include customer ID if returning user has payment methods
               if (globalCustomerId && hasPaymentMethods) {
                 requestBody.customerId = globalCustomerId;
-                console.log(
-                  'Including customer ID for returning user with Apple Pay:',
-                  globalCustomerId
-                );
               }
 
               /* Create Order on the Server Side */
@@ -252,7 +239,6 @@ async function setupApplepay() {
 
               if (!orderResponse.ok) {
                 const errorText = await orderResponse.text();
-                console.error('Order creation failed:', errorText);
                 throw new Error(
                   `Error creating order: ${orderResponse.status} - ${errorText}`
                 );
@@ -263,7 +249,6 @@ async function setupApplepay() {
                 throw new Error('Order ID not received from server');
               }
 
-              console.log('Order created successfully:', orderData);
               const { id } = orderData;
 
               /**
@@ -285,9 +270,6 @@ async function setupApplepay() {
 
               if (captureResponse.ok) {
                 const captureData = await captureResponse.json();
-                console.log('Apple Pay capture response:', captureData);
-
-                // Check for vault information in the response
                 const paymentSource = captureData.payment_source;
                 if (paymentSource && paymentSource.apple_pay) {
                   const vaultStatus =
@@ -330,20 +312,16 @@ async function setupApplepay() {
                 status: window.ApplePaySession.STATUS_SUCCESS,
               });
             } catch (err) {
-              console.error('Payment processing failed:', err);
               session.completePayment({
                 status: window.ApplePaySession.STATUS_FAILURE,
               });
             }
           };
 
-          session.oncancel = () => {
-            console.log('Apple Pay Cancelled !!');
-          };
+          session.oncancel = () => {};
 
           session.begin();
         } catch (clickError) {
-          console.error('Apple Pay session error:', clickError);
           if (clickError.message.includes('insecure document')) {
             alert(
               'Apple Pay requires HTTPS. Please test on a Mac with Safari over HTTPS, or deploy to a secure server.'
@@ -356,8 +334,6 @@ async function setupApplepay() {
         }
       });
   } catch (error) {
-    console.error('Apple Pay setup failed:', error);
-    // Hide the Apple Pay container if setup fails
     const container = document.getElementById('applepay-container');
     if (container) {
       container.style.display = 'none';
@@ -366,88 +342,56 @@ async function setupApplepay() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  // Detect if we're likely on a PC/Windows for better user messaging
-  const isPC =
-    !navigator.userAgent.includes('Mac') &&
-    !navigator.userAgent.includes('iPhone');
-
-  console.log('Device detection:', {
-    isPC,
-    userAgent: navigator.userAgent,
-    protocol: location.protocol,
-    hostname: location.hostname,
-  });
-
-  // Always load PayPal components first - Apple Pay is optional
   loadPayPalComponents();
 
-  // Early device check - completely skip Apple Pay setup on non-Apple devices
+  try {
+    setupGooglePay();
+  } catch (error) {
+    // Google Pay setup failed
+  }
+
   const isAppleDevice = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
   const isSafari =
     /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
   if (!isAppleDevice || !isSafari) {
-    console.log(
-      'Non-Apple device or non-Safari browser detected - hiding Apple Pay container'
-    );
     const applePayContainer = document.getElementById('applepay-container');
     if (applePayContainer) {
       applePayContainer.style.display = 'none';
     }
-    return; // Skip all Apple Pay setup
+    return;
   }
 
-  // Try to set up Apple Pay but don't let it break other functionality
   try {
-    // Check if Apple Pay is available before trying to set it up
     if (typeof ApplePaySession !== 'undefined') {
       if (
         ApplePaySession?.supportsVersion(4) &&
         ApplePaySession?.canMakePayments()
       ) {
-        // Wait for PayPal SDK to be loaded before setting up Apple Pay
         if (typeof paypal !== 'undefined' && paypal.Applepay) {
-          setupApplepay().catch(console.error);
+          setupApplepay().catch(() => {});
         } else {
-          // If PayPal SDK isn't loaded yet, wait for it
           const checkPayPalLoaded = setInterval(() => {
             if (typeof paypal !== 'undefined' && paypal.Applepay) {
               clearInterval(checkPayPalLoaded);
-              setupApplepay().catch(console.error);
+              setupApplepay().catch(() => {});
             }
           }, 100);
-
-          // Clear interval after 10 seconds to avoid infinite checking
           setTimeout(() => clearInterval(checkPayPalLoaded), 10000);
         }
       } else {
-        console.log(
-          'Apple Pay is not available on this device/browser - canMakePayments returned false'
-        );
-        // Hide the Apple Pay container if not available
         const applePayContainer = document.getElementById('applepay-container');
         if (applePayContainer) {
           applePayContainer.style.display = 'none';
         }
       }
     } else {
-      console.log(
-        'Apple Pay is not available on this device/browser - likely PC/Windows'
-      );
-      // Hide the Apple Pay container completely on non-Apple devices
       const applePayContainer = document.getElementById('applepay-container');
       if (applePayContainer) {
         applePayContainer.style.display = 'none';
-        // Optionally show a message for debugging (comment out for production)
-        // applePayContainer.innerHTML = '<p style="padding: 10px; background: #f0f0f0; border-radius: 4px; margin: 10px 0;">Apple Pay is only available on Mac/iOS devices with Safari over HTTPS</p>';
       }
     }
   } catch (applePaySetupError) {
-    console.warn(
-      'Apple Pay setup failed, but continuing with other payment methods:',
-      applePaySetupError
-    );
-    // Hide the Apple Pay container on any error
     const applePayContainer = document.getElementById('applepay-container');
     if (applePayContainer) {
       applePayContainer.style.display = 'none';
@@ -525,8 +469,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 const createOrder = (data, actions) => {
-  console.log('Client-Side Create Order Raw Request: ', data);
-
   const shippingInfo = {
     firstName: document.getElementById('shipping-first-name').value,
     lastName: document.getElementById('shipping-last-name').value,
@@ -579,23 +521,14 @@ const createOrder = (data, actions) => {
     requestBody.billingInfo = billingInfo;
   }
 
-  // Include vault flag if user wants to save payment method
   const vaultToggle = document.getElementById('vault-toggle');
   if (vaultToggle && vaultToggle.checked) {
     requestBody.vault = true;
-    console.log('Vault requested: payment method will be saved');
   }
 
-  // Include customer ID if returning user has payment methods
   if (globalCustomerId && hasPaymentMethods) {
     requestBody.customerId = globalCustomerId;
-    console.log(
-      'Including customer ID for returning user with payment methods:',
-      globalCustomerId
-    );
   }
-
-  console.log('Final request body:', requestBody);
 
   return fetch('/api/checkout-orders', {
     method: 'POST',
@@ -606,7 +539,6 @@ const createOrder = (data, actions) => {
   })
     .then(response => response.json())
     .then(orderData => {
-      console.log('Create Order Raw Response: ', orderData);
       const orderId = orderData.id;
       document.getElementById(
         'create-order-info'
@@ -623,9 +555,6 @@ const createOrder = (data, actions) => {
 };
 
 function loadPayPalComponents(idToken = null, customerId = null) {
-  console.log('idToken:', idToken);
-
-  // Fetch and display saved payment methods
   if (customerId) {
     fetch(`/api/payment-tokens?customer_id=${customerId}`)
       .then(response => response.json())
@@ -634,7 +563,7 @@ function loadPayPalComponents(idToken = null, customerId = null) {
         loadPayPalSDK(idToken);
       })
       .catch(error => {
-        console.error('Error fetching payment tokens:', error);
+        loadPayPalSDK(idToken);
       });
   } else {
     loadPayPalSDK(idToken);
@@ -642,8 +571,6 @@ function loadPayPalComponents(idToken = null, customerId = null) {
 }
 
 function displaySavedPaymentMethods(paymentTokens) {
-  console.log('paymentTokens:', paymentTokens);
-
   const container = document.getElementById('saved-payment-methods-container');
   container.innerHTML = ''; // Clear any existing content
 
@@ -724,7 +651,6 @@ function displaySavedPaymentMethods(paymentTokens) {
 }
 
 function loadPayPalSDK(idToken) {
-  // Only include Apple Pay component on devices that support it
   const isAppleDevice =
     /Mac|iPhone|iPad|iPod/.test(navigator.userAgent) &&
     /Safari/.test(navigator.userAgent) &&
@@ -733,14 +659,6 @@ function loadPayPalSDK(idToken) {
   const components = isAppleDevice
     ? 'buttons,card-fields,messages,applepay'
     : 'buttons,card-fields,messages';
-
-  console.log(
-    'Loading PayPal SDK with components:',
-    components,
-    '(Apple device detected:',
-    isAppleDevice,
-    ')'
-  );
 
   // Use PayPal SDK with conditional Apple Pay component
   const scriptUrl = `https://www.paypal.com/sdk/js?commit=false&components=${components}&intent=capture&client-id=${clientId}&enable-funding=venmo&integration-date=2023-01-01&debug=false`;
@@ -791,17 +709,11 @@ function loadPayPalSDK(idToken) {
 }
 
 const onApprove = (data, actions) => {
-  console.log('onApprove callback triggered');
-
   return fetch(`/api/orders/${data.orderID}/authorize`, {
     method: 'POST',
   })
     .then(response => response.json())
     .then(orderData => {
-      console.log(
-        'Authorize Order Response: ',
-        JSON.stringify(orderData, null, 2)
-      );
       const authorizationId =
         orderData.purchase_units[0].payments.authorizations[0].id;
       const paymentSource = orderData.payment_source;
@@ -857,21 +769,13 @@ const onApprove = (data, actions) => {
     });
 };
 
-const onCancel = (data, actions) => {
-  console.log(`Order Canceled - ID: ${data.orderID}`);
-};
+const onCancel = (data, actions) => {};
 
-const onError = err => {
-  console.error(err);
-};
+const onError = err => {};
 
-const onShippingOptionsChange = (data, actions) => {
-  console.log('Shipping Options Change:', data);
-};
+const onShippingOptionsChange = (data, actions) => {};
 
-const onShippingAddressChange = (data, actions) => {
-  console.log('Shipping Address Change:', data);
-};
+const onShippingAddressChange = (data, actions) => {};
 
 function updateAmountTotal() {
   const cartTotal = parseFloat(
@@ -888,7 +792,6 @@ function updatePayPalMessages() {
   const amount = parseFloat(
     document.getElementById('amount-total').textContent
   ).toFixed(2);
-  console.log('updatePayPalMessages amount:', amount);
   const messageContainer = document.querySelector('[data-pp-message]');
   messageContainer.setAttribute('data-pp-amount', amount);
   paypal.Messages().render(messageContainer);

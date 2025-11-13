@@ -644,9 +644,45 @@ apple-pay-button {
   -apple-pay-button-type: buy;
 }
 
-/* Ensure both PayPal and Apple Pay button containers have consistent width */
+/* Google Pay Button Styling */
+#googlepay-container {
+  margin-top: 10px;
+  width: 100%;
+}
+
+#google-pay-button {
+  background-color: #000 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 12px 24px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  width: 100% !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 8px 0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  transition: background-color 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+#google-pay-button:hover {
+  background-color: #333 !important;
+}
+
+#google-pay-button svg {
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+/* Ensure PayPal, Apple Pay, and Google Pay button containers have consistent width */
 #paypal-button-container,
-#applepay-container {
+#applepay-container,
+#googlepay-container {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -660,7 +696,8 @@ apple-pay-button {
 }
 
 /* Style the informational message for non-Apple devices */
-#applepay-container p {
+#applepay-container p,
+#googlepay-container p {
   text-align: center;
   font-size: 14px;
   color: #666;
@@ -669,6 +706,16 @@ apple-pay-button {
   background: #f8f9fa;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
+}
+
+/* Warning message styling for HTTPS requirements */
+#googlepay-container div[style*='background: #fff3cd'] {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#googlepay-container div[style*='background: #fff3cd'] strong {
+  display: block;
+  margin-bottom: 4px;
 }
 
 /* Vault Testing Section Styles */

@@ -37,6 +37,9 @@ import {
   testVaultedPayee,
   testVaultedSameMerchantDifferentPayee,
   captureOneTimePayee,
+  testVaultV3,
+  testVaultV3WithPayee,
+  testLegacyVsV3,
 } from '../controllers/payeeTestController.js';
 
 const router = express.Router();
@@ -92,7 +95,7 @@ router.get('/webhooks/info', getWebhookInfo);
 router.get('/webhooks/events', getWebhookEvents);
 router.post('/webhooks/test', testWebhook);
 
-// Payee testing routes
+// Payee testing routes (legacy)
 router.post('/test-onetime-payee', testOneTimePayee);
 router.post('/capture-onetime-payee', captureOneTimePayee);
 router.post('/test-vaulted-payee', testVaultedPayee);
@@ -100,5 +103,10 @@ router.post(
   '/test-vaulted-same-merchant-different-payee',
   testVaultedSameMerchantDifferentPayee
 );
+
+// Vault v3 testing routes
+router.post('/test-vault-v3', testVaultV3);
+router.post('/test-vault-v3-payee', testVaultV3WithPayee);
+router.post('/test-legacy-vs-v3', testLegacyVsV3);
 
 export default router;

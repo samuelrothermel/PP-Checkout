@@ -90,16 +90,24 @@
 </head>
 <body>
     <div class="test-container">
-        <h1>PayPal Payee Test: One-time vs Vaulted Payments</h1>
+        <h1>PayPal Vault v3 Test: Payment Method Tokens</h1>
         
         <div class="explanation">
-            <h4>Test Explanation:</h4>
-            <p><strong>Expected Behavior:</strong></p>
+            <h4>Vault v3 Test Explanation:</h4>
+            <p><strong>New Payment Method Token Format:</strong></p>
+            <pre><code>"payment_source": {
+    "token": {
+        "id": "vault_id_from_previous_transaction",
+        "type": "PAYMENT_METHOD_TOKEN"
+    }
+}</code></pre>
+            <p><strong>Test Flow:</strong></p>
             <ul>
-                <li><strong>One-time Payment:</strong> Should succeed when using a different payee merchant ID</li>
-                <li><strong>Vaulted Payment:</strong> Should fail when using a different payee merchant ID (security restriction)</li>
+                <li><strong>Step 1:</strong> Create vaulted payment token (stores payment method)</li>
+                <li><strong>Step 2:</strong> Use vault v3 token format with different payee merchant ID</li>
+                <li><strong>Step 3:</strong> Compare vault v3 vs legacy vault behavior</li>
             </ul>
-            <p>This demonstrates PayPal's security model where vaulted tokens are tied to the original merchant.</p>
+            <p>This tests PayPal's new vault v3 API format and security model.</p>
         </div>
 
         <!-- Configuration Section -->
@@ -116,25 +124,11 @@
             </div>
         </div>
 
-        <!-- Test 1: One-time Payment -->
+        <!-- Test 1: Create Vault Token -->
         <div class="test-section">
-            <h3>Test 1: One-time Payment with Different Payee + PayPal Approval + Auto Capture</h3>
-            <p>This should <strong>succeed</strong> - one-time payments can be disbursed to different merchants.</p>
-            <p><strong>Test Flow:</strong> Create Order → PayPal Login/Approval → Auto Capture → Check Disbursement</p>
-            <p><em>Note: Since this is a PayPal-branded transaction, you must log in and approve the payment.</em></p>
-            
-            <button class="btn" onclick="createOneTimeOrder()">Step 1: Create Order</button>
-            
-            <!-- PayPal Button Container for Approval -->
-            <div id="paypal-onetime-container" style="display: none; margin: 15px 0;"></div>
-            
-            <div id="onetime-results" class="results" style="display: none;"></div>
-        </div>
-
-        <!-- Test 2: Vaulted Payment Setup -->
-        <div class="test-section">
-            <h3>Test 2a: Create Vaulted Token (Same Merchant)</h3>
-            <p>First, create a vaulted payment token with your primary merchant account.</p>
+            <h3>Step 1: Create Vault Payment Token</h3>
+            <p>First, create a vaulted payment token that we'll test with the vault v3 format.</p>
+            <p><strong>Process:</strong> PayPal Button → Login/Approval → Vault Token Creation</p>
             
             <div id="paypal-button-container-vault"></div>
             
@@ -142,31 +136,50 @@
             <div id="vault-token" style="display: none;"></div>
         </div>
 
-        <!-- Test 2b: Use Vaulted Token with Different Payee -->
+        <!-- Test 2: Vault v3 Format Test -->
         <div class="test-section">
-            <h3>Test 2b: Use Vaulted Token with Different Payee + Auto Capture</h3>
-            <p>This should <strong>fail at order creation</strong> - vaulted tokens cannot be used for different merchants.</p>
-            <p><strong>Test Flow:</strong> Create Order (should fail) → If successful, Auto Capture → Check Disbursement</p>
+            <h3>Step 2: Test Vault v3 Payment Method Token Format</h3>
+            <p>Test the new vault v3 format with <code>PAYMENT_METHOD_TOKEN</code> type.</p>
+            <p><strong>API Format:</strong></p>
+            <pre><code>{
+  "payment_source": {
+    "token": {
+      "id": "your_vault_id",
+      "type": "PAYMENT_METHOD_TOKEN"
+    }
+  }
+}</code></pre>
             
-            <button class="btn" id="test-vaulted-btn" onclick="testVaultedPayment()" disabled>
-                Test Vaulted Payment with Different Payee
+            <button class="btn" id="test-vault-v3-btn" onclick="testVaultV3Format()" disabled>
+                Test Vault v3 Format
             </button>
             
-            <div id="vaulted-results" class="results" style="display: none;"></div>
+            <div id="vault-v3-results" class="results" style="display: none;"></div>
         </div>
 
-        <!-- Test 3: Same Merchant Vaulted Token with Different Payee -->
+        <!-- Test 3: Vault v3 with Different Payee -->
         <div class="test-section">
-            <h3>Test 3: Same Merchant Vaulted Token → Different Payee Destination</h3>
-            <p>This tests if the <strong>same merchant</strong> can use their own vaulted token but redirect funds to a different payee.</p>
-            <p><strong>Test Flow:</strong> Create Order (should succeed) → Auto Capture → Check if funds go to different payee</p>
-            <p><em>Expected Behavior: Unknown - this tests PayPal's payee redirection rules with vaulted payments.</em></p>
+            <h3>Step 3: Test Vault v3 with Different Payee</h3>
+            <p>Test vault v3 format with different payee merchant ID to verify security model.</p>
+            <p><strong>Expected:</strong> Should work with same merchant, may fail with different payee.</p>
             
-            <button class="btn" id="test-same-merchant-btn" onclick="testSameMerchantDifferentPayee()" disabled>
-                Test Same Merchant → Different Payee
+            <button class="btn" id="test-vault-v3-payee-btn" onclick="testVaultV3WithPayee()" disabled>
+                Test Vault v3 with Different Payee
             </button>
             
-            <div id="same-merchant-results" class="results" style="display: none;"></div>
+            <div id="vault-v3-payee-results" class="results" style="display: none;"></div>
+        </div>
+
+        <!-- Test 4: Legacy vs v3 Comparison -->
+        <div class="test-section">
+            <h3>Step 4: Legacy Vault vs Vault v3 Comparison</h3>
+            <p>Compare the old vault format with the new vault v3 format.</p>
+            
+            <button class="btn" id="test-legacy-comparison-btn" onclick="testLegacyVsV3()" disabled>
+                Compare Legacy vs Vault v3
+            </button>
+            
+            <div id="legacy-comparison-results" class="results" style="display: none;"></div>
         </div>
 
         <!-- Results Summary -->
@@ -184,9 +197,10 @@
     <script>
         let vaultedToken = null;
         let testResults = {
-            onetime: null,
-            vaulted: null,
-            sameMerchant: null
+            vaultCreation: null,
+            vaultV3: null,
+            vaultV3Payee: null,
+            legacyComparison: null
         };
 
         // Auto-fill the payee merchant ID field
@@ -194,11 +208,86 @@
             document.getElementById('payee-merchant-id').value = 'QA9TDBGQ8E5RS';
         });
 
-        // Test 1: One-time payment with different payee
-        let currentOrderId = null;
-        let currentPayeeMerchantId = null;
+        // Test vault v3 format
+        function testVaultV3Format() {
+            if (!vaultedToken) {
+                alert('Please create a vaulted token first');
+                return;
+            }
 
-        function createOneTimeOrder() {
+            const amount = document.getElementById('test-amount').value;
+            
+            showResults('vault-v3-results', 'Testing vault v3 PAYMENT_METHOD_TOKEN format...', 'warning');
+
+            fetch('/api/test-vault-v3', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    vaultedToken: vaultedToken,
+                    amount: amount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                testResults.vaultV3 = data;
+                
+                let resultMessage = `🧪 VAULT V3 FORMAT TEST RESULTS:\n\n`;
+                
+                if (data.success) {
+                    resultMessage += `✅ ORDER CREATION: SUCCESS\n`;
+                    resultMessage += `Order ID: ${data.orderId}\n`;
+                    resultMessage += `Status: ${data.status}\n`;
+                    
+                    if (data.capture && data.capture.success) {
+                        resultMessage += `✅ CAPTURE: SUCCESS\n`;
+                        resultMessage += `Capture ID: ${data.capture.captureId}\n`;
+                        resultMessage += `Amount: $${data.capture.amount}\n`;
+                    } else if (data.capture && data.capture.error) {
+                        resultMessage += `❌ CAPTURE: FAILED\n`;
+                        resultMessage += `Error: ${data.capture.error}\n`;
+                    }
+                    
+                    resultMessage += `\n📋 PAYMENT SOURCE FORMAT:\n`;
+                    resultMessage += `{\n`;
+                    resultMessage += `  "payment_source": {\n`;
+                    resultMessage += `    "token": {\n`;
+                    resultMessage += `      "id": "${vaultedToken}",\n`;
+                    resultMessage += `      "type": "PAYMENT_METHOD_TOKEN"\n`;
+                    resultMessage += `    }\n`;
+                    resultMessage += `  }\n`;
+                    resultMessage += `}\n\n`;
+                    
+                    showResults('vault-v3-results', resultMessage, 'success');
+                } else {
+                    resultMessage += `❌ ORDER CREATION: FAILED\n`;
+                    resultMessage += `Error: ${data.error}\n\n`;
+                    
+                    showResults('vault-v3-results', resultMessage, 'error');
+                }
+                
+                resultMessage += `📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
+                document.getElementById('vault-v3-results').textContent = resultMessage;
+                
+                document.getElementById('test-vault-v3-payee-btn').disabled = false;
+                document.getElementById('test-legacy-comparison-btn').disabled = false;
+                updateSummary();
+            })
+            .catch(error => {
+                testResults.vaultV3 = { success: false, error: error.message };
+                showResults('vault-v3-results', `❌ ERROR: ${error.message}`, 'error');
+                updateSummary();
+            });
+        }
+
+        // Test vault v3 format with different payee
+        function testVaultV3WithPayee() {
+            if (!vaultedToken) {
+                alert('Please create a vaulted token first');
+                return;
+            }
+
             const payeeMerchantId = document.getElementById('payee-merchant-id').value;
             const amount = document.getElementById('test-amount').value;
             
@@ -207,110 +296,136 @@
                 return;
             }
 
-            showResults('onetime-results', 'Creating PayPal order with different payee...', 'warning');
+            showResults('vault-v3-payee-results', 'Testing vault v3 format with different payee...', 'warning');
 
-            fetch('/api/test-onetime-payee', {
+            fetch('/api/test-vault-v3-payee', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    vaultedToken: vaultedToken,
                     payeeMerchantId: payeeMerchantId,
                     amount: amount
                 })
             })
             .then(response => response.json())
             .then(data => {
+                testResults.vaultV3Payee = data;
+                
+                let resultMessage = `🧪 VAULT V3 + DIFFERENT PAYEE TEST:\n\n`;
+                
                 if (data.success) {
-                    currentOrderId = data.orderId;
-                    currentPayeeMerchantId = payeeMerchantId;
+                    resultMessage += `${data.orderCreation.success ? '✅' : '❌'} ORDER CREATION: ${data.orderCreation.success ? 'SUCCESS' : 'FAILED'}\n`;
                     
-                    let resultMessage = `✅ ORDER CREATED: Ready for PayPal approval!\n\n`;
-                    resultMessage += `📋 ORDER DETAILS:\n`;
-                    resultMessage += `Order ID: ${data.orderId}\n`;
-                    resultMessage += `Status: ${data.status}\n`;
-                    resultMessage += `Payee Merchant: ${payeeMerchantId}\n`;
-                    resultMessage += `Amount: $${data.amount}\n\n`;
-                    resultMessage += `👆 Now click the PayPal button below to approve the payment\n`;
+                    if (data.orderCreation.success) {
+                        resultMessage += `Order ID: ${data.orderId}\n`;
+                        resultMessage += `Payee: ${payeeMerchantId}\n`;
+                        
+                        if (data.capture && data.capture.success) {
+                            resultMessage += `✅ CAPTURE: SUCCESS\n`;
+                            resultMessage += `💰 Funds disbursed to different payee!\n`;
+                        } else if (data.capture && data.capture.error) {
+                            resultMessage += `❌ CAPTURE: FAILED\n`;
+                            resultMessage += `Error: ${data.capture.error}\n`;
+                        }
+                    }
                     
-                    showResults('onetime-results', resultMessage, 'warning');
-                    
-                    // Show the PayPal button for approval
-                    document.getElementById('paypal-onetime-container').style.display = 'block';
-                    renderOneTimePayPalButton(data.orderId);
+                    showResults('vault-v3-payee-results', resultMessage, data.capture?.success ? 'success' : 'warning');
                 } else {
-                    showResults('onetime-results', `❌ ORDER CREATION FAILED!\n\nError: ${data.error}\n\nFull Response:\n${JSON.stringify(data, null, 2)}`, 'error');
+                    resultMessage += `❌ ORDER CREATION: FAILED (Expected for security)\n`;
+                    resultMessage += `Error: ${data.error}\n`;
+                    resultMessage += `🔒 Security: Vault tokens tied to original merchant\n`;
+                    
+                    showResults('vault-v3-payee-results', resultMessage, 'success');
                 }
+                
+                resultMessage += `\n📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
+                document.getElementById('vault-v3-payee-results').textContent = resultMessage;
+                
+                updateSummary();
             })
             .catch(error => {
-                showResults('onetime-results', `❌ ERROR: ${error.message}`, 'error');
+                testResults.vaultV3Payee = { success: false, error: error.message };
+                showResults('vault-v3-payee-results', `✅ EXPECTED: ${error.message}`, 'success');
+                updateSummary();
             });
         }
 
-        // Render PayPal button for one-time payment approval
-        function renderOneTimePayPalButton(orderId) {
-            // Clear existing button
-            document.getElementById('paypal-onetime-container').innerHTML = '';
+        // Compare legacy vault vs vault v3
+        function testLegacyVsV3() {
+            if (!vaultedToken) {
+                alert('Please create a vaulted token first');
+                return;
+            }
+
+            const amount = document.getElementById('test-amount').value;
             
-            paypal.Buttons({
-                createOrder: function(data, actions) {
-                    // Return the existing order ID
-                    return orderId;
+            showResults('legacy-comparison-results', 'Comparing legacy vault vs vault v3 formats...', 'warning');
+
+            fetch('/api/test-legacy-vs-v3', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                onApprove: function(data, actions) {
-                    showResults('onetime-results', 'Payment approved! Capturing order...', 'warning');
-                    
-                    // Capture the approved order
-                    return fetch('/api/capture-onetime-payee', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            orderId: data.orderID,
-                            payeeMerchantId: currentPayeeMerchantId
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(captureData => {
-                        if (captureData.success) {
-                            testResults.onetime = { success: true, data: captureData };
-                            
-                            let resultMessage = `✅ SUCCESS: Payment approved and captured!\n\n`;
-                            resultMessage += `📋 ORDER DETAILS:\n`;
-                            resultMessage += `Order ID: ${captureData.orderId}\n`;
-                            resultMessage += `Payee Merchant: ${captureData.payeeMerchantId}\n\n`;
-                            
-                            resultMessage += `💰 CAPTURE DETAILS:\n`;
-                            resultMessage += `✅ Capture Status: SUCCESS\n`;
-                            resultMessage += `Capture ID: ${captureData.capture.captureId}\n`;
-                            resultMessage += `Amount Captured: $${captureData.capture.amount}\n`;
-                            resultMessage += `💸 ${captureData.disbursementTest.note}\n`;
-                            resultMessage += `🔄 ${captureData.disbursementTest.fundsFlow}\n\n`;
-                            
-                            resultMessage += `🎯 EXPECTED BEHAVIOR: ${captureData.disbursementTest.expectedBehavior}\n\n`;
-                            resultMessage += `📊 Full Response:\n${JSON.stringify(captureData, null, 2)}`;
-                            
-                            showResults('onetime-results', resultMessage, 'success');
-                        } else {
-                            testResults.onetime = { success: false, error: captureData.error };
-                            showResults('onetime-results', `❌ CAPTURE FAILED!\n\nError: ${captureData.error}\n\nFull Response:\n${JSON.stringify(captureData, null, 2)}`, 'error');
-                        }
-                        updateSummary();
-                        
-                        // Hide the PayPal button after completion
-                        document.getElementById('paypal-onetime-container').style.display = 'none';
-                    });
-                },
-                onCancel: function(data) {
-                    showResults('onetime-results', '❌ Payment was cancelled by user', 'error');
-                    document.getElementById('paypal-onetime-container').style.display = 'none';
-                },
-                onError: function(err) {
-                    showResults('onetime-results', `❌ PayPal Error: ${err}`, 'error');
-                    document.getElementById('paypal-onetime-container').style.display = 'none';
+                body: JSON.stringify({
+                    vaultedToken: vaultedToken,
+                    amount: amount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                testResults.legacyComparison = data;
+                
+                let resultMessage = `🔄 LEGACY vs VAULT V3 COMPARISON:\n\n`;
+                
+                // Legacy results
+                resultMessage += `📊 LEGACY VAULT FORMAT:\n`;
+                if (data.legacy.success) {
+                    resultMessage += `✅ Status: SUCCESS\n`;
+                    resultMessage += `Order ID: ${data.legacy.orderId}\n`;
+                    resultMessage += `Format: { "paypal": { "vault_id": "${vaultedToken}" } }\n`;
+                } else {
+                    resultMessage += `❌ Status: FAILED\n`;
+                    resultMessage += `Error: ${data.legacy.error}\n`;
                 }
-            }).render('#paypal-onetime-container');
+                
+                resultMessage += `\n📊 VAULT V3 FORMAT:\n`;
+                if (data.v3.success) {
+                    resultMessage += `✅ Status: SUCCESS\n`;
+                    resultMessage += `Order ID: ${data.v3.orderId}\n`;
+                    resultMessage += `Format: { "token": { "id": "${vaultedToken}", "type": "PAYMENT_METHOD_TOKEN" } }\n`;
+                } else {
+                    resultMessage += `❌ Status: FAILED\n`;
+                    resultMessage += `Error: ${data.v3.error}\n`;
+                }
+                
+                resultMessage += `\n🎯 COMPARISON RESULTS:\n`;
+                const bothWork = data.legacy.success && data.v3.success;
+                const neitherWork = !data.legacy.success && !data.v3.success;
+                const onlyLegacy = data.legacy.success && !data.v3.success;
+                const onlyV3 = !data.legacy.success && data.v3.success;
+                
+                if (bothWork) {
+                    resultMessage += `✅ Both formats work - backward compatibility maintained\n`;
+                } else if (neitherWork) {
+                    resultMessage += `❌ Neither format works - possible API issues\n`;
+                } else if (onlyLegacy) {
+                    resultMessage += `⚠️ Only legacy format works - v3 may not be fully deployed\n`;
+                } else if (onlyV3) {
+                    resultMessage += `🆕 Only v3 format works - legacy deprecated\n`;
+                }
+                
+                resultMessage += `\n📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
+                
+                showResults('legacy-comparison-results', resultMessage, 'success');
+                updateSummary();
+            })
+            .catch(error => {
+                testResults.legacyComparison = { success: false, error: error.message };
+                showResults('legacy-comparison-results', `❌ ERROR: ${error.message}`, 'error');
+                updateSummary();
+            });
         }
 
         // Vault setup token creation function
@@ -347,13 +462,17 @@
             .then(response => response.json())
             .then(tokenData => {
                 vaultedToken = tokenData.id;
+                testResults.vaultCreation = { success: true, data: tokenData };
+                
                 document.getElementById('vault-token').style.display = 'block';
-                document.getElementById('vault-token').innerHTML = `<strong>Vaulted Token:</strong> ${vaultedToken}`;
-                document.getElementById('test-vaulted-btn').disabled = false;
-                document.getElementById('test-same-merchant-btn').disabled = false;
+                document.getElementById('vault-token').innerHTML = `<strong>Vault Token ID:</strong> ${vaultedToken}`;
                 
-                showResults('vault-results', `✅ Vaulted token created successfully!\n\nToken ID: ${vaultedToken}\n\nFull Response:\n${JSON.stringify(tokenData, null, 2)}`, 'success');
+                // Enable vault v3 test buttons
+                document.getElementById('test-vault-v3-btn').disabled = false;
                 
+                showResults('vault-results', `✅ Vault token created successfully!\n\nToken ID: ${vaultedToken}\n\n🧪 Ready for vault v3 testing!\n\nFull Response:\n${JSON.stringify(tokenData, null, 2)}`, 'success');
+                
+                updateSummary();
                 return tokenData;
             });
         };
@@ -367,167 +486,7 @@
             }
         }).render('#paypal-button-container-vault');
 
-        // Test vaulted payment with different payee
-        function testVaultedPayment() {
-            const payeeMerchantId = document.getElementById('payee-merchant-id').value;
-            const amount = document.getElementById('test-amount').value;
-            
-            if (!vaultedToken) {
-                alert('Please create a vaulted token first');
-                return;
-            }
-            
-            if (!payeeMerchantId) {
-                alert('Please enter a different payee merchant ID');
-                return;
-            }
 
-            showResults('vaulted-results', 'Testing vaulted payment with different payee...', 'warning');
-
-            fetch('/api/test-vaulted-payee', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    vaultedToken: vaultedToken,
-                    payeeMerchantId: payeeMerchantId,
-                    amount: amount
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    testResults.vaulted = { success: true, data: data };
-                    
-                    let resultMessage = `❌ UNEXPECTED: Vaulted payment succeeded (should have failed)!\n\n`;
-                    resultMessage += `📋 ORDER DETAILS:\n`;
-                    resultMessage += `Order ID: ${data.orderId}\n`;
-                    resultMessage += `Status: ${data.status}\n`;
-                    resultMessage += `Payee Merchant: ${payeeMerchantId}\n`;
-                    resultMessage += `Amount: $${data.amount}\n\n`;
-                    
-                    resultMessage += `💰 CAPTURE DETAILS:\n`;
-                    if (data.capture && data.capture.success) {
-                        resultMessage += `❌ SECURITY ISSUE: Capture Status: SUCCESS\n`;
-                        resultMessage += `Capture ID: ${data.capture.result.purchase_units[0].payments.captures[0].id}\n`;
-                        resultMessage += `Amount Captured: $${data.capture.result.purchase_units[0].payments.captures[0].amount.value}\n`;
-                        resultMessage += `🚨 ${data.disbursementTest.note}\n\n`;
-                    } else if (data.capture && data.capture.error) {
-                        resultMessage += `✅ Capture Status: FAILED (Good - this limits the security impact)\n`;
-                        resultMessage += `Error: ${data.capture.error.message}\n\n`;
-                    }
-                    
-                    resultMessage += `🎯 EXPECTED BEHAVIOR: ${data.disbursementTest.expectedBehavior}\n`;
-                    if (data.warning) {
-                        resultMessage += `⚠️ WARNING: ${data.warning}\n`;
-                    }
-                    resultMessage += `\n📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
-                    
-                    showResults('vaulted-results', resultMessage, 'error');
-                } else {
-                    testResults.vaulted = { success: false, error: data.error };
-                    
-                    let resultMessage = `✅ EXPECTED: Vaulted payment failed as expected!\n\n`;
-                    resultMessage += `❌ Order Creation: FAILED\n`;
-                    resultMessage += `Error: ${data.error}\n`;
-                    resultMessage += `💡 ${data.disbursementTest.note}\n\n`;
-                    resultMessage += `🎯 EXPECTED BEHAVIOR: ${data.disbursementTest.expectedBehavior}\n`;
-                    resultMessage += `✅ SECURITY: ${data.note}\n\n`;
-                    resultMessage += `📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
-                    
-                    showResults('vaulted-results', resultMessage, 'success');
-                }
-                updateSummary();
-            })
-            .catch(error => {
-                testResults.vaulted = { success: false, error: error.message };
-                showResults('vaulted-results', `✅ EXPECTED: Vaulted payment failed as expected!\n\nError: ${error.message}\nReason: Vaulted tokens are tied to the original merchant`, 'success');
-                updateSummary();
-            });
-        }
-
-        // Test 3: Same merchant vaulted token with different payee
-        function testSameMerchantDifferentPayee() {
-            const payeeMerchantId = document.getElementById('payee-merchant-id').value;
-            const amount = document.getElementById('test-amount').value;
-            
-            if (!vaultedToken) {
-                alert('Please create a vaulted token first');
-                return;
-            }
-            
-            if (!payeeMerchantId) {
-                alert('Please enter a different payee merchant ID');
-                return;
-            }
-
-            showResults('same-merchant-results', 'Testing same merchant vaulted token with different payee destination...', 'warning');
-
-            fetch('/api/test-vaulted-same-merchant-different-payee', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    vaultedToken: vaultedToken,
-                    payeeMerchantId: payeeMerchantId,
-                    amount: amount
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    testResults.sameMerchant = { success: true, data: data };
-                    
-                    let resultMessage = `✅ ORDER CREATION: SUCCESS (Expected)\n\n`;
-                    resultMessage += `📋 ORDER DETAILS:\n`;
-                    resultMessage += `Order ID: ${data.orderId}\n`;
-                    resultMessage += `Status: ${data.status}\n`;
-                    resultMessage += `Payee Merchant: ${payeeMerchantId}\n`;
-                    resultMessage += `Amount: $${data.amount}\n`;
-                    resultMessage += `💡 Note: ${data.orderCreation.note}\n\n`;
-                    
-                    resultMessage += `💰 CAPTURE RESULTS:\n`;
-                    if (data.capture && data.capture.success) {
-                        resultMessage += `✅ Capture Status: SUCCESS\n`;
-                        resultMessage += `🎯 RESULT: Same merchant CAN redirect vaulted payments to different payees!\n`;
-                        resultMessage += `💸 ${data.disbursementTest.note}\n\n`;
-                    } else if (data.capture && data.capture.error) {
-                        resultMessage += `❌ Capture Status: FAILED\n`;
-                        resultMessage += `🎯 RESULT: Same merchant CANNOT redirect vaulted payments to different payees\n`;
-                        resultMessage += `Error: ${data.capture.error.message}\n\n`;
-                    }
-                    
-                    resultMessage += `📝 Test Scenario: ${data.disbursementTest.testScenario}\n`;
-                    resultMessage += `🎯 Expected Behavior: ${data.disbursementTest.expectedBehavior}\n\n`;
-                    resultMessage += `📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
-                    
-                    const resultType = (data.capture && data.capture.success) ? 'success' : 'error';
-                    showResults('same-merchant-results', resultMessage, resultType);
-                } else {
-                    testResults.sameMerchant = { success: false, error: data.error };
-                    
-                    let resultMessage = `❌ UNEXPECTED: Order creation failed!\n\n`;
-                    resultMessage += `Error: ${data.error}\n`;
-                    resultMessage += `💡 ${data.disbursementTest.note}\n\n`;
-                    resultMessage += `📝 Test Scenario: ${data.disbursementTest.testScenario}\n`;
-                    resultMessage += `🎯 Expected Behavior: ${data.disbursementTest.expectedBehavior}\n\n`;
-                    if (data.explanation) {
-                        resultMessage += `❓ Explanation: ${data.explanation}\n\n`;
-                    }
-                    resultMessage += `📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
-                    
-                    showResults('same-merchant-results', resultMessage, 'error');
-                }
-                updateSummary();
-            })
-            .catch(error => {
-                testResults.sameMerchant = { success: false, error: error.message };
-                showResults('same-merchant-results', `❌ ERROR: ${error.message}`, 'error');
-                updateSummary();
-            });
-        }
 
         function showResults(elementId, message, type = 'warning') {
             const element = document.getElementById(elementId);
@@ -537,73 +496,78 @@
         }
 
         function updateSummary() {
-            let summary = '🧪 PayPal Payee Security Test Results:\n\n';
+            let summary = '🧪 PayPal Vault v3 Test Results:\n\n';
             
-            if (testResults.onetime !== null) {
-                const onetimeData = testResults.onetime.data;
-                summary += `1️⃣ ONE-TIME PAYMENT:\n`;
-                summary += `   Order Creation: ${testResults.onetime.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
+            if (testResults.vaultCreation !== null) {
+                summary += `1️⃣ VAULT TOKEN CREATION:\n`;
+                summary += `   Status: ${testResults.vaultCreation.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
+                summary += `   Token ID: ${vaultedToken || 'N/A'}\n\n`;
+            }
+            
+            if (testResults.vaultV3 !== null) {
+                summary += `2️⃣ VAULT V3 FORMAT TEST:\n`;
+                summary += `   Status: ${testResults.vaultV3.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
+                summary += `   API Format: PAYMENT_METHOD_TOKEN\n`;
                 
-                if (testResults.onetime.success && onetimeData.capture) {
-                    summary += `   Capture: ${onetimeData.capture.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
-                    summary += `   Disbursement: ${onetimeData.capture.success ? '💰 FUNDS DISBURSED TO DIFFERENT MERCHANT' : '❌ NO DISBURSEMENT'}\n`;
-                    summary += `   Expected: ✅ Should succeed and disburse to different merchant\n`;
-                } else if (!testResults.onetime.success) {
-                    summary += `   Error: ${testResults.onetime.error}\n`;
-                    summary += `   Expected: ✅ Should succeed\n`;
+                if (testResults.vaultV3.success && testResults.vaultV3.capture) {
+                    summary += `   Capture: ${testResults.vaultV3.capture.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
                 }
                 summary += '\n';
             }
             
-            if (testResults.vaulted !== null) {
-                const vaultedData = testResults.vaulted.data;
-                summary += `2️⃣ VAULTED TOKEN PAYMENT:\n`;
-                summary += `   Order Creation: ${testResults.vaulted.success ? '❌ SUCCEEDED (SECURITY ISSUE)' : '✅ FAILED AS EXPECTED'}\n`;
+            if (testResults.vaultV3Payee !== null) {
+                summary += `3️⃣ VAULT V3 + DIFFERENT PAYEE:\n`;
+                summary += `   Order Creation: ${testResults.vaultV3Payee.success ? '❌ UNEXPECTED SUCCESS' : '✅ EXPECTED FAILURE'}\n`;
                 
-                if (testResults.vaulted.success && vaultedData.capture) {
-                    summary += `   Capture: ${vaultedData.capture.success ? '❌ SUCCESS (MAJOR SECURITY ISSUE)' : '✅ FAILED (LIMITED IMPACT)'}\n`;
-                    summary += `   Disbursement: ${vaultedData.capture.success ? '🚨 FUNDS WRONGLY DISBURSED!' : '✅ NO DISBURSEMENT'}\n`;
-                    summary += `   Expected: ❌ Should fail completely\n`;
-                } else if (!testResults.vaulted.success) {
-                    summary += `   Security: ✅ Vaulted tokens properly tied to original merchant\n`;
-                    summary += `   Expected: ✅ Should fail at order creation\n`;
+                if (testResults.vaultV3Payee.success && testResults.vaultV3Payee.capture) {
+                    summary += `   Capture: ${testResults.vaultV3Payee.capture.success ? '🚨 SECURITY ISSUE' : '✅ BLOCKED'}\n`;
+                    summary += `   Security: ${testResults.vaultV3Payee.capture.success ? '❌ COMPROMISED' : '✅ PROTECTED'}\n`;
+                } else {
+                    summary += `   Security: ✅ Vault tokens properly tied to original merchant\n`;
                 }
                 summary += '\n';
             }
             
-            if (testResults.sameMerchant !== null) {
-                const sameMerchantData = testResults.sameMerchant.data;
-                summary += `3️⃣ SAME MERCHANT VAULTED → DIFFERENT PAYEE:\n`;
-                summary += `   Order Creation: ${testResults.sameMerchant.success ? '✅ SUCCESS (Expected)' : '❌ FAILED (Unexpected)'}\n`;
+            if (testResults.legacyComparison !== null) {
+                summary += `4️⃣ LEGACY vs VAULT V3 COMPARISON:\n`;
+                const legacy = testResults.legacyComparison.legacy;
+                const v3 = testResults.legacyComparison.v3;
                 
-                if (testResults.sameMerchant.success && sameMerchantData.capture) {
-                    summary += `   Capture: ${sameMerchantData.capture.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
-                    summary += `   Disbursement: ${sameMerchantData.capture.success ? '💰 FUNDS REDIRECTED TO DIFFERENT PAYEE' : '❌ NO DISBURSEMENT'}\n`;
-                    summary += `   Result: ${sameMerchantData.capture.success ? '🔄 Same merchant CAN redirect vaulted payments' : '🚫 Same merchant CANNOT redirect vaulted payments'}\n`;
-                } else if (!testResults.sameMerchant.success) {
-                    summary += `   Error: ${testResults.sameMerchant.error}\n`;
+                summary += `   Legacy Format: ${legacy?.success ? '✅ WORKS' : '❌ FAILED'}\n`;
+                summary += `   Vault v3 Format: ${v3?.success ? '✅ WORKS' : '❌ FAILED'}\n`;
+                
+                const bothWork = legacy?.success && v3?.success;
+                const neitherWork = !legacy?.success && !v3?.success;
+                const onlyLegacy = legacy?.success && !v3?.success;
+                const onlyV3 = !legacy?.success && v3?.success;
+                
+                if (bothWork) {
+                    summary += `   Compatibility: ✅ Both formats supported\n`;
+                } else if (neitherWork) {
+                    summary += `   Compatibility: ❌ Neither format works\n`;
+                } else if (onlyLegacy) {
+                    summary += `   Compatibility: ⚠️ Only legacy works\n`;
+                } else if (onlyV3) {
+                    summary += `   Compatibility: 🆕 Only v3 works\n`;
                 }
                 summary += '\n';
             }
             
-            if (testResults.onetime !== null && testResults.vaulted !== null) {
-                const onetimeWorked = testResults.onetime.success && testResults.onetime.data.capture?.success;
-                const vaultedBlocked = !testResults.vaulted.success;
-                const expectedBehavior = onetimeWorked && vaultedBlocked;
+            // Overall assessment
+            const hasVaultV3Results = testResults.vaultV3 !== null && testResults.vaultV3Payee !== null;
+            if (hasVaultV3Results) {
+                const v3Works = testResults.vaultV3.success;
+                const securityMaintained = !testResults.vaultV3Payee.success || 
+                    (testResults.vaultV3Payee.success && !testResults.vaultV3Payee.capture?.success);
                 
-                summary += `🎯 OVERALL SECURITY TEST:\n`;
-                summary += `   One-time ➜ Different Payee: ${onetimeWorked ? '✅ ALLOWED' : '❌ BLOCKED'}\n`;
-                summary += `   Vaulted ➜ Different Payee: ${vaultedBlocked ? '✅ BLOCKED' : '🚨 ALLOWED (SECURITY ISSUE)'}\n`;
-                
-                if (testResults.sameMerchant !== null) {
-                    const sameMerchantWorked = testResults.sameMerchant.success && testResults.sameMerchant.data.capture?.success;
-                    summary += `   Same Merchant Vaulted ➜ Different Payee: ${sameMerchantWorked ? '🔄 ALLOWED' : '🚫 BLOCKED'}\n`;
-                }
-                
-                summary += `   Security Model: ${expectedBehavior ? '✅ WORKING CORRECTLY' : '🚨 POTENTIAL SECURITY ISSUE'}`;
+                summary += `🎯 VAULT V3 ASSESSMENT:\n`;
+                summary += `   API Functionality: ${v3Works ? '✅ WORKING' : '❌ NOT WORKING'}\n`;
+                summary += `   Security Model: ${securityMaintained ? '✅ MAINTAINED' : '🚨 COMPROMISED'}\n`;
+                summary += `   Ready for Production: ${v3Works && securityMaintained ? '✅ YES' : '❌ NO'}`;
             }
             
-            showResults('summary-results', summary, testResults.onetime !== null && testResults.vaulted !== null ? 'success' : 'warning');
+            const summaryType = hasVaultV3Results ? 'success' : 'warning';
+            showResults('summary-results', summary, summaryType);
         }
     </script>
 </body>

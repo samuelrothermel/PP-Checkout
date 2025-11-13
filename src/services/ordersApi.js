@@ -188,6 +188,33 @@ export const createCheckoutOrder = async orderData => {
         },
       };
     }
+  } else if (paymentSource === 'google_pay') {
+    payment_source.google_pay = {};
+
+    // Add vault attributes if requested
+    if (vault) {
+      payment_source.google_pay.attributes = {
+        vault: {
+          store_in_vault: 'ON_SUCCESS',
+          usage_type: 'MERCHANT',
+          customer_type: 'CONSUMER',
+        },
+      };
+
+      // Add customer ID if provided for returning users with payment methods
+      if (customerId) {
+        payment_source.google_pay.attributes.customer = {
+          id: customerId,
+        };
+      }
+    } else if (customerId) {
+      // Add customer ID even without vault if provided
+      payment_source.google_pay.attributes = {
+        customer: {
+          id: customerId,
+        },
+      };
+    }
   }
 
   // Debug: Log the final payment_source object
@@ -576,6 +603,12 @@ export const createOrderWithVaultId = async (
         vault_id: vaultId,
       },
     };
+  } else if (tokenDetails.payment_source?.google_pay) {
+    payment_source = {
+      google_pay: {
+        vault_id: vaultId,
+      },
+    };
   } else if (tokenDetails.payment_source?.card) {
     payment_source = {
       card: {
@@ -686,6 +719,12 @@ export const createOrderWithVaultIdAndCapture = async (
   if (tokenDetails.payment_source?.apple_pay) {
     payment_source = {
       apple_pay: {
+        vault_id: vaultId,
+      },
+    };
+  } else if (tokenDetails.payment_source?.google_pay) {
+    payment_source = {
+      google_pay: {
         vault_id: vaultId,
       },
     };

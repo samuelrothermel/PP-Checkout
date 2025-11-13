@@ -139,11 +139,12 @@
             <!-- Vault Toggle -->
             <div class="checkbox-control" style="margin-bottom: 15px;">
               <input type="checkbox" id="save-payment-method">
-              <label for="save-payment-method">💾 Save my payment method for future purchases</label>
+              <label for="save-payment-method">Save my payment method for future purchases</label>
             </div>
             
             <div id="paypal-button-container"></div>
             <div id="applepay-container"></div>
+            <div id="googlepay-container"></div>
           </div>
           
           <!-- Card Payment -->
@@ -235,7 +236,8 @@
 <script>
   const clientId = '<%= clientId %>';
 </script>
-<script src="/checkout.js"></script>
+    <script src="/checkout.js"></script>
 <script src="https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js"></script>
+<script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
 </body>
 </html>

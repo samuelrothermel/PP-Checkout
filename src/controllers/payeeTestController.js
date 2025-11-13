@@ -1,7 +1,9 @@
+import fetch from 'node-fetch';
 import {
   createOneTimeOrderWithPayee,
   createVaultedOrderWithPayee,
   capturePayment,
+  createOrderWithVaultIdAndCapture,
 } from '../services/ordersApi.js';
 
 // Create one-time order with different payee (returns order for frontend approval)
@@ -197,6 +199,320 @@ export const testVaultedSameMerchantDifferentPayee = async (req, res, next) => {
     });
   }
 };
+
+// Test vault v3 format with PAYMENT_METHOD_TOKEN
+export const testVaultV3 = async (req, res, next) => {
+  try {
+    const { vaultedToken, amount } = req.body;
+
+    console.log(
+      `Testing vault v3 format with token: ${vaultedToken}, amount: ${amount}`
+    );
+
+    // Create order using vault v3 format: PAYMENT_METHOD_TOKEN
+    const orderResult = await createOrderWithVaultV3Format(
+      vaultedToken,
+      amount
+    );
+
+    console.log(
+      `Vault v3 order created successfully: ${orderResult.id}, status: ${orderResult.status}`
+    );
+
+    res.json({
+      success: true,
+      orderId: orderResult.id,
+      status: orderResult.status,
+      amount: amount,
+      format: 'PAYMENT_METHOD_TOKEN',
+      orderCreation: orderResult,
+      capture:
+        orderResult.status === 'COMPLETED'
+          ? {
+              success: true,
+              captureId: orderResult.purchase_units[0].payments.captures[0].id,
+              amount:
+                orderResult.purchase_units[0].payments.captures[0].amount.value,
+            }
+          : null,
+      note: 'Vault v3 format test - using PAYMENT_METHOD_TOKEN type',
+    });
+  } catch (error) {
+    console.error('Vault v3 test failed:', error);
+
+    res.json({
+      success: false,
+      error: error.message,
+      details: error.status ? `HTTP ${error.status}` : 'Unknown error',
+      format: 'PAYMENT_METHOD_TOKEN',
+      note: 'Vault v3 format failed - may not be supported yet',
+    });
+  }
+};
+
+// Test vault v3 format with different payee
+export const testVaultV3WithPayee = async (req, res, next) => {
+  try {
+    const { vaultedToken, payeeMerchantId, amount } = req.body;
+
+    console.log(
+      `Testing vault v3 with payee - token: ${vaultedToken}, payee: ${payeeMerchantId}, amount: ${amount}`
+    );
+
+    // Try to create order using vault v3 format with different payee
+    const orderResult = await createOrderWithVaultV3FormatAndPayee(
+      vaultedToken,
+      payeeMerchantId,
+      amount
+    );
+
+    console.log(`Vault v3 order with payee created: ${orderResult.id}`);
+
+    // Try to capture if order was created
+    let captureResult = null;
+    let captureError = null;
+
+    if (orderResult.status === 'COMPLETED') {
+      captureResult = orderResult;
+    } else if (orderResult.status === 'APPROVED') {
+      try {
+        captureResult = await capturePayment(orderResult.id);
+      } catch (error) {
+        captureError = {
+          message: error.message,
+          status: error.status,
+        };
+      }
+    }
+
+    res.json({
+      success: true,
+      orderId: orderResult.id,
+      status: orderResult.status,
+      payeeMerchantId: payeeMerchantId,
+      amount: amount,
+      orderCreation: {
+        success: true,
+        result: orderResult,
+        note: 'UNEXPECTED: Vault v3 order with different payee succeeded',
+      },
+      capture: {
+        success: !!captureResult,
+        result: captureResult,
+        error: captureError,
+      },
+      warning:
+        'UNEXPECTED: Vault v3 with different payee succeeded - potential security issue',
+    });
+  } catch (error) {
+    console.error('Vault v3 with payee test failed (expected):', error);
+
+    res.json({
+      success: false,
+      error: error.message,
+      details: error.status ? `HTTP ${error.status}` : 'Unknown error',
+      note: 'EXPECTED: Vault v3 tokens should be tied to original merchant',
+      security: 'Vault tokens properly protected against cross-merchant usage',
+    });
+  }
+};
+
+// Compare legacy vault vs vault v3 formats
+export const testLegacyVsV3 = async (req, res, next) => {
+  try {
+    const { vaultedToken, amount } = req.body;
+
+    console.log(
+      `Comparing legacy vs vault v3 formats for token: ${vaultedToken}`
+    );
+
+    let legacyResult = { success: false, error: null };
+    let v3Result = { success: false, error: null };
+
+    // Test legacy format
+    try {
+      const legacyOrder = await createOrderWithVaultIdAndCapture(
+        vaultedToken,
+        amount
+      );
+      legacyResult = {
+        success: true,
+        orderId: legacyOrder.id,
+        status: legacyOrder.status,
+        data: legacyOrder,
+      };
+      console.log('Legacy vault format: SUCCESS');
+    } catch (error) {
+      legacyResult.error = error.message;
+      console.log('Legacy vault format: FAILED -', error.message);
+    }
+
+    // Test v3 format
+    try {
+      const v3Order = await createOrderWithVaultV3Format(vaultedToken, amount);
+      v3Result = {
+        success: true,
+        orderId: v3Order.id,
+        status: v3Order.status,
+        data: v3Order,
+      };
+      console.log('Vault v3 format: SUCCESS');
+    } catch (error) {
+      v3Result.error = error.message;
+      console.log('Vault v3 format: FAILED -', error.message);
+    }
+
+    // Determine compatibility status
+    const bothWork = legacyResult.success && v3Result.success;
+    const neitherWork = !legacyResult.success && !v3Result.success;
+    const onlyLegacy = legacyResult.success && !v3Result.success;
+    const onlyV3 = !legacyResult.success && v3Result.success;
+
+    let compatibilityStatus;
+    if (bothWork) {
+      compatibilityStatus =
+        'Both formats supported - full backward compatibility';
+    } else if (neitherWork) {
+      compatibilityStatus = 'Neither format works - possible API issues';
+    } else if (onlyLegacy) {
+      compatibilityStatus = 'Only legacy format works - v3 not yet deployed';
+    } else if (onlyV3) {
+      compatibilityStatus = 'Only v3 format works - legacy deprecated';
+    }
+
+    res.json({
+      success: true,
+      legacy: legacyResult,
+      v3: v3Result,
+      compatibility: {
+        status: compatibilityStatus,
+        bothWork,
+        neitherWork,
+        onlyLegacy,
+        onlyV3,
+      },
+      formats: {
+        legacy: `{ "paypal": { "vault_id": "${vaultedToken}" } }`,
+        v3: `{ "token": { "id": "${vaultedToken}", "type": "PAYMENT_METHOD_TOKEN" } }`,
+      },
+    });
+  } catch (error) {
+    console.error('Comparison test failed:', error);
+
+    res.json({
+      success: false,
+      error: error.message,
+      note: 'Failed to complete format comparison test',
+    });
+  }
+};
+
+// Helper function to create order with vault v3 format
+async function createOrderWithVaultV3Format(vaultId, amount = '10.00') {
+  const { generateAccessToken } = await import('../services/authApi.js');
+  const accessToken = await generateAccessToken();
+
+  const payload = {
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: amount,
+        },
+      },
+    ],
+    payment_source: {
+      token: {
+        id: vaultId,
+        type: 'PAYMENT_METHOD_TOKEN',
+      },
+    },
+  };
+
+  console.log(
+    'Creating order with vault v3 format:',
+    JSON.stringify(payload, null, 2)
+  );
+
+  const response = await fetch(
+    'https://api-m.sandbox.paypal.com/v2/checkout/orders',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        'PayPal-Request-Id': Date.now().toString(),
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (response.status === 200 || response.status === 201) {
+    return response.json();
+  }
+
+  const error = new Error(await response.text());
+  error.status = response.status;
+  throw error;
+}
+
+// Helper function to create order with vault v3 format and different payee
+async function createOrderWithVaultV3FormatAndPayee(
+  vaultId,
+  payeeMerchantId,
+  amount = '10.00'
+) {
+  const { generateAccessToken } = await import('../services/authApi.js');
+  const accessToken = await generateAccessToken();
+
+  const payload = {
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: amount,
+        },
+        payee: {
+          merchant_id: payeeMerchantId,
+        },
+      },
+    ],
+    payment_source: {
+      token: {
+        id: vaultId,
+        type: 'PAYMENT_METHOD_TOKEN',
+      },
+    },
+  };
+
+  console.log(
+    'Creating order with vault v3 format and payee:',
+    JSON.stringify(payload, null, 2)
+  );
+
+  const response = await fetch(
+    'https://api-m.sandbox.paypal.com/v2/checkout/orders',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        'PayPal-Request-Id': Date.now().toString(),
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (response.status === 200 || response.status === 201) {
+    return response.json();
+  }
+
+  const error = new Error(await response.text());
+  error.status = response.status;
+  throw error;
+}
 
 // Test vaulted payment with different payee
 export const testVaultedPayee = async (req, res, next) => {
