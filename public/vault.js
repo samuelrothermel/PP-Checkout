@@ -152,6 +152,22 @@ function createCustomerCard(customer) {
   // Use the customerId from our response structure
   const customerId = customer.customerId;
   const paymentTokens = customer.paymentTokens || [];
+  const customerDetails = customer.customerDetails || {};
+
+  // Extract customer name from details if available
+  let customerName = '';
+  if (customerDetails.name) {
+    if (typeof customerDetails.name === 'string') {
+      customerName = customerDetails.name;
+    } else if (
+      customerDetails.name.given_name &&
+      customerDetails.name.surname
+    ) {
+      customerName = `${customerDetails.name.given_name} ${customerDetails.name.surname}`;
+    } else if (customerDetails.name.full_name) {
+      customerName = customerDetails.name.full_name;
+    }
+  }
 
   // Format creation date from client timestamp or first payment token
   let createdDate = 'Unknown';
@@ -167,6 +183,11 @@ function createCustomerCard(customer) {
         <div class="customer-header">
             <div>
                 <div class="customer-id">Customer: ${customerId}</div>
+                ${
+                  customerName
+                    ? `<div class="customer-name">Name: ${customerName}</div>`
+                    : ''
+                }
                 <div class="customer-date">Created: ${createdDate}</div>
             </div>
             <div>
@@ -222,35 +243,76 @@ function parsePaymentMethod(method) {
     ? new Date(method.create_time).toLocaleDateString()
     : 'Unknown';
 
+  // Log the method for debugging
+  console.log('Parsing payment method:', JSON.stringify(method, null, 2));
+
   if (method.payment_source) {
     if (method.payment_source.card) {
       icon = '💳';
       const card = method.payment_source.card;
       type = `${card.brand || 'Card'}`;
-      const lastDigits = card.last_digits || '';
+      const lastDigits = card.last_digits || card.last_4_digits || '';
       const expiry = card.expiry || '';
       details = lastDigits ? `**** **** **** ${lastDigits}` : 'Card';
       if (expiry) {
         details += ` | Exp: ${expiry}`;
       }
+      // Add cardholder name if available
+      if (card.name) {
+        details += ` | ${card.name}`;
+      }
     } else if (method.payment_source.paypal) {
       icon = '🅿️';
       type = 'PayPal';
       const paypal = method.payment_source.paypal;
-      details = paypal.email_address || 'PayPal Account';
+      details = paypal.email_address || paypal.account_id || 'PayPal Account';
+      // Add payer name if available
+      if (paypal.name && paypal.name.given_name) {
+        details += ` | ${paypal.name.given_name} ${
+          paypal.name.surname || ''
+        }`.trim();
+      }
     } else if (method.payment_source.venmo) {
       icon = '📱';
       type = 'Venmo';
       const venmo = method.payment_source.venmo;
-      details = venmo.email_address || venmo.user_name || 'Venmo Account';
+      details =
+        venmo.email_address ||
+        venmo.user_name ||
+        venmo.username ||
+        'Venmo Account';
     } else if (method.payment_source.apple_pay) {
       icon = '🍎';
       type = 'Apple Pay';
-      details = 'Apple Pay Payment Method';
+      const applePay = method.payment_source.apple_pay;
+      details = 'Apple Pay';
+      // Add card details if available within Apple Pay
+      if (applePay.card) {
+        const card = applePay.card;
+        const lastDigits = card.last_digits || card.last_4_digits || '';
+        if (lastDigits) {
+          details += ` | **** ${lastDigits}`;
+        }
+        if (card.brand) {
+          details += ` (${card.brand})`;
+        }
+      }
     } else if (method.payment_source.google_pay) {
       icon = '🔍';
       type = 'Google Pay';
-      details = 'Google Pay Payment Method';
+      const googlePay = method.payment_source.google_pay;
+      details = 'Google Pay';
+      // Add card details if available within Google Pay
+      if (googlePay.card) {
+        const card = googlePay.card;
+        const lastDigits = card.last_digits || card.last_4_digits || '';
+        if (lastDigits) {
+          details += ` | **** ${lastDigits}`;
+        }
+        if (card.brand) {
+          details += ` (${card.brand})`;
+        }
+      }
     }
   }
 

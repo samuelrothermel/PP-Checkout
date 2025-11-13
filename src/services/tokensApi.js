@@ -139,7 +139,34 @@ export const fetchPaymentTokens = async customerId => {
     }
   );
   const data = await response.json();
-  console.log('Payment Tokens Response: ', data);
+  console.log('Payment Tokens Response: ', JSON.stringify(data, null, 2));
+
+  // Log detailed customer and payment source information
+  if (data.customer) {
+    console.log('Customer Details:', JSON.stringify(data.customer, null, 2));
+  }
+
+  if (data.payment_tokens && data.payment_tokens.length > 0) {
+    data.payment_tokens.forEach((token, index) => {
+      console.log(
+        `Payment Token ${index + 1}:`,
+        JSON.stringify(token, null, 2)
+      );
+      if (token.payment_source) {
+        console.log(
+          `Payment Source ${index + 1}:`,
+          JSON.stringify(token.payment_source, null, 2)
+        );
+      }
+      if (token.customer) {
+        console.log(
+          `Token Customer ${index + 1}:`,
+          JSON.stringify(token.customer, null, 2)
+        );
+      }
+    });
+  }
+
   return data.payment_tokens || [];
 };
 
@@ -308,10 +335,24 @@ export const getPaymentTokensByCustomerIds = async customerIds => {
     try {
       console.log(`Fetching payment tokens for customer: ${customerId}`);
 
-      const paymentTokens = await fetchPaymentTokens(customerId);
+      // Get the full response to extract customer details
+      const accessToken = await generateAccessToken();
+      const response = await fetch(
+        `https://api-m.sandbox.paypal.com/v3/vault/payment-tokens?customer_id=${customerId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      const data = await response.json();
+
+      const paymentTokens = data.payment_tokens || [];
+      const customerDetails = data.customer || {};
 
       customers.push({
         customerId,
+        customerDetails, // Include customer details from API response
         paymentTokens,
         client_customer_timestamp: customerIdObj.timestamp || null,
       });
