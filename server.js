@@ -2,7 +2,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import paypal from '@paypal/checkout-server-sdk';
 import crypto from 'crypto';
 
 // Initialize Express app

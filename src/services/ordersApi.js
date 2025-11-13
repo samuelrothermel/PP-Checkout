@@ -1,20 +1,8 @@
 import fetch from 'node-fetch';
-import paypal from '@paypal/checkout-server-sdk';
 import {
   generateAccessToken,
   generateAccessTokenForMerchant,
 } from './authApi.js';
-
-// PayPal SDK configuration (reuse from authApi if available, otherwise define here)
-const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_PAYPAL_CLIENT_ID';
-const CLIENT_SECRET = process.env.CLIENT_SECRET || 'YOUR_PAYPAL_CLIENT_SECRET';
-
-// Create a PayPal environment
-const environment = new paypal.core.SandboxEnvironment(
-  CLIENT_ID,
-  CLIENT_SECRET
-);
-const client = new paypal.core.PayPalHttpClient(environment);
 
 // set some important variables
 const base = 'https://api-m.sandbox.paypal.com';
@@ -817,20 +805,32 @@ export const getOrdersByIds = async orderIds => {
     };
   }
 
-  // Fetch each order individually from PayPal's Orders API using SDK
+  // Fetch each order individually from PayPal's Orders API using direct API calls
   for (const orderIdObj of orderIds) {
     const orderId = orderIdObj.id || orderIdObj;
     try {
       console.log(`Fetching order details for: ${orderId}`);
 
-      // Create the request using PayPal SDK
-      const request = new paypal.orders.OrdersGetRequest(orderId);
+      // Get access token for direct API call
+      const accessToken = await generateAccessToken();
 
-      // Execute the request using the PayPal client
-      const order = await client.execute(request);
+      // Make direct API call to fetch order details
+      const response = await fetch(`${base}/v2/checkout/orders/${orderId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const orderDetails = await response.json();
 
       orders.push({
-        ...order.result,
+        ...orderDetails,
         client_order_timestamp: orderIdObj.timestamp || null,
       });
     } catch (orderError) {
