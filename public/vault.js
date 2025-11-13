@@ -61,7 +61,32 @@ async function loadVaultData() {
       showMessage(data.message, 'info');
     }
 
-    displayVaultStats(data.stats);
+    // Calculate stats from the customer data
+    let totalPaymentMethods = 0;
+    let cardCount = 0;
+    let paypalCount = 0;
+
+    customers.forEach(customer => {
+      if (customer.paymentTokens && customer.paymentTokens.length > 0) {
+        totalPaymentMethods += customer.paymentTokens.length;
+        customer.paymentTokens.forEach(token => {
+          if (token.payment_source?.card) {
+            cardCount++;
+          } else if (token.payment_source?.paypal) {
+            paypalCount++;
+          }
+        });
+      }
+    });
+
+    const stats = {
+      totalCustomers: customers.length,
+      totalPaymentMethods,
+      cardCount,
+      paypalCount,
+    };
+
+    displayVaultStats(stats);
     displayCustomers(customers);
 
     loadingElement.style.display = 'none';
@@ -124,64 +149,36 @@ function createCustomerCard(customer) {
   const card = document.createElement('div');
   card.className = 'customer-card';
 
-  // Format creation date
-  const createdDate = customer.created_date
-    ? new Date(customer.created_date).toLocaleDateString()
-    : 'Unknown';
+  // Use the customerId from our response structure
+  const customerId = customer.customerId;
+  const paymentTokens = customer.paymentTokens || [];
+
+  // Format creation date from client timestamp or first payment token
+  let createdDate = 'Unknown';
+  if (customer.client_customer_timestamp) {
+    createdDate = new Date(
+      customer.client_customer_timestamp
+    ).toLocaleDateString();
+  } else if (paymentTokens.length > 0 && paymentTokens[0].create_time) {
+    createdDate = new Date(paymentTokens[0].create_time).toLocaleDateString();
+  }
 
   card.innerHTML = `
         <div class="customer-header">
             <div>
-                <div class="customer-id">Customer: ${customer.id}</div>
+                <div class="customer-id">Customer: ${customerId}</div>
                 <div class="customer-date">Created: ${createdDate}</div>
             </div>
             <div>
                 <span class="status-badge status-vaulted">Active</span>
             </div>
         </div>
-        <div class="payment-methods" id="methods-${customer.id}">
-            ${
-              customer.payment_methods
-                ? createPaymentMethodsHTML(customer.payment_methods)
-                : '<p style="color: #666; font-style: italic;">Loading payment methods...</p>'
-            }
+        <div class="payment-methods">
+            ${createPaymentMethodsHTML(paymentTokens)}
         </div>
     `;
 
-  // Load payment methods if not already loaded
-  if (!customer.payment_methods) {
-    loadCustomerPaymentMethods(customer.id);
-  }
-
   return card;
-}
-
-async function loadCustomerPaymentMethods(customerId) {
-  try {
-    const response = await fetch(
-      `/api/vault/customers/${customerId}/payment-methods`
-    );
-    if (response.ok) {
-      const data = await response.json();
-      const container = document.getElementById(`methods-${customerId}`);
-      if (container) {
-        container.innerHTML = createPaymentMethodsHTML(
-          data.payment_methods || []
-        );
-      }
-    }
-  } catch (error) {
-    console.error(
-      'Error loading payment methods for customer:',
-      customerId,
-      error
-    );
-    const container = document.getElementById(`methods-${customerId}`);
-    if (container) {
-      container.innerHTML =
-        '<p style="color: #d32f2f; font-style: italic;">Error loading payment methods</p>';
-    }
-  }
 }
 
 function createPaymentMethodsHTML(paymentMethods) {
