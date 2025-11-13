@@ -650,6 +650,18 @@ apple-pay-button {
   width: 100%;
 }
 
+/* Target the actual Google Pay button created by Google's SDK */
+#googlepay-container button {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 40px !important;
+  border-radius: 4px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  display: block !important;
+}
+
+/* Legacy selector for custom Google Pay button */
 #google-pay-button {
   background-color: #000 !important;
   color: white !important;

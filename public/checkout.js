@@ -201,7 +201,7 @@ async function setupGooglePay() {
           allowedPaymentMethods: googlePayConfig.allowedPaymentMethods,
           buttonColor: 'default',
           buttonType: 'buy',
-          buttonSizeMode: 'static', // Per PayPal docs
+          buttonSizeMode: 'fill', // Use 'fill' to make button fill container width
         });
         console.log('[Google Pay Debug] Button created successfully');
 
@@ -209,6 +209,18 @@ async function setupGooglePay() {
         if (container) {
           container.innerHTML = '';
           container.appendChild(button);
+
+          // Apply additional styling to ensure full width
+          const googlePayButton = container.querySelector('button');
+          if (googlePayButton) {
+            googlePayButton.style.width = '100%';
+            googlePayButton.style.maxWidth = '100%';
+            googlePayButton.style.boxSizing = 'border-box';
+            googlePayButton.style.height = '40px';
+            googlePayButton.style.margin = '0';
+            googlePayButton.style.borderRadius = '4px';
+          }
+
           console.log(
             '[Google Pay Debug] Button added to container successfully'
           );
@@ -679,7 +691,9 @@ async function setupApplepay() {
               };
 
               // Check if user wants to save payment method
-              const vaultToggle = document.getElementById('vault-toggle');
+              const vaultToggle = document.getElementById(
+                'save-payment-method'
+              );
               const vaultRequested = vaultToggle && vaultToggle.checked;
 
               const requestBody = {
@@ -989,7 +1003,7 @@ const createOrder = (data, actions) => {
     requestBody.billingInfo = billingInfo;
   }
 
-  const vaultToggle = document.getElementById('vault-toggle');
+  const vaultToggle = document.getElementById('save-payment-method');
   if (vaultToggle && vaultToggle.checked) {
     requestBody.vault = true;
   }
@@ -1130,7 +1144,7 @@ function loadPayPalSDK(idToken) {
     : 'buttons,card-fields,messages,googlepay';
 
   // Use PayPal SDK with Google Pay component
-  const scriptUrl = `https://www.paypal.com/sdk/js?commit=false&components=${components}&intent=capture&client-id=${clientId}&enable-funding=venmo&integration-date=2023-01-01&debug=false`;
+  const scriptUrl = `https://www.paypal.com/sdk/js?commit=false&components=${components}&intent=authorize&client-id=${clientId}&enable-funding=venmo&integration-date=2023-01-01&debug=false`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
   if (idToken) {
@@ -1181,13 +1195,13 @@ function loadPayPalSDK(idToken) {
 }
 
 const onApprove = (data, actions) => {
+  // Always use authorize endpoint since all orders are created with AUTHORIZE intent
   return fetch(`/api/orders/${data.orderID}/authorize`, {
     method: 'POST',
   })
     .then(response => response.json())
     .then(orderData => {
-      const authorizationId =
-        orderData.purchase_units[0].payments.authorizations[0].id;
+      console.log('Order processed:', orderData);
       const paymentSource = orderData.payment_source;
 
       // Determine payment source type by checking which property exists
@@ -1200,6 +1214,18 @@ const onApprove = (data, actions) => {
         paymentSourceType = 'venmo';
       } else if (paymentSource.apple_pay) {
         paymentSourceType = 'apple_pay';
+      } else if (paymentSource.google_pay) {
+        paymentSourceType = 'google_pay';
+      }
+
+      // All orders are authorized, so always look for authorization data
+      let authorizationId = '';
+      if (orderData.purchase_units[0].payments.authorizations) {
+        authorizationId =
+          orderData.purchase_units[0].payments.authorizations[0].id;
+        document.getElementById(
+          'capture-order-info'
+        ).textContent = `Authorization ID: ${authorizationId}`;
       }
 
       const vaultStatus =
@@ -1210,11 +1236,9 @@ const onApprove = (data, actions) => {
         paymentSource[paymentSourceType]?.attributes?.vault?.id;
 
       document.getElementById(
-        'capture-order-info'
-      ).textContent = `Authorization ID: ${authorizationId}`;
-      document.getElementById(
         'payment-source-type-info'
       ).textContent = `Payment Source: ${paymentSourceType}`;
+
       if (vaultStatus) {
         document.getElementById(
           'vault-status-info'
@@ -1235,9 +1259,10 @@ const onApprove = (data, actions) => {
       document.getElementById('payment-source-section').style.display = 'block';
     })
     .catch(error => {
+      console.error('Order authorization error:', error);
       document.getElementById(
         'capture-info-section'
-      ).textContent = `Authorize Order ERROR: ${error}`;
+      ).textContent = `Order Authorization ERROR: ${error}`;
     });
 };
 

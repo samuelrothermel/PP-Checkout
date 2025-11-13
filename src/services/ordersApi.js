@@ -236,6 +236,10 @@ export const createCheckoutOrder = async orderData => {
     purchaseUnit.shipping = shippingDetails;
   }
 
+  // Always use AUTHORIZE intent for all checkout orders
+  const intent = 'AUTHORIZE';
+  console.log(`Using intent: ${intent} (vault requested: ${vault})`);
+
   const url = `${base}/v2/checkout/orders`;
   const response = await fetch(url, {
     method: 'post',
@@ -245,7 +249,7 @@ export const createCheckoutOrder = async orderData => {
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      intent: 'CAPTURE',
+      intent,
       purchase_units: [purchaseUnit],
       payment_source,
     }),
