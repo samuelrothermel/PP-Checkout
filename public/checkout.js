@@ -143,12 +143,13 @@ async function setupGooglePay() {
       return;
     }
 
-    // Get Google Pay configuration from PayPal
+    // Get Google Pay configuration from PayPal - more explicit configuration
     console.log(
       '[Google Pay Debug] Getting PayPal Google Pay configuration...'
     );
     try {
-      googlePayConfig = await paypal.Googlepay().config();
+      const googlepayComponent = paypal.Googlepay();
+      googlePayConfig = await googlepayComponent.config();
       console.log(
         '[Google Pay Debug] Google Pay config received:',
         googlePayConfig
@@ -165,19 +166,23 @@ async function setupGooglePay() {
         throw new Error('Google Pay is not eligible');
       }
 
-      // Check if we can create payments client
+      // Create payments client with explicit environment from config
       console.log('[Google Pay Debug] Creating Google Pay payments client...');
       const paymentsClient = new google.payments.api.PaymentsClient({
-        environment: 'TEST', // Change to 'PRODUCTION' for live
+        environment: googlePayConfig.environment || 'TEST', // Use config environment
+        paymentDataCallbacks: {
+          onPaymentDataChanged: onPaymentDataChanged,
+        },
       });
       console.log('[Google Pay Debug] Payments client created successfully');
 
-      // Check readiness
+      // Check readiness with proper structure per PayPal docs
       console.log('[Google Pay Debug] Checking Google Pay readiness...');
       const isReadyToPayRequest = {
-        apiVersion: 2,
-        apiVersionMinor: 0,
+        apiVersion: googlePayConfig.apiVersion || 2,
+        apiVersionMinor: googlePayConfig.apiVersionMinor || 0,
         allowedPaymentMethods: googlePayConfig.allowedPaymentMethods,
+        existingPaymentMethodRequired: false, // Per PayPal docs
       };
 
       const isReadyToPay = await paymentsClient.isReadyToPay(
@@ -195,6 +200,7 @@ async function setupGooglePay() {
           allowedPaymentMethods: googlePayConfig.allowedPaymentMethods,
           buttonColor: 'default',
           buttonType: 'buy',
+          buttonSizeMode: 'static', // Per PayPal docs
         });
         console.log('[Google Pay Debug] Button created successfully');
 
@@ -251,23 +257,134 @@ async function setupGooglePay() {
   }
 }
 
+// Add payment data changed callback per PayPal docs
+function onPaymentDataChanged(intermediatePaymentData) {
+  return new Promise((resolve, reject) => {
+    let shippingAddress = intermediatePaymentData.shippingAddress;
+    let shippingOptionData = intermediatePaymentData.shippingOptionData;
+    let paymentDataRequestUpdate = {};
+
+    if (
+      intermediatePaymentData.callbackTrigger === 'INITIALIZE' ||
+      intermediatePaymentData.callbackTrigger === 'SHIPPING_ADDRESS'
+    ) {
+      if (shippingAddress.administrativeArea === 'NJ') {
+        paymentDataRequestUpdate.error = getGoogleUnserviceableAddressError();
+      } else {
+        paymentDataRequestUpdate.newShippingOptionParameters =
+          getGoogleDefaultShippingOptions();
+        paymentDataRequestUpdate.newTransactionInfo =
+          getGoogleTransactionInfo();
+      }
+    } else if (intermediatePaymentData.callbackTrigger === 'SHIPPING_OPTION') {
+      paymentDataRequestUpdate.newTransactionInfo = getGoogleTransactionInfo(
+        shippingOptionData.id
+      );
+    }
+
+    resolve(paymentDataRequestUpdate);
+  });
+}
+
+// Helper functions per PayPal docs
+function getGoogleUnserviceableAddressError() {
+  return {
+    reason: 'SHIPPING_ADDRESS_UNSERVICEABLE',
+    message: 'Cannot ship to the selected address',
+    intent: 'SHIPPING_ADDRESS',
+  };
+}
+
+function getGoogleDefaultShippingOptions() {
+  return {
+    defaultSelectedOptionId: 'shipping-001',
+    shippingOptions: [
+      {
+        id: 'shipping-001',
+        label: 'Free: Standard shipping',
+        description: 'Free Shipping delivered in 5 business days.',
+      },
+      {
+        id: 'shipping-002',
+        label: '$1.99: Standard shipping',
+        description: 'Standard shipping delivered in 3 business days.',
+      },
+    ],
+  };
+}
+
+function getGoogleTransactionInfo(shippingOptionId) {
+  let selectedShippingOption = getSelectedShippingOption(shippingOptionId);
+  return {
+    displayItems: [
+      {
+        label: 'Subtotal',
+        type: 'SUBTOTAL',
+        price: getCurrentTotalAmount(),
+      },
+      {
+        label: selectedShippingOption.label,
+        type: 'LINE_ITEM',
+        price: selectedShippingOption.price,
+      },
+    ],
+    countryCode: 'US',
+    currencyCode: 'USD',
+    totalPriceStatus: 'FINAL',
+    totalPrice: (
+      parseFloat(getCurrentTotalAmount()) +
+      parseFloat(selectedShippingOption.price)
+    ).toFixed(2),
+    totalPriceLabel: 'Total',
+  };
+}
+
+function getSelectedShippingOption(shippingOptionId) {
+  const shippingOptions = {
+    'shipping-001': { label: 'Free shipping', price: '0.00' },
+    'shipping-002': { label: 'Standard shipping', price: '1.99' },
+  };
+  return shippingOptions[shippingOptionId] || shippingOptions['shipping-001'];
+}
+
 async function onGooglePayButtonClicked() {
   console.log('[Google Pay Debug] Google Pay button clicked');
 
   try {
     console.log('[Google Pay Debug] Creating payment data request...');
+
+    // Structure payment request per PayPal docs
     const paymentDataRequest = {
-      ...googlePayConfig.paymentDataRequest,
+      apiVersion: googlePayConfig.apiVersion || 2,
+      apiVersionMinor: googlePayConfig.apiVersionMinor || 0,
+      allowedPaymentMethods: googlePayConfig.allowedPaymentMethods,
       transactionInfo: {
         totalPriceStatus: 'FINAL',
         totalPrice: getCurrentTotalAmount(),
         currencyCode: 'USD',
+        countryCode: 'US', // Add country code per docs
       },
+      merchantInfo: {
+        merchantName: 'Example Merchant', // Should be your actual merchant name
+        merchantId: googlePayConfig.merchantId, // Use from config
+      },
+      callbackIntents: [
+        'PAYMENT_AUTHORIZATION',
+        'SHIPPING_ADDRESS',
+        'SHIPPING_OPTION',
+      ],
+      shippingAddressRequired: true,
+      shippingOptionRequired: true,
+      emailRequired: true,
     };
+
     console.log('[Google Pay Debug] Payment data request:', paymentDataRequest);
 
     const paymentsClient = new google.payments.api.PaymentsClient({
-      environment: 'TEST',
+      environment: googlePayConfig.environment || 'TEST',
+      paymentDataCallbacks: {
+        onPaymentDataChanged: onPaymentDataChanged,
+      },
     });
 
     console.log('[Google Pay Debug] Loading payment data...');
@@ -284,25 +401,65 @@ async function onGooglePayButtonClicked() {
     await processGooglePayPayment(paymentData);
   } catch (error) {
     console.log('[Google Pay Debug] Button click error:', error);
+    // Better error handling per docs
+    if (error.statusCode === 'CANCELED') {
+      console.log('[Google Pay Debug] User canceled the payment');
+    } else {
+      console.error('[Google Pay Debug] Payment failed:', error);
+    }
   }
 }
 
 async function processGooglePayPayment(paymentData) {
   try {
-    // Collect shipping information
-    const shippingInfo = {
-      firstName: document.getElementById('shipping-first-name').value,
-      lastName: document.getElementById('shipping-last-name').value,
-      email: document.getElementById('shipping-email').value,
-      phone: document.getElementById('shipping-phone').value,
-      address: {
-        addressLine1: document.getElementById('shipping-address-line1').value,
-        adminArea2: document.getElementById('shipping-admin-area2').value,
-        adminArea1: document.getElementById('shipping-admin-area1').value,
-        postalCode: document.getElementById('shipping-postal-code').value,
-        countryCode: document.getElementById('shipping-country-code').value,
-      },
-    };
+    // Collect shipping information - use Google Pay shipping if available
+    const googleShipping = paymentData.shippingAddress;
+    const shippingInfo = googleShipping
+      ? {
+          firstName:
+            googleShipping.name?.split(' ')[0] ||
+            document.getElementById('shipping-first-name').value,
+          lastName:
+            googleShipping.name?.split(' ').slice(1).join(' ') ||
+            document.getElementById('shipping-last-name').value,
+          email:
+            paymentData.email ||
+            document.getElementById('shipping-email').value,
+          phone:
+            googleShipping.phoneNumber ||
+            document.getElementById('shipping-phone').value,
+          address: {
+            addressLine1:
+              googleShipping.address1 ||
+              document.getElementById('shipping-address-line1').value,
+            adminArea2:
+              googleShipping.locality ||
+              document.getElementById('shipping-admin-area2').value,
+            adminArea1:
+              googleShipping.administrativeArea ||
+              document.getElementById('shipping-admin-area1').value,
+            postalCode:
+              googleShipping.postalCode ||
+              document.getElementById('shipping-postal-code').value,
+            countryCode:
+              googleShipping.countryCode ||
+              document.getElementById('shipping-country-code').value,
+          },
+        }
+      : {
+          firstName: document.getElementById('shipping-first-name').value,
+          lastName: document.getElementById('shipping-last-name').value,
+          email: document.getElementById('shipping-email').value,
+          phone: document.getElementById('shipping-phone').value,
+          address: {
+            addressLine1: document.getElementById('shipping-address-line1')
+              .value,
+            adminArea2: document.getElementById('shipping-admin-area2').value,
+            adminArea1: document.getElementById('shipping-admin-area1').value,
+            postalCode: document.getElementById('shipping-postal-code').value,
+            countryCode: document.getElementById('shipping-country-code').value,
+          },
+        };
 
     const requestBody = {
       source: 'google_pay',
@@ -328,8 +485,9 @@ async function processGooglePayPayment(paymentData) {
     const orderData = await orderResponse.json();
     const { id } = orderData;
 
-    // Confirm the order with PayPal
-    await paypal.Googlepay().confirmOrder({
+    // Confirm the order with PayPal - structure per docs
+    const googlepayComponent = paypal.Googlepay();
+    await googlepayComponent.confirmOrder({
       orderId: id,
       paymentMethodData: paymentData.paymentMethodData,
     });
@@ -356,6 +514,7 @@ async function processGooglePayPayment(paymentData) {
       document.getElementById('payment-source-section').style.display = 'block';
     }
   } catch (error) {
+    console.error('[Google Pay Debug] Payment processing error:', error);
     // Handle payment processing errors
     throw error;
   }
@@ -934,11 +1093,12 @@ function loadPayPalSDK(idToken) {
     /Safari/.test(navigator.userAgent) &&
     typeof ApplePaySession !== 'undefined';
 
+  // Include googlepay component explicitly per PayPal docs
   const components = isAppleDevice
-    ? 'buttons,card-fields,messages,applepay'
-    : 'buttons,card-fields,messages';
+    ? 'buttons,card-fields,messages,applepay,googlepay'
+    : 'buttons,card-fields,messages,googlepay';
 
-  // Use PayPal SDK with conditional Apple Pay component
+  // Use PayPal SDK with Google Pay component
   const scriptUrl = `https://www.paypal.com/sdk/js?commit=false&components=${components}&intent=capture&client-id=${clientId}&enable-funding=venmo&integration-date=2023-01-01&debug=false`;
   const scriptElement = document.createElement('script');
   scriptElement.src = scriptUrl;
@@ -981,6 +1141,9 @@ function loadPayPalSDK(idToken) {
           cardField.submit();
         });
     }
+
+    // Setup Google Pay after PayPal SDK loads
+    setupGooglePay();
   };
 
   document.head.appendChild(scriptElement);
