@@ -31,12 +31,13 @@ app.use(cors(corsOptions));
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.sandbox.paypal.com https://www.paypal.com https://sandbox.paypal.com https://paypal.com https://js.paypal.com https://js.sandbox.paypal.com https://applepay.cdn-apple.com https://appleid.cdn-apple.com https://pay.google.com https://*.google.com https://google.com; " +
-      "connect-src 'self' https://www.sandbox.paypal.com https://www.paypal.com https://sandbox.paypal.com https://paypal.com https://api-m.sandbox.paypal.com https://api-m.paypal.com https://cn-geo1.uber.com https://applepay.cdn-apple.com https://appleid.apple.com https://api.sandbox.paypal.com https://api.paypal.com https://pay.google.com https://*.google.com https://google.com; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.sandbox.paypal.com https://www.paypal.com https://sandbox.paypal.com https://paypal.com https://js.paypal.com https://js.sandbox.paypal.com https://applepay.cdn-apple.com https://appleid.cdn-apple.com https://pay.google.com https://*.google.com https://google.com https://www.gstatic.com; " +
+      "connect-src 'self' https://www.sandbox.paypal.com https://www.paypal.com https://sandbox.paypal.com https://paypal.com https://api-m.sandbox.paypal.com https://api-m.paypal.com https://cn-geo1.uber.com https://applepay.cdn-apple.com https://appleid.apple.com https://api.sandbox.paypal.com https://api.paypal.com https://pay.google.com https://*.google.com https://google.com https://www.gstatic.com; " +
       'frame-src https://www.sandbox.paypal.com https://www.paypal.com https://sandbox.paypal.com https://paypal.com https://appleid.apple.com https://pay.google.com https://*.google.com https://google.com; ' +
       "frame-ancestors 'self' https://www.paypal.com https://www.sandbox.paypal.com https://sandbox.paypal.com https://paypal.com; " +
       'child-src https://www.sandbox.paypal.com https://www.paypal.com https://sandbox.paypal.com https://paypal.com https://pay.google.com https://*.google.com; ' +
-      "img-src 'self' data: https://www.paypalobjects.com https://t.paypal.com https://www.paypal.com https://sandbox.paypal.com https://paypal.com; " +
+      "img-src 'self' data: https://www.paypalobjects.com https://t.paypal.com https://www.paypal.com https://sandbox.paypal.com https://paypal.com https://www.gstatic.com https://*.gstatic.com https://pay.google.com https://*.google.com; " +
+      "manifest-src 'self' https://pay.google.com https://*.google.com https://google.com; " +
       "style-src 'self' 'unsafe-inline' https://www.paypalobjects.com;"
   );
   next();

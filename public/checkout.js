@@ -56,29 +56,157 @@ async function setupGooglePay() {
       return;
     }
 
-    const container = document.getElementById('googlepay-container');
-    if (container) {
-      container.innerHTML = `
-        <div style="
-          padding: 12px;
-          background: #f8f9fa;
-          border: 1px solid #dee2e6;
-          border-radius: 4px;
-          margin: 8px 0;
-          font-size: 14px;
-          color: #495057;
-          text-align: center;
-        ">
-          <strong>Google Pay</strong><br>
-          <small>Ready for HTTPS testing</small>
-        </div>
-      `;
+    // Get Google Pay configuration from PayPal
+    try {
+      googlePayConfig = await paypal.Googlepay().config();
+
+      if (!googlePayConfig.isEligible) {
+        throw new Error('Google Pay is not eligible');
+      }
+
+      // Initialize Google Pay button
+      const paymentsClient = new google.payments.api.PaymentsClient({
+        environment: 'TEST', // Change to 'PRODUCTION' for live
+      });
+
+      const button = paymentsClient.createButton({
+        onClick: onGooglePayButtonClicked,
+        allowedPaymentMethods: googlePayConfig.allowedPaymentMethods,
+        buttonColor: 'default',
+        buttonType: 'buy',
+      });
+
+      const container = document.getElementById('googlepay-container');
+      if (container) {
+        container.innerHTML = '';
+        container.appendChild(button);
+      }
+    } catch (configError) {
+      // Fallback to placeholder for unsupported environments
+      const container = document.getElementById('googlepay-container');
+      if (container) {
+        container.innerHTML = `
+          <div style="
+            padding: 12px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin: 8px 0;
+            font-size: 14px;
+            color: #495057;
+            text-align: center;
+          ">
+            <strong>Google Pay</strong><br>
+            <small>Requires HTTPS and compatible browser</small>
+          </div>
+        `;
+      }
     }
   } catch (error) {
     const container = document.getElementById('googlepay-container');
     if (container) {
       container.style.display = 'none';
     }
+  }
+}
+
+async function onGooglePayButtonClicked() {
+  try {
+    const paymentDataRequest = {
+      ...googlePayConfig.paymentDataRequest,
+      transactionInfo: {
+        totalPriceStatus: 'FINAL',
+        totalPrice: getCurrentTotalAmount(),
+        currencyCode: 'USD',
+      },
+    };
+
+    const paymentsClient = new google.payments.api.PaymentsClient({
+      environment: 'TEST',
+    });
+
+    const paymentData = await paymentsClient.loadPaymentData(
+      paymentDataRequest
+    );
+
+    // Process the payment with PayPal
+    await processGooglePayPayment(paymentData);
+  } catch (error) {
+    // Handle Google Pay errors silently or show user-friendly message
+  }
+}
+
+async function processGooglePayPayment(paymentData) {
+  try {
+    // Collect shipping information
+    const shippingInfo = {
+      firstName: document.getElementById('shipping-first-name').value,
+      lastName: document.getElementById('shipping-last-name').value,
+      email: document.getElementById('shipping-email').value,
+      phone: document.getElementById('shipping-phone').value,
+      address: {
+        addressLine1: document.getElementById('shipping-address-line1').value,
+        adminArea2: document.getElementById('shipping-admin-area2').value,
+        adminArea1: document.getElementById('shipping-admin-area1').value,
+        postalCode: document.getElementById('shipping-postal-code').value,
+        countryCode: document.getElementById('shipping-country-code').value,
+      },
+    };
+
+    const requestBody = {
+      source: 'google_pay',
+      totalAmount: getCurrentTotalAmount(),
+      paymentSource: 'google_pay',
+      shippingInfo: shippingInfo,
+      googlePayData: paymentData,
+    };
+
+    // Create Order on the Server Side
+    const orderResponse = await fetch('/api/checkout-orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!orderResponse.ok) {
+      throw new Error('Order creation failed');
+    }
+
+    const orderData = await orderResponse.json();
+    const { id } = orderData;
+
+    // Confirm the order with PayPal
+    await paypal.Googlepay().confirmOrder({
+      orderId: id,
+      paymentMethodData: paymentData.paymentMethodData,
+    });
+
+    // Capture the payment
+    const captureResponse = await fetch(`/api/orders/${id}/capture`, {
+      method: 'POST',
+    });
+
+    if (captureResponse.ok) {
+      const captureData = await captureResponse.json();
+
+      // Update UI with success info
+      document.getElementById(
+        'create-order-info'
+      ).textContent = `Created Order ID: ${id}`;
+      document.getElementById(
+        'capture-order-info'
+      ).textContent = `Google Pay Payment Captured: ${id}`;
+      document.getElementById('payment-source-type-info').textContent =
+        'Payment Source: Google Pay';
+      document.getElementById('order-info-section').style.display = 'block';
+      document.getElementById('capture-info-section').style.display = 'block';
+      document.getElementById('payment-source-section').style.display = 'block';
+    }
+  } catch (error) {
+    // Handle payment processing errors
+    throw error;
   }
 }
 
