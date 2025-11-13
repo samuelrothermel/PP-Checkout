@@ -46,13 +46,72 @@ function onGooglePayLoaded() {
     console.log(
       '[Google Pay Debug] Document still loading, adding DOMContentLoaded listener'
     );
-    document.addEventListener('DOMContentLoaded', setupGooglePay);
+    document.addEventListener('DOMContentLoaded', () =>
+      waitForPayPalAndSetupGooglePay()
+    );
   } else {
     console.log(
-      '[Google Pay Debug] Document ready, setting up Google Pay immediately'
+      '[Google Pay Debug] Document ready, waiting for PayPal SDK and setting up Google Pay'
+    );
+    waitForPayPalAndSetupGooglePay();
+  }
+}
+
+function waitForPayPalAndSetupGooglePay() {
+  console.log('[Google Pay Debug] Waiting for PayPal SDK to load...');
+
+  // Check if PayPal SDK is already loaded
+  if (window.paypal && window.paypal.Googlepay) {
+    console.log(
+      '[Google Pay Debug] PayPal SDK already loaded, setting up Google Pay'
     );
     setupGooglePay();
+    return;
   }
+
+  // Poll for PayPal SDK to load
+  let attempts = 0;
+  const maxAttempts = 50; // 5 seconds max wait time
+
+  const checkPayPal = setInterval(() => {
+    attempts++;
+    console.log(
+      `[Google Pay Debug] Checking for PayPal SDK (attempt ${attempts}/${maxAttempts})...`
+    );
+
+    if (window.paypal && window.paypal.Googlepay) {
+      console.log(
+        '[Google Pay Debug] PayPal SDK loaded, setting up Google Pay'
+      );
+      clearInterval(checkPayPal);
+      setupGooglePay();
+    } else if (attempts >= maxAttempts) {
+      console.log(
+        '[Google Pay Debug] Timeout waiting for PayPal SDK, giving up'
+      );
+      clearInterval(checkPayPal);
+
+      // Show fallback message
+      const container = document.getElementById('googlepay-container');
+      if (container) {
+        container.innerHTML = `
+          <div style="
+            padding: 12px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            margin: 8px 0;
+            font-size: 14px;
+            color: #856404;
+            text-align: center;
+          ">
+            <strong>Google Pay</strong><br>
+            <small>PayPal SDK loading timeout</small>
+          </div>
+        `;
+      }
+    }
+  }, 100); // Check every 100ms
 }
 
 async function setupGooglePay() {
@@ -564,11 +623,10 @@ async function setupApplepay() {
 document.addEventListener('DOMContentLoaded', function () {
   loadPayPalComponents();
 
-  try {
-    setupGooglePay();
-  } catch (error) {
-    // Google Pay setup failed
-  }
+  // Google Pay setup will be handled by the SDK callback or by waiting for PayPal SDK
+  console.log(
+    '[Google Pay Debug] DOMContentLoaded - Google Pay setup will be handled by SDK callback'
+  );
 
   const isAppleDevice = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
   const isSafari =
