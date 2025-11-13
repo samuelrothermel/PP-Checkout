@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management - PayPal Demo</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .orders-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .orders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .orders-table th,
+        .orders-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .orders-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .orders-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-created {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .status-authorized {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .status-captured {
+            background-color: #e8f5e8;
+            color: #388e3c;
+        }
+        
+        .status-failed {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .capture-btn {
+            background-color: #0070ba;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .capture-btn:hover {
+            background-color: #005ea6;
+        }
+        
+        .capture-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .payment-source {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .payment-source-icon {
+            font-size: 14px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background-color: #ffebee;
+            color: #d32f2f;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .success {
+            background-color: #e8f5e8;
+            color: #388e3c;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .nav-link {
+            color: #0070ba;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid #0070ba;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            background-color: #0070ba;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="orders-container">
+        <div class="orders-header">
+            <h1>Orders Management</h1>
+            <a href="index.html" class="nav-link">← Back to Checkout</a>
+        </div>
+        
+        <div id="message-container"></div>
+        
+        <div id="loading" class="loading">
+            Loading orders...
+        </div>
+        
+        <div id="orders-content" style="display: none;">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Payment Source</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-tbody">
+                    <!-- Orders will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="orders.js"></script>
+</body>
+</html>
