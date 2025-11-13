@@ -26,6 +26,65 @@ console.error = function (...args) {
 let globalCustomerId = null;
 let hasPaymentMethods = false;
 
+// Helper functions for localStorage management
+function saveOrderId(orderId) {
+  try {
+    const recentOrders = JSON.parse(
+      localStorage.getItem('recentOrderIds') || '[]'
+    );
+    // Add new order ID at the beginning and limit to 20 most recent
+    const updatedOrders = [
+      { id: orderId, timestamp: new Date().toISOString() },
+      ...recentOrders.slice(0, 19),
+    ];
+    localStorage.setItem('recentOrderIds', JSON.stringify(updatedOrders));
+    console.log('Saved order ID to localStorage:', orderId);
+  } catch (error) {
+    console.error('Error saving order ID to localStorage:', error);
+  }
+}
+
+function saveCustomerId(customerId) {
+  try {
+    const recentCustomers = JSON.parse(
+      localStorage.getItem('recentCustomerIds') || '[]'
+    );
+    // Check if customer already exists to avoid duplicates
+    if (!recentCustomers.find(customer => customer.id === customerId)) {
+      // Add new customer ID at the beginning and limit to 10 most recent
+      const updatedCustomers = [
+        { id: customerId, timestamp: new Date().toISOString() },
+        ...recentCustomers.slice(0, 9),
+      ];
+      localStorage.setItem(
+        'recentCustomerIds',
+        JSON.stringify(updatedCustomers)
+      );
+      console.log('Saved customer ID to localStorage:', customerId);
+    }
+  } catch (error) {
+    console.error('Error saving customer ID to localStorage:', error);
+  }
+}
+
+function getRecentOrderIds() {
+  try {
+    return JSON.parse(localStorage.getItem('recentOrderIds') || '[]');
+  } catch (error) {
+    console.error('Error reading order IDs from localStorage:', error);
+    return [];
+  }
+}
+
+function getRecentCustomerIds() {
+  try {
+    return JSON.parse(localStorage.getItem('recentCustomerIds') || '[]');
+  } catch (error) {
+    console.error('Error reading customer IDs from localStorage:', error);
+    return [];
+  }
+}
+
 // Helper function to get current total amount from the DOM
 function getCurrentTotalAmount() {
   const totalElement = document.getElementById('amount-total');
@@ -1022,6 +1081,10 @@ const createOrder = (data, actions) => {
     .then(response => response.json())
     .then(orderData => {
       const orderId = orderData.id;
+
+      // Save order ID to localStorage
+      saveOrderId(orderId);
+
       document.getElementById(
         'create-order-info'
       ).textContent = `Created Order ID: ${orderId}`;
@@ -1245,6 +1308,9 @@ const onApprove = (data, actions) => {
         ).textContent = `Vault Status: ${vaultStatus}`;
       }
       if (customerId) {
+        // Save customer ID to localStorage when vaulting occurs
+        saveCustomerId(customerId);
+
         document.getElementById(
           'customer-id-info'
         ).textContent = `Customer ID: ${customerId}`;

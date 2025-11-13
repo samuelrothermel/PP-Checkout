@@ -2,6 +2,16 @@ document.addEventListener('DOMContentLoaded', function () {
   loadVaultData();
 });
 
+// Helper functions for localStorage management
+function getRecentCustomerIds() {
+  try {
+    return JSON.parse(localStorage.getItem('recentCustomerIds') || '[]');
+  } catch (error) {
+    console.error('Error reading customer IDs from localStorage:', error);
+    return [];
+  }
+}
+
 async function loadVaultData() {
   const loadingElement = document.getElementById('loading');
   const contentElement = document.getElementById('vault-content');
@@ -11,7 +21,34 @@ async function loadVaultData() {
     loadingElement.style.display = 'block';
     contentElement.style.display = 'none';
 
-    const response = await fetch('/api/vault/customers');
+    // Get recent customer IDs from localStorage
+    const recentCustomerIds = getRecentCustomerIds();
+    console.log('Recent customer IDs from localStorage:', recentCustomerIds);
+
+    if (recentCustomerIds.length === 0) {
+      displayVaultStats({
+        totalCustomers: 0,
+        totalPaymentMethods: 0,
+        cardCount: 0,
+        paypalCount: 0,
+      });
+      displayCustomers([]);
+      loadingElement.style.display = 'none';
+      contentElement.style.display = 'block';
+      showMessage(
+        'No vaulted customers found. Customers will appear here when you save payment methods during checkout.',
+        'info'
+      );
+      return;
+    }
+
+    const response = await fetch('/api/vault/customers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ customerIds: recentCustomerIds }),
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch vault data: ${response.status}`);
@@ -68,10 +105,8 @@ function displayCustomers(customers) {
                 <h3>No Vaulted Customers</h3>
                 <p style="margin-bottom: 15px;">PayPal's Payment Method Tokens API requires tracking customer IDs in your database.</p>
                 <div style="font-size: 14px; line-height: 1.5; color: #888; text-align: left; max-width: 600px; margin: 0 auto;">
-                    To implement vault management, you need to:<br><br>
-                    1. Store customer IDs when vaulting payment methods<br>
-                    2. Use PayPal's GET /v3/vault/payment-tokens API to fetch tokens<br>
-                    3. Track customer relationships in your database<br><br>
+                    Customer vault data will appear here when you save payment methods during checkout.<br>
+                    Customer IDs are stored in your browser's local storage and payment methods are fetched from PayPal's Payment Method Tokens API.<br><br>
                 </div>
                 <a href="/checkout" class="nav-link" style="margin-top: 15px; display: inline-block;">Go to Checkout</a>
             </div>

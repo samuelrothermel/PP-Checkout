@@ -2,6 +2,16 @@ document.addEventListener('DOMContentLoaded', function () {
   loadOrders();
 });
 
+// Helper functions for localStorage management
+function getRecentOrderIds() {
+  try {
+    return JSON.parse(localStorage.getItem('recentOrderIds') || '[]');
+  } catch (error) {
+    console.error('Error reading order IDs from localStorage:', error);
+    return [];
+  }
+}
+
 async function loadOrders() {
   const loadingElement = document.getElementById('loading');
   const contentElement = document.getElementById('orders-content');
@@ -11,7 +21,28 @@ async function loadOrders() {
     loadingElement.style.display = 'block';
     contentElement.style.display = 'none';
 
-    const response = await fetch('/api/orders');
+    // Get recent order IDs from localStorage
+    const recentOrderIds = getRecentOrderIds();
+    console.log('Recent order IDs from localStorage:', recentOrderIds);
+
+    if (recentOrderIds.length === 0) {
+      displayOrders([]);
+      loadingElement.style.display = 'none';
+      contentElement.style.display = 'block';
+      showMessage(
+        'No recent orders found. Orders will appear here after you place them on the checkout page.',
+        'info'
+      );
+      return;
+    }
+
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ orderIds: recentOrderIds }),
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch orders: ${response.status}`);
@@ -47,12 +78,9 @@ function displayOrders(orders) {
                         <strong>No Orders Available</strong>
                     </div>
                     <div style="font-size: 14px; line-height: 1.5; color: #888;">
-                        PayPal's Orders API doesn't provide a "list all orders" endpoint.<br>
-                        To implement order management, you need to:<br><br>
-                        1. Store order IDs in your database when orders are created<br>
-                        2. Use PayPal's GET /v2/checkout/orders/{order_id} to fetch individual order details<br>
-                        3. Track order statuses and display them here<br><br>
-                        <a href="/checkout" style="color: #0070ba;">Create a new order</a> to see how individual orders work.
+                        Orders placed on the checkout page will appear here automatically.<br>
+                        Order IDs are stored in your browser's local storage and fetched from PayPal's Orders API.<br><br>
+                        <a href="/checkout" style="color: #0070ba;">Go to Checkout</a> to place your first order.
                     </div>
                 </td>
             </tr>
