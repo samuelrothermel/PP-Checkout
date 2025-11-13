@@ -166,12 +166,13 @@ async function setupGooglePay() {
         throw new Error('Google Pay is not eligible');
       }
 
-      // Create payments client with explicit environment from config
+      // Create payments client with explicit environment from config and required callbacks
       console.log('[Google Pay Debug] Creating Google Pay payments client...');
       const paymentsClient = new google.payments.api.PaymentsClient({
-        environment: googlePayConfig.environment || 'TEST', // Use config environment
+        environment: googlePayConfig.environment || 'TEST',
         paymentDataCallbacks: {
           onPaymentDataChanged: onPaymentDataChanged,
+          onPaymentAuthorized: onPaymentAuthorized, // Required for PAYMENT_AUTHORIZATION intent
         },
       });
       console.log('[Google Pay Debug] Payments client created successfully');
@@ -255,6 +256,35 @@ async function setupGooglePay() {
       console.log('[Google Pay Debug] Container hidden due to error');
     }
   }
+}
+
+// Add payment authorization callback required for PAYMENT_AUTHORIZATION intent
+function onPaymentAuthorized(paymentData) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log(
+        '[Google Pay Debug] Payment authorized, processing...',
+        paymentData
+      );
+
+      // Process the payment with PayPal
+      await processGooglePayPayment(paymentData);
+
+      resolve({
+        transactionState: 'SUCCESS',
+      });
+    } catch (error) {
+      console.error('[Google Pay Debug] Payment authorization failed:', error);
+      resolve({
+        transactionState: 'ERROR',
+        error: {
+          reason: 'PAYMENT_DATA_INVALID',
+          message: 'Payment processing failed',
+          intent: 'PAYMENT_AUTHORIZATION',
+        },
+      });
+    }
+  });
 }
 
 // Add payment data changed callback per PayPal docs
@@ -369,7 +399,7 @@ async function onGooglePayButtonClicked() {
         merchantId: googlePayConfig.merchantId, // Use from config
       },
       callbackIntents: [
-        'PAYMENT_AUTHORIZATION',
+        'PAYMENT_AUTHORIZATION', // This requires onPaymentAuthorized callback
         'SHIPPING_ADDRESS',
         'SHIPPING_OPTION',
       ],
@@ -384,6 +414,7 @@ async function onGooglePayButtonClicked() {
       environment: googlePayConfig.environment || 'TEST',
       paymentDataCallbacks: {
         onPaymentDataChanged: onPaymentDataChanged,
+        onPaymentAuthorized: onPaymentAuthorized, // Required callback
       },
     });
 
@@ -396,9 +427,9 @@ async function onGooglePayButtonClicked() {
       paymentData
     );
 
-    // Process the payment with PayPal
-    console.log('[Google Pay Debug] Processing payment with PayPal...');
-    await processGooglePayPayment(paymentData);
+    // Note: With PAYMENT_AUTHORIZATION intent, the payment processing
+    // will be handled by the onPaymentAuthorized callback above
+    // No need to call processGooglePayPayment here
   } catch (error) {
     console.log('[Google Pay Debug] Button click error:', error);
     // Better error handling per docs
