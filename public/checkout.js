@@ -1027,16 +1027,17 @@ document.addEventListener('DOMContentLoaded', function () {
   // Add event listeners to handle submit button visibility for all payment methods
   document.addEventListener('change', function (event) {
     if (event.target.name === 'payment-method') {
-      const savedPaymentSubmit = document.getElementById(
-        'saved-payment-submit'
-      );
+      const submitOrderButton = document.getElementById('submit-order-button');
 
-      if (savedPaymentSubmit) {
-        // Hide saved payment submit button for all non-saved payment methods
-        if (event.target.id.startsWith('saved-')) {
-          savedPaymentSubmit.style.display = 'block';
+      if (submitOrderButton) {
+        // Show submit button for saved payment methods OR new credit card
+        if (
+          event.target.id.startsWith('saved-') ||
+          event.target.id === 'card-radio'
+        ) {
+          submitOrderButton.style.display = 'block';
         } else {
-          savedPaymentSubmit.style.display = 'none';
+          submitOrderButton.style.display = 'none';
         }
       }
 
@@ -1051,6 +1052,34 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
           // Hide card fields when other payment methods are selected
           cardButtonContainer.style.display = 'none';
+        }
+      }
+
+      // Show/hide Apple Pay button based on selected payment method
+      const applePayButtonContainer = document.getElementById(
+        'applepay-button-container'
+      );
+      if (applePayButtonContainer) {
+        if (event.target.id === 'applepay-radio') {
+          // Show Apple Pay button when Apple Pay is selected
+          applePayButtonContainer.style.display = 'block';
+        } else {
+          // Hide Apple Pay button when other payment methods are selected
+          applePayButtonContainer.style.display = 'none';
+        }
+      }
+
+      // Show/hide Google Pay button based on selected payment method
+      const googlePayButtonContainer = document.getElementById(
+        'googlepay-button-container'
+      );
+      if (googlePayButtonContainer) {
+        if (event.target.id === 'googlepay-radio') {
+          // Show Google Pay button when Google Pay is selected
+          googlePayButtonContainer.style.display = 'block';
+        } else {
+          // Hide Google Pay button when other payment methods are selected
+          googlePayButtonContainer.style.display = 'none';
         }
       }
     }
@@ -1407,21 +1436,29 @@ function createSavedPaymentMethodRadio(token, index, container) {
 }
 
 function setupSavedPaymentMethods() {
-  // Show the saved payment submit button since we have saved methods
-  const savedPaymentSubmit = document.getElementById('saved-payment-submit');
-  if (savedPaymentSubmit) {
-    savedPaymentSubmit.style.display = 'block';
+  // Show the submit order button since we have saved methods
+  const submitOrderButton = document.getElementById('submit-order-button');
+  if (submitOrderButton) {
+    submitOrderButton.style.display = 'block';
   }
 
   // Add event listener for submit button
-  if (savedPaymentSubmit) {
-    savedPaymentSubmit.addEventListener('click', function () {
+  if (submitOrderButton) {
+    submitOrderButton.addEventListener('click', function () {
       const selectedRadio = document.querySelector(
-        'input[name="payment-method"][id^="saved-"]:checked'
+        'input[name="payment-method"]:checked'
       );
       if (selectedRadio) {
-        const vaultId = selectedRadio.getAttribute('data-vault-id');
-        handleSavedPaymentCheckout(vaultId);
+        if (selectedRadio.id.startsWith('saved-')) {
+          // Handle saved payment method
+          const vaultId = selectedRadio.getAttribute('data-vault-id');
+          handleSavedPaymentCheckout(vaultId);
+        } else if (selectedRadio.id === 'card-radio') {
+          // Handle new credit card payment
+          if (window.cardFieldInstance) {
+            window.cardFieldInstance.submit();
+          }
+        }
       }
     });
   }
@@ -1442,7 +1479,7 @@ function handleSavedPaymentCheckout(vaultId) {
     selectedRadio?.getAttribute('data-payment-source') || 'paypal';
 
   // Show loading state
-  const submitButton = document.getElementById('saved-payment-submit');
+  const submitButton = document.getElementById('submit-order-button');
   if (submitButton) {
     submitButton.disabled = true;
     submitButton.textContent = 'Processing...';
@@ -1531,7 +1568,7 @@ function handleSavedPaymentCheckout(vaultId) {
       // Reset button state
       if (submitButton) {
         submitButton.disabled = false;
-        submitButton.textContent = 'Pay with Saved Method';
+        submitButton.textContent = 'Submit Order';
       }
     });
 }
@@ -1773,9 +1810,6 @@ function loadPayPalSDK(idToken) {
           <div id="card-number-field-container"></div>
           <div id="card-expiry-field-container"></div>
           <div id="card-cvv-field-container"></div>
-          <button id="card-payment-submit" type="button" class="submit-button" style="margin-top: 15px;">
-            Complete Checkout with Card
-          </button>
         </div>
       `;
 
@@ -1788,11 +1822,8 @@ function loadPayPalSDK(idToken) {
       const expiryField = cardField.ExpiryField();
       expiryField.render('#card-expiry-field-container');
 
-      document
-        .getElementById('card-payment-submit')
-        .addEventListener('click', () => {
-          cardField.submit();
-        });
+      // Store cardField reference globally so the unified submit button can use it
+      window.cardFieldInstance = cardField;
 
       // Setup billing info toggle for card payments
       const billingToggle = document.getElementById('billing-info-toggle');
@@ -1916,6 +1947,21 @@ function createPayPalSmartButtonStack() {
       );
       if (cardButtonContainer) {
         cardButtonContainer.style.display = 'none';
+      }
+
+      // Hide Apple Pay and Google Pay buttons initially since PayPal is selected by default
+      const applePayButtonContainer = document.getElementById(
+        'applepay-button-container'
+      );
+      if (applePayButtonContainer) {
+        applePayButtonContainer.style.display = 'none';
+      }
+
+      const googlePayButtonContainer = document.getElementById(
+        'googlepay-button-container'
+      );
+      if (googlePayButtonContainer) {
+        googlePayButtonContainer.style.display = 'none';
       }
     })
     .catch(error => {
