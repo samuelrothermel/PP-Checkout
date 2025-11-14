@@ -236,7 +236,14 @@ async function setupGooglePay() {
         // Show Google Pay option
         document.getElementById('googlepay-option').style.display = 'block';
 
-        // Render Google Pay mark (individual funding source)
+        // Clear and render Google Pay mark (individual funding source)
+        const markContainer = document.getElementById(
+          'googlepay-mark-container'
+        );
+        if (markContainer) {
+          markContainer.innerHTML = ''; // Clear any existing marks
+        }
+
         const googlePayMark = paypal.Marks({
           fundingSource: paypal.FUNDING.GOOGLEPAY,
         });
