@@ -246,10 +246,15 @@ async function setupGooglePay() {
           // Create a simple Google Pay image instead of PayPal marks
           const googlePayImg = document.createElement('img');
           googlePayImg.src =
-            'https://developers.google.com/pay/api/web/guides/brand-guidelines/google-pay-mark.png';
+            'https://www.gstatic.com/wallet/buy/googlepay_button_black_color.svg';
           googlePayImg.alt = 'Google Pay';
           googlePayImg.style.height = '30px';
           googlePayImg.style.marginRight = '8px';
+          googlePayImg.onerror = function () {
+            // Fallback to text if image fails to load
+            markContainer.innerHTML =
+              '<span style="font-weight: bold; color: #000;">Google Pay</span>';
+          };
           markContainer.appendChild(googlePayImg);
         }
         const button = paymentsClient.createButton({
@@ -600,13 +605,13 @@ async function processGooglePayPayment(paymentData) {
       paymentMethodData: paymentData.paymentMethodData,
     });
 
-    // Capture the payment
-    const captureResponse = await fetch(`/api/orders/${id}/capture`, {
+    // Authorize the payment (not capture)
+    const authorizeResponse = await fetch(`/api/orders/${id}/authorize`, {
       method: 'POST',
     });
 
-    if (captureResponse.ok) {
-      const captureData = await captureResponse.json();
+    if (authorizeResponse.ok) {
+      const authorizeData = await authorizeResponse.json();
 
       // Update UI with success info
       document.getElementById(
@@ -614,7 +619,7 @@ async function processGooglePayPayment(paymentData) {
       ).textContent = `Created Order ID: ${id}`;
       document.getElementById(
         'capture-order-info'
-      ).textContent = `Google Pay Payment Captured: ${id}`;
+      ).textContent = `Google Pay Payment Authorized: ${id}`;
       document.getElementById('payment-source-type-info').textContent =
         'Payment Source: Google Pay';
       document.getElementById('order-info-section').style.display = 'block';
@@ -686,10 +691,15 @@ async function setupApplepay() {
       // Create a simple Apple Pay image instead of PayPal marks
       const applePayImg = document.createElement('img');
       applePayImg.src =
-        'https://developer.apple.com/apple-pay/marketing/shared/apple-pay-mark-rgb-041619.png';
+        'https://developer.apple.com/assets/elements/badges/apple-pay-mark-black.svg';
       applePayImg.alt = 'Apple Pay';
       applePayImg.style.height = '30px';
       applePayImg.style.marginRight = '8px';
+      applePayImg.onerror = function () {
+        // Fallback to text if image fails to load
+        markContainer.innerHTML =
+          '<span style="font-weight: bold; color: #000;">Apple Pay</span>';
+      };
       markContainer.appendChild(applePayImg);
     }
 
@@ -829,15 +839,18 @@ async function setupApplepay() {
               });
 
               /*
-               * Capture order (must currently be made on server)
+               * Authorize order (must currently be made on server)
                */
-              const captureResponse = await fetch(`/api/orders/${id}/capture`, {
-                method: 'POST',
-              });
+              const authorizeResponse = await fetch(
+                `/api/orders/${id}/authorize`,
+                {
+                  method: 'POST',
+                }
+              );
 
-              if (captureResponse.ok) {
-                const captureData = await captureResponse.json();
-                const paymentSource = captureData.payment_source;
+              if (authorizeResponse.ok) {
+                const authorizeData = await authorizeResponse.json();
+                const paymentSource = authorizeData.payment_source;
                 if (paymentSource && paymentSource.apple_pay) {
                   const vaultStatus =
                     paymentSource.apple_pay.attributes?.vault?.status;
@@ -849,7 +862,7 @@ async function setupApplepay() {
                   // Update UI with Apple Pay specific information
                   document.getElementById(
                     'capture-order-info'
-                  ).textContent = `Apple Pay Payment Captured: ${id}`;
+                  ).textContent = `Apple Pay Payment Authorized: ${id}`;
                   document.getElementById(
                     'payment-source-type-info'
                   ).textContent = 'Payment Source: Apple Pay';
