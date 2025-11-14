@@ -1762,12 +1762,14 @@ function createPayPalFundingSourceRadios() {
 
   // Loop over each funding source / payment method
   paypal.getFundingSources().forEach(function (fundingSource) {
-    // Skip CARD and CREDIT funding sources to remove unwanted card payment options
+    // Skip CARD, CREDIT, and GOOGLEPAY funding sources to remove unwanted options
+    // Google Pay is handled separately with its own integration
     const fundingSourceUpper = fundingSource.toUpperCase();
     if (
       fundingSourceUpper === 'CARD' ||
       fundingSourceUpper === 'CREDIT' ||
-      fundingSourceUpper === 'DEBIT'
+      fundingSourceUpper === 'DEBIT' ||
+      fundingSourceUpper === 'GOOGLEPAY'
     ) {
       return;
     }
