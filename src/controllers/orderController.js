@@ -4,6 +4,8 @@ import {
   capturePayment as capturePaymentApi,
   authorizePayment as authorizePaymentApi,
   getOrdersByIds as getOrdersByIdsApi,
+  captureAuthorization as captureAuthorizationApi,
+  getOrderDetails as getOrderDetailsApi,
 } from '../services/ordersApi.js';
 
 // Create order request
@@ -87,6 +89,31 @@ export const capturePayment = async (req, res, next) => {
   try {
     const captureData = await capturePaymentApi(orderID);
     const vaultResponse = JSON.stringify(captureData.payment_source);
+    res.json(captureData);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Capture authorized payment
+export const captureAuthorizedPayment = async (req, res, next) => {
+  console.log('capture authorized payment request triggered');
+  console.log('');
+  const { orderID } = req.params;
+  try {
+    // First get the order details to find the authorization ID
+    const orderDetails = await getOrderDetailsApi(orderID);
+    console.log('Order details:', JSON.stringify(orderDetails, null, 2));
+
+    const authorizationId =
+      orderDetails.purchase_units?.[0]?.payments?.authorizations?.[0]?.id;
+
+    if (!authorizationId) {
+      throw new Error('No authorization found for this order');
+    }
+
+    console.log('Capturing authorization ID:', authorizationId);
+    const captureData = await captureAuthorizationApi(authorizationId);
     res.json(captureData);
   } catch (err) {
     next(err);

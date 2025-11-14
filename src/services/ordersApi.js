@@ -354,6 +354,38 @@ export const capturePayment = async orderId => {
   return handleResponse(response);
 };
 
+// capture authorization request
+export const captureAuthorization = async authorizationId => {
+  console.log('capturing authorization with ID:', authorizationId);
+  const accessToken = await generateAccessToken();
+  const url = `${base}/v2/payments/authorizations/${authorizationId}/capture`;
+  const response = await fetch(url, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return handleResponse(response);
+};
+
+// get order details request
+export const getOrderDetails = async orderId => {
+  console.log('getting order details for ID:', orderId);
+  const accessToken = await generateAccessToken();
+  const url = `${base}/v2/checkout/orders/${orderId}`;
+  const response = await fetch(url, {
+    method: 'get',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return handleResponse(response);
+};
+
 // authorize payment request
 export const authorizePayment = async orderId => {
   console.log('authorizing payment with order ID:', orderId);

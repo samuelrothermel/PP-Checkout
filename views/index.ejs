@@ -10,24 +10,19 @@
 <body>
   <div class="container">
     <!-- Add navigation header -->
-    <div style="background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #dee2e6; margin: -20px -20px 30px -20px; border-radius: 8px 8px 0 0;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin: 0; color: #333;">PayPal Demo Dashboard</h2>
-        <div style="display: flex; gap: 12px;">
-          <a href="/orders" style="color: #0070ba; text-decoration: none; padding: 8px 16px; border: 1px solid #0070ba; border-radius: 4px; transition: all 0.2s; font-size: 14px;">
-            📋 Orders
+    <div class="nav-header">
+      <div class="nav-header-content">
+        <h2>PayPal Demo Dashboard</h2>
+        <div class="nav-links">
+          <a href="/orders" class="nav-link">
+            Orders
           </a>
-          <a href="/vault" style="color: #0070ba; text-decoration: none; padding: 8px 16px; border: 1px solid #0070ba; border-radius: 4px; transition: all 0.2s; font-size: 14px;">
-            🏦 Vault
+          <a href="/vault" class="nav-link">
+            Vault
           </a>
         </div>
       </div>
     </div>
-
-    <header>
-      <h1>PayPal Online Checkout Solutions</h1>
-      <p style="text-align: center; color: #666; margin-bottom: 40px;">Explore different integration examples and best practices for PayPal's checkout solutions</p>
-    </header>
 
     <section class="integrations-gallery">
       
@@ -92,7 +87,6 @@
           <li>bleh</li>
           <li>blur</li>
           <li>blah</li>
-          <li><a href="https://developer.paypal.com/limited-release/reference-transactions/">PayPal Developer Documentation for more details</a></li>
         </ul>
       </a>
 
@@ -129,7 +123,6 @@
           <li>PP JS SDK Intent set to "tokenize" along with "vault=true" to specify this is a billing (without purchase) transaction</li>
           <li>Setup tokens for future billing</li>
           <li>Subscription and trial support</li>
-          <li><a href="https://developer.paypal.com/limited-release/reference-transactions/">PayPal Developer Documentation for more details</a></li>
         </ul>
       </a>
 
@@ -144,7 +137,6 @@
           <li>Mobile-optimized responsive design</li>
           <li>Instant payment method and customer recognition</li>
           <li>Higher conversion rates and reduced cart abandonment</li>
-          <li><a href="https://developer.paypal.com/docs/fastlane/">PayPal Fastlane Documentation</a></li>
         </ul>
       </a>
 

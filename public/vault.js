@@ -182,7 +182,7 @@ function createCustomerCard(customer) {
   card.innerHTML = `
         <div class="customer-header">
             <div>
-                <div class="customer-id">Customer: ${customerId}</div>
+                <div class="customer-id">Customer ID: ${customerId}</div>
                 ${
                   customerName
                     ? `<div class="customer-name">Name: ${customerName}</div>`
@@ -209,13 +209,20 @@ function createPaymentMethodsHTML(paymentMethods) {
 
   return paymentMethods
     .map(method => {
-      const { icon, type, details, vaultId, vaultDate, status } =
-        parsePaymentMethod(method);
+      const {
+        icon,
+        type,
+        details,
+        vaultId,
+        vaultDate,
+        status,
+        description,
+        usageType,
+      } = parsePaymentMethod(method);
 
       return `
             <div class="payment-method">
                 <div class="payment-info">
-                    <div class="payment-icon">${icon}</div>
                     <div class="payment-details">
                         <div class="payment-type">${type}</div>
                         <div class="payment-meta">${details}</div>
@@ -223,8 +230,12 @@ function createPaymentMethodsHTML(paymentMethods) {
                 </div>
                 <div class="vault-info">
                     <div class="vault-id">${vaultId}</div>
-                    <div class="vault-date">${vaultDate}</div>
-                    <span class="status-badge status-${status}">${status}</span>
+                    <div class="vault-description">${description}</div>
+                    ${
+                      usageType
+                        ? `<div class="vault-usage-type">Usage: ${usageType}</div>`
+                        : ''
+                    }
                 </div>
             </div>
         `;
@@ -237,8 +248,10 @@ function parsePaymentMethod(method) {
   let type = 'Unknown';
   let details = 'N/A';
   let status = 'vaulted';
+  let description = 'No description available';
+  let usageType = '';
 
-  const vaultId = method.id ? method.id.substring(0, 12) + '...' : 'N/A';
+  const vaultId = method.id || 'N/A'; // Show full vault ID without truncation
   const vaultDate = method.create_time
     ? new Date(method.create_time).toLocaleDateString()
     : 'Unknown';
@@ -261,16 +274,35 @@ function parsePaymentMethod(method) {
       if (card.name) {
         details += ` | ${card.name}`;
       }
+
+      // Set default values for cards
+      description = 'Credit/Debit Card';
+      usageType = 'payment';
     } else if (method.payment_source.paypal) {
       icon = '🅿️';
       type = 'PayPal';
       const paypal = method.payment_source.paypal;
       details = paypal.email_address || paypal.account_id || 'PayPal Account';
+
       // Add payer name if available
       if (paypal.name && paypal.name.given_name) {
         details += ` | ${paypal.name.given_name} ${
           paypal.name.surname || ''
         }`.trim();
+      }
+
+      // Extract PayPal-specific information
+      description = paypal.description || 'PayPal Payment Method';
+      usageType = paypal.usage_type
+        ? paypal.usage_type.toLowerCase().replace('_', ' ')
+        : '';
+
+      // Add phone number if available
+      if (paypal.phone && paypal.phone.phone_number) {
+        const phone = paypal.phone.phone_number;
+        if (phone.national_number) {
+          details += ` | Phone: ${phone.national_number}`;
+        }
       }
     } else if (method.payment_source.venmo) {
       icon = '📱';
@@ -281,6 +313,9 @@ function parsePaymentMethod(method) {
         venmo.user_name ||
         venmo.username ||
         'Venmo Account';
+
+      description = 'Venmo Payment Method';
+      usageType = 'mobile payment';
     } else if (method.payment_source.apple_pay) {
       icon = '🍎';
       type = 'Apple Pay';
@@ -297,6 +332,9 @@ function parsePaymentMethod(method) {
           details += ` (${card.brand})`;
         }
       }
+
+      description = 'Apple Pay Wallet';
+      usageType = 'digital wallet';
     } else if (method.payment_source.google_pay) {
       icon = '🔍';
       type = 'Google Pay';
@@ -313,10 +351,26 @@ function parsePaymentMethod(method) {
           details += ` (${card.brand})`;
         }
       }
+
+      description = 'Google Pay Wallet';
+      usageType = 'digital wallet';
     }
+  } else {
+    // Fallback for unknown payment sources
+    description = 'Payment Method';
+    usageType = 'payment';
   }
 
-  return { icon, type, details, vaultId, vaultDate, status };
+  return {
+    icon,
+    type,
+    details,
+    vaultId,
+    vaultDate,
+    status,
+    description,
+    usageType,
+  };
 }
 
 function showMessage(message, type = 'info') {

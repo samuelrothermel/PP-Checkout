@@ -51,6 +51,9 @@ async function loadOrders() {
     const data = await response.json();
     const orders = data.orders || [];
 
+    // Log server-side response like vault page
+    console.log('Server-side orders response:', JSON.stringify(data, null, 2));
+
     if (data.message) {
       showMessage(data.message, 'info');
     }
@@ -97,6 +100,9 @@ function displayOrders(orders) {
 function createOrderRow(order) {
   const row = document.createElement('tr');
 
+  // Log individual order details for debugging like vault page
+  console.log('Processing order:', JSON.stringify(order, null, 2));
+
   // Extract order details
   const orderId = order.id;
   const createTime = new Date(order.create_time).toLocaleDateString();
@@ -104,69 +110,100 @@ function createOrderRow(order) {
   const currency = order.purchase_units?.[0]?.amount?.currency_code || 'USD';
   const status = order.status;
 
-  // Determine payment source
+  // Determine display status - show Authorized/Captured instead of Completed
+  let displayStatus = status;
+  if (status === 'COMPLETED') {
+    // Check if this order has captures (payment has been captured)
+    const hasCaptures =
+      order.purchase_units?.[0]?.payments?.captures?.length > 0;
+
+    if (hasCaptures) {
+      displayStatus = 'CAPTURED';
+    } else if (
+      order.intent === 'AUTHORIZE' ||
+      order.purchase_units?.[0]?.payments?.authorizations?.length > 0
+    ) {
+      // Check if authorizations are still pending (not captured)
+      const authorizations =
+        order.purchase_units?.[0]?.payments?.authorizations || [];
+      const hasPendingAuth = authorizations.some(
+        auth => auth.status === 'CREATED'
+      );
+
+      if (hasPendingAuth) {
+        displayStatus = 'AUTHORIZED';
+      } else {
+        displayStatus = 'CAPTURED';
+      }
+    } else {
+      displayStatus = 'CAPTURED';
+    }
+  }
+
+  // Determine payment source without icons
   let paymentSource = 'Unknown';
-  let paymentSourceIcon = '💳';
 
   if (order.payment_source) {
     if (order.payment_source.paypal) {
       paymentSource = 'PayPal';
-      paymentSourceIcon = '🅿️';
     } else if (order.payment_source.card) {
       const brand = order.payment_source.card.brand || 'Card';
       const lastDigits = order.payment_source.card.last_digits || '';
       paymentSource = lastDigits ? `${brand} ****${lastDigits}` : brand;
-      paymentSourceIcon = '💳';
     } else if (order.payment_source.venmo) {
       paymentSource = 'Venmo';
-      paymentSourceIcon = '📱';
     } else if (order.payment_source.apple_pay) {
       paymentSource = 'Apple Pay';
-      paymentSourceIcon = '🍎';
     } else if (order.payment_source.google_pay) {
       paymentSource = 'Google Pay';
-      paymentSourceIcon = '🔍';
     }
   }
 
   row.innerHTML = `
         <td>
-            <span style="font-family: monospace; font-size: 12px;">${orderId}</span>
+            <span class="order-id">${orderId}</span>
         </td>
-        <td>${createTime}</td>
-        <td><strong>${currency} ${amount}</strong></td>
-        <td>
-            <div class="payment-source">
-                <span class="payment-source-icon">${paymentSourceIcon}</span>
-                <span>${paymentSource}</span>
-            </div>
+        <td class="order-date">${createTime}</td>
+        <td class="order-amount">${currency} ${amount}</td>
+        <td class="payment-source-text">
+            ${paymentSource}
         </td>
         <td>
-            <span class="status-badge status-${status.toLowerCase()}">
-                ${status}
+            <span class="status-badge status-${displayStatus.toLowerCase()}">
+                ${displayStatus}
             </span>
         </td>
         <td>
-            ${createActionButton(orderId, status)}
+            ${createActionButton(orderId, displayStatus, status)}
         </td>
     `;
 
   return row;
 }
 
-function createActionButton(orderId, status) {
-  if (status === 'APPROVED') {
+function createActionButton(orderId, displayStatus, originalStatus) {
+  if (displayStatus === 'AUTHORIZED') {
     return `
             <button class="capture-btn" onclick="captureOrder('${orderId}')">
                 Capture Payment
             </button>
         `;
-  } else if (status === 'COMPLETED') {
-    return '<span style="color: #388e3c; font-size: 12px;">✓ Completed</span>';
-  } else if (status === 'CREATED') {
-    return '<span style="color: #666; font-size: 12px;">Pending</span>';
+  } else if (displayStatus === 'CAPTURED') {
+    return `
+            <button class="refund-btn" onclick="refundOrder('${orderId}')" disabled>
+                Refund Payment
+            </button>
+        `;
+  } else if (originalStatus === 'APPROVED') {
+    return `
+            <button class="capture-btn" onclick="captureOrder('${orderId}')">
+                Capture Payment
+            </button>
+        `;
+  } else if (originalStatus === 'CREATED') {
+    return '<span class="action-status pending">Pending</span>';
   } else {
-    return `<span style="color: #666; font-size: 12px;">${status}</span>`;
+    return `<span class="action-status">${displayStatus}</span>`;
   }
 }
 
@@ -178,7 +215,8 @@ async function captureOrder(orderId) {
     button.disabled = true;
     button.textContent = 'Capturing...';
 
-    const response = await fetch(`/api/orders/${orderId}/capture`, {
+    // Call the capture authorized payment endpoint
+    const response = await fetch(`/api/orders/${orderId}/capture-authorized`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -191,6 +229,12 @@ async function captureOrder(orderId) {
     }
 
     const captureData = await response.json();
+
+    // Log capture response like vault page
+    console.log(
+      'Capture authorized payment response:',
+      JSON.stringify(captureData, null, 2)
+    );
 
     showMessage(`Order ${orderId} captured successfully!`, 'success');
 
@@ -205,6 +249,11 @@ async function captureOrder(orderId) {
     button.disabled = false;
     button.textContent = originalText;
   }
+}
+
+async function refundOrder(orderId) {
+  // Placeholder for refund functionality
+  showMessage('Refund functionality not yet implemented', 'info');
 }
 
 function showMessage(message, type = 'info') {
