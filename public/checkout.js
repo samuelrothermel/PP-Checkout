@@ -887,7 +887,7 @@ async function setupApplepay() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  loadPayPalComponents();
+  // PayPal SDK will be loaded by generateUserIdTokenForFirstTime() with proper user ID token
 
   const isAppleDevice = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
   const isSafari =
@@ -1967,3 +1967,44 @@ function updatePayPalMessages() {
 }
 
 updateAmountTotal();
+
+// Generate user ID token for first-time users (required for Venmo vaulting)
+async function generateUserIdTokenForFirstTime() {
+  try {
+    console.log(
+      '🎫 Generating user ID token for first-time payer (Venmo vaulting support)'
+    );
+
+    const response = await fetch('/api/first-time-user-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch first-time user ID token: ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+    const idToken = data.idToken;
+
+    console.log('🎫 Generated user ID token for first-time payer');
+    console.log('🎫 Token length:', idToken.length);
+
+    // Store the token globally for use in Venmo vaulting
+    window.firstTimeUserIdToken = idToken;
+
+    // Load PayPal SDK with the user ID token
+    loadPayPalSDK(idToken);
+  } catch (error) {
+    console.error('❌ Error generating first-time user ID token:', error);
+    // Fallback: load SDK without user ID token
+    loadPayPalSDK();
+  }
+}
+
+// Initialize with user ID token for first-time users
+generateUserIdTokenForFirstTime();

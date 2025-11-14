@@ -7,7 +7,10 @@ import {
   fetchPaymentTokens,
   getPaymentTokensByCustomerIds as getPaymentTokensByCustomerIdsApi,
 } from '../services/tokensApi.js';
-import { returningAccessToken } from '../services/authApi.js';
+import {
+  returningAccessToken,
+  generateUserIdToken,
+} from '../services/authApi.js';
 
 // Create vault setup token
 export const createVaultSetupToken = async (req, res, next) => {
@@ -70,6 +73,18 @@ export const createReturningUserToken = async (req, res, next) => {
   try {
     const { customerId } = req.body;
     const idToken = await returningAccessToken(customerId);
+    res.json({ idToken });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Create user ID token for first-time payer (required for Venmo vaulting)
+export const createFirstTimeUserToken = async (req, res, next) => {
+  console.log('create first-time user ID token triggered');
+  console.log('');
+  try {
+    const idToken = await generateUserIdToken();
     res.json({ idToken });
   } catch (err) {
     next(err);

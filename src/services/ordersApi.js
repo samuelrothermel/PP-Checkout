@@ -188,6 +188,10 @@ export const createCheckoutOrder = async orderData => {
     // Add vault attributes if requested (use savePaymentMethod parameter)
     const shouldVault = savePaymentMethod || vault;
     console.log('Venmo vaulting requested:', shouldVault);
+    console.log(
+      'Venmo payment_source before vaulting:',
+      JSON.stringify(payment_source.venmo, null, 2)
+    );
 
     if (shouldVault) {
       payment_source.venmo.attributes = {
@@ -197,6 +201,10 @@ export const createCheckoutOrder = async orderData => {
           customer_type: 'CONSUMER',
         },
       };
+      console.log(
+        'Venmo payment_source after adding vault attributes:',
+        JSON.stringify(payment_source.venmo, null, 2)
+      );
     }
 
     // Add customer ID if provided for returning users with payment methods

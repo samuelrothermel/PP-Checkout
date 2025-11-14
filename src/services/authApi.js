@@ -74,3 +74,19 @@ export const returningAccessToken = async customerId => {
   const jsonData = await handleResponse(response);
   return jsonData.id_token;
 };
+
+// generate user ID token for first-time payer (required for Venmo vaulting)
+export const generateUserIdToken = async () => {
+  console.log('generating user ID token for first-time payer');
+  const auth = Buffer.from(CLIENT_ID + ':' + APP_SECRET).toString('base64');
+  const response = await fetch(`${base}/v1/oauth2/token`, {
+    method: 'post',
+    body: 'grant_type=client_credentials&response_type=id_token',
+    headers: {
+      Authorization: `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+  const jsonData = await handleResponse(response);
+  return jsonData.id_token;
+};

@@ -16,6 +16,7 @@ import {
   createPaymentTokenFromCustomerId,
   getPaymentTokens,
   createReturningUserToken,
+  createFirstTimeUserToken,
   createRecurringSetupToken,
   createRecurringOrder,
   createOrderWithVaultId,
@@ -68,6 +69,7 @@ router.post('/vault/recurring-order', createRecurringOrder);
 router.post('/vault/create-order', createOrderWithVaultId);
 router.get('/payment-tokens', getPaymentTokens);
 router.post('/returning-user-token', createReturningUserToken);
+router.post('/first-time-user-token', createFirstTimeUserToken);
 
 // Client Token route for SDK initialization
 router.get('/client-token', generateClientToken);
