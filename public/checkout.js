@@ -1049,6 +1049,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.target.id === 'card-radio') {
           // Show card fields when card payment method is selected
           cardButtonContainer.style.display = 'block';
+          // Initialize card fields if they haven't been initialized yet
+          if (!window.cardFieldsInitialized) {
+            initializeCardFields();
+          }
         } else {
           // Hide card fields when other payment methods are selected
           cardButtonContainer.style.display = 'none';
@@ -1741,102 +1745,7 @@ function loadPayPalSDK(idToken) {
       createPayPalSmartButtonStack();
     }
 
-    // Initialize the card fields and render them in the card button container
-    const cardField = paypal.CardFields({
-      createOrder,
-      onApprove,
-      onError,
-    });
-
-    if (cardField.isEligible()) {
-      // Create card fields HTML structure in the card button container
-      document.getElementById('card-button-container').innerHTML = `
-        <div class="checkbox-group">
-          <div class="checkbox-option">
-            <input type="checkbox" id="billing-info-toggle" />
-            <label for="billing-info-toggle">Billing is different from Shipping</label>
-          </div>
-        </div>
-        
-        <div id="billing-info" class="billing-info" style="display: none;">
-          <h5>Billing Information</h5>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="billing-first-name">First Name</label>
-              <input type="text" id="billing-first-name" name="billing-first-name" value="Jane" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label for="billing-last-name">Last Name</label>
-              <input type="text" id="billing-last-name" name="billing-last-name" value="Doe" class="form-control" required />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="billing-email">Email Address</label>
-              <input type="email" id="billing-email" name="billing-email" value="jane.doe@example.com" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label for="billing-phone">Phone Number</label>
-              <input type="text" id="billing-phone" name="billing-phone" value="1234567890" class="form-control" required />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="billing-address-line1">Street Address</label>
-            <input type="text" id="billing-address-line1" name="billing-address-line1" value="123 Main St" class="form-control" required />
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="billing-admin-area2">City</label>
-              <input type="text" id="billing-admin-area2" name="billing-admin-area2" value="Springfield" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label for="billing-admin-area1">State</label>
-              <input type="text" id="billing-admin-area1" name="billing-admin-area1" value="IL" class="form-control" required />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="billing-postal-code">Zip Code</label>
-              <input type="text" id="billing-postal-code" name="billing-postal-code" value="62701" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label for="billing-country-code">Country Code</label>
-              <input type="text" id="billing-country-code" name="billing-country-code" value="US" class="form-control" required />
-            </div>
-          </div>
-        </div>
-        
-        <div class="card-fields">
-          <div id="card-number-field-container"></div>
-          <div id="card-expiry-field-container"></div>
-          <div id="card-cvv-field-container"></div>
-        </div>
-      `;
-
-      const numberField = cardField.NumberField();
-      numberField.render('#card-number-field-container');
-
-      const cvvField = cardField.CVVField();
-      cvvField.render('#card-cvv-field-container');
-
-      const expiryField = cardField.ExpiryField();
-      expiryField.render('#card-expiry-field-container');
-
-      // Store cardField reference globally so the unified submit button can use it
-      window.cardFieldInstance = cardField;
-
-      // Setup billing info toggle for card payments
-      const billingToggle = document.getElementById('billing-info-toggle');
-      const billingInfo = document.getElementById('billing-info');
-
-      billingToggle.addEventListener('change', function () {
-        if (this.checked) {
-          billingInfo.style.display = 'block';
-        } else {
-          billingInfo.style.display = 'none';
-        }
-      });
-    }
+    // Card fields will be initialized lazily when the card radio button is first selected
 
     // Setup Google Pay after PayPal SDK loads
     setupGooglePay();
@@ -2193,6 +2102,118 @@ async function ensureVenmoVaultingReady() {
   }
 
   return false;
+}
+
+// Initialize card fields when first needed (when card radio button is selected)
+function initializeCardFields() {
+  if (!window.paypal || window.cardFieldsInitialized) {
+    return;
+  }
+
+  console.log('Initializing PayPal card fields...');
+
+  const cardField = window.paypal.CardFields({
+    createOrder,
+    onApprove,
+    onError,
+  });
+
+  if (cardField.isEligible()) {
+    // Create card fields HTML structure in the card button container
+    document.getElementById('card-button-container').innerHTML = `
+      <div class="checkbox-group">
+        <div class="checkbox-option">
+          <input type="checkbox" id="billing-info-toggle" />
+          <label for="billing-info-toggle">Billing is different from Shipping</label>
+        </div>
+      </div>
+      
+      <div id="billing-info" class="billing-info" style="display: none;">
+        <h5>Billing Information</h5>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="billing-first-name">First Name</label>
+            <input type="text" id="billing-first-name" name="billing-first-name" value="Jane" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="billing-last-name">Last Name</label>
+            <input type="text" id="billing-last-name" name="billing-last-name" value="Doe" class="form-control" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="billing-email">Email Address</label>
+            <input type="email" id="billing-email" name="billing-email" value="jane.doe@example.com" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="billing-phone">Phone Number</label>
+            <input type="text" id="billing-phone" name="billing-phone" value="1234567890" class="form-control" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="billing-address-line1">Street Address</label>
+          <input type="text" id="billing-address-line1" name="billing-address-line1" value="123 Main St" class="form-control" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="billing-admin-area2">City</label>
+            <input type="text" id="billing-admin-area2" name="billing-admin-area2" value="Springfield" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="billing-admin-area1">State</label>
+            <input type="text" id="billing-admin-area1" name="billing-admin-area1" value="IL" class="form-control" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="billing-postal-code">Zip Code</label>
+            <input type="text" id="billing-postal-code" name="billing-postal-code" value="62701" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="billing-country-code">Country Code</label>
+            <input type="text" id="billing-country-code" name="billing-country-code" value="US" class="form-control" required />
+          </div>
+        </div>
+      </div>
+      
+      <div class="card-fields">
+        <div id="card-number-field-container"></div>
+        <div id="card-expiry-field-container"></div>
+        <div id="card-cvv-field-container"></div>
+      </div>
+    `;
+
+    const numberField = cardField.NumberField();
+    numberField.render('#card-number-field-container');
+
+    const cvvField = cardField.CVVField();
+    cvvField.render('#card-cvv-field-container');
+
+    const expiryField = cardField.ExpiryField();
+    expiryField.render('#card-expiry-field-container');
+
+    // Store cardField reference globally so the unified submit button can use it
+    window.cardFieldInstance = cardField;
+
+    // Setup billing info toggle for card payments
+    const billingToggle = document.getElementById('billing-info-toggle');
+    const billingInfo = document.getElementById('billing-info');
+
+    if (billingToggle) {
+      billingToggle.addEventListener('change', function () {
+        if (this.checked) {
+          billingInfo.style.display = 'block';
+        } else {
+          billingInfo.style.display = 'none';
+        }
+      });
+    }
+
+    window.cardFieldsInitialized = true;
+    console.log('✅ PayPal card fields initialized successfully');
+  } else {
+    console.log('❌ Card fields are not eligible in this environment');
+  }
 }
 
 // Initialize without user ID token initially (will be added when needed for Venmo vaulting)
