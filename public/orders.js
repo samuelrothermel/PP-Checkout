@@ -279,7 +279,7 @@ async function refundOrder(orderId) {
   showMessage('Refund functionality not yet implemented', 'info');
 }
 
-async function deleteOrder(orderId) {
+function deleteOrder(orderId) {
   if (
     !confirm(
       `Are you sure you want to delete order ${orderId}? This action cannot be undone.`
@@ -295,33 +295,17 @@ async function deleteOrder(orderId) {
     button.disabled = true;
     button.textContent = 'Deleting...';
 
-    // Call the delete order endpoint
-    const response = await fetch(`/api/orders/${orderId}/delete`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Delete failed: ${response.status}`);
-    }
-
-    const deleteData = await response.json();
-
-    // Log delete response
-    console.log('Delete order response:', JSON.stringify(deleteData, null, 2));
-
     // Remove order from localStorage
     removeOrderFromLocalStorage(orderId);
+
+    console.log(`Order ${orderId} removed from localStorage`);
 
     showMessage(`Order ${orderId} deleted successfully!`, 'success');
 
     // Reload orders to show updated list
     setTimeout(() => {
       loadOrders();
-    }, 1000);
+    }, 500);
   } catch (error) {
     console.error('Delete error:', error);
     showMessage(`Failed to delete order: ${error.message}`, 'error');
