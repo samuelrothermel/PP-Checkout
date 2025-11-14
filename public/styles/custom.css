@@ -69,9 +69,6 @@ header h1 {
   font-style: italic;
   margin: 0;
 }
-  border-color: #0070ba;
-  text-decoration: none;
-}
 
 .integration-card h3 {
   font-size: 1.3em;
@@ -701,6 +698,30 @@ header h1 {
   }
 }
 
+/* Enhanced payment methods container styling */
+.checkout-section h4 {
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 1.3em;
+  color: #1a1a1a;
+  font-weight: 600;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 15px;
+}
+
+/* Submit button for saved payments */
+#saved-payment-submit {
+  max-width: 350px !important;
+  width: 100% !important;
+  margin: 20px auto !important;
+  display: block !important;
+  padding: 12px 24px !important;
+  height: 48px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+}
+
 /* Checkout Responsive Design */
 @media (max-width: 768px) {
   .checkout-layout {
@@ -719,6 +740,23 @@ header h1 {
     flex-direction: column;
     gap: 15px;
   }
+
+  /* Mobile adjustments for payment methods */
+  .payment-method-buttons > div,
+  .payment-method-buttons iframe,
+  .payment-method-buttons button,
+  #paypal-button-container > div,
+  #btn-appl,
+  #googlepay-button-container button,
+  .card-fields,
+  #multi-card-field-button,
+  #saved-payment-submit {
+    max-width: 100% !important;
+  }
+
+  .payment-method-buttons {
+    padding: 0 10px 15px 10px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -732,6 +770,20 @@ header h1 {
 
   .order-summary {
     padding: 15px;
+  }
+
+  /* Small mobile adjustments for payment methods */
+  .payment-method-label > div {
+    margin-left: 35px;
+  }
+
+  .payment-method-buttons {
+    margin-left: 35px;
+    padding: 0 5px 15px 5px;
+  }
+
+  .checkout-section h4 {
+    font-size: 1.2em;
   }
 }
 
@@ -981,15 +1033,17 @@ apple-pay-button {
 
 /* Payment Method Options */
 .payment-method-option {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   border: 2px solid #e9ecef;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: border-color 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .payment-method-option:hover {
   border-color: #0070ba;
   background-color: #f8f9fa;
+  box-shadow: 0 4px 8px rgba(0, 112, 186, 0.1);
 }
 
 .payment-method-option input[type='radio'] {
@@ -1035,18 +1089,164 @@ apple-pay-button {
   margin-left: 40px;
   display: flex;
   align-items: center;
-  min-height: 25px;
+  justify-content: flex-start;
+  min-height: 35px;
+  padding: 8px 0;
+}
+
+/* Style the marks containers */
+#paypal-mark-container,
+#venmo-mark-container,
+#paylater-mark-container,
+#applepay-mark-container,
+#googlepay-mark-container,
+#card-mark-container {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+/* Ensure PayPal marks render properly */
+#paypal-mark-container > div,
+#venmo-mark-container > div,
+#paylater-mark-container > div {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* Style Apple Pay and Google Pay custom images */
+#applepay-mark-container img,
+#googlepay-mark-container img {
+  height: 28px !important;
+  max-width: 120px !important;
+  object-fit: contain !important;
+}
+
+/* Card mark container text styling */
+#card-mark-container {
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  color: #333 !important;
 }
 
 /* Payment button containers within radio options */
 .payment-method-buttons {
   margin-left: 40px;
-  margin-top: 15px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 0 20px 20px 20px;
   display: none; /* Initially hidden */
 }
 
 .payment-method-option input[type='radio']:checked ~ .payment-method-buttons {
   display: block;
+}
+
+/* Center all payment buttons and add consistent spacing */
+.payment-method-buttons > div,
+.payment-method-buttons iframe,
+.payment-method-buttons button {
+  margin: 0 auto 15px auto !important;
+  display: block !important;
+  max-width: 350px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* PayPal button specific styling */
+#paypal-button-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-bottom: 20px !important;
+}
+
+#paypal-button-container > div {
+  max-width: 350px !important;
+  width: 100% !important;
+}
+
+/* Apple Pay button container styling */
+#applepay-button-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-bottom: 20px !important;
+}
+
+#btn-appl,
+apple-pay-button {
+  max-width: 350px !important;
+  width: 100% !important;
+  height: 48px !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* Google Pay button container styling */
+#googlepay-button-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-bottom: 20px !important;
+}
+
+#googlepay-button-container button,
+#googlepay-button-container > div {
+  max-width: 350px !important;
+  width: 100% !important;
+  height: 48px !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* Card fields container styling */
+#card-button-container {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  margin-bottom: 20px !important;
+}
+
+/* Ensure card fields are hidden unless card radio is selected */
+#card-button-container .card-fields,
+#card-button-container #multi-card-field-button,
+#card-button-container > div {
+  display: none !important;
+}
+
+/* Show card fields only when card radio button is checked */
+.payment-method-option
+  input[type='radio']#card-radio:checked
+  ~ .payment-method-buttons
+  .card-fields,
+.payment-method-option
+  input[type='radio']#card-radio:checked
+  ~ .payment-method-buttons
+  #multi-card-field-button,
+.payment-method-option
+  input[type='radio']#card-radio:checked
+  ~ .payment-method-buttons
+  > div {
+  display: block !important;
+}
+
+.card-fields {
+  max-width: 350px !important;
+  width: 100% !important;
+  margin: 0 auto 20px auto !important;
+}
+
+.card-fields > div {
+  margin-bottom: 15px !important;
+}
+
+#multi-card-field-button {
+  max-width: 350px !important;
+  width: 100% !important;
+  height: 48px !important;
+  margin: 0 auto !important;
 }
 
 /* Saved Payment Method Styling */

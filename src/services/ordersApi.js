@@ -21,13 +21,6 @@ const handleResponse = async response => {
 
 // create order request
 export const createCheckoutOrder = async orderData => {
-  console.log('\n=== CREATE CHECKOUT ORDER DEBUG ===');
-  console.log('Full orderData received:', JSON.stringify(orderData, null, 2));
-  console.log('vault_id:', orderData.vault_id);
-  console.log('payment_source_type:', orderData.payment_source_type);
-  console.log('savePaymentMethod:', orderData.savePaymentMethod);
-  console.log('vault (legacy):', orderData.vault);
-  console.log('========================================\n');
   const {
     shippingInfo,
     billingInfo,
@@ -62,11 +55,9 @@ export const createCheckoutOrder = async orderData => {
     };
   }
 
-  console.log('Shipping Address: ', shippingDetails);
-
   // Log customer ID if provided
   if (customerId) {
-    console.log('Customer ID provided for returning user:', customerId);
+    // Customer ID provided for returning user
   }
 
   // Build payment_source object dynamically
@@ -74,14 +65,8 @@ export const createCheckoutOrder = async orderData => {
 
   // Check if vault_id is provided for saved payment methods
   if (vault_id) {
-    console.log('\n=== VAULT_ID PROCESSING ===');
-    console.log('Using vault_id for saved payment method:', vault_id);
-    console.log('Payment source type provided by client:', payment_source_type);
-    console.log('Type of payment_source_type:', typeof payment_source_type);
-
     // Use the client-provided payment source type to construct the payment_source
     if (payment_source_type === 'card') {
-      console.log('Creating card payment source');
       payment_source = {
         card: {
           vault_id: vault_id,
@@ -93,7 +78,6 @@ export const createCheckoutOrder = async orderData => {
         },
       };
     } else if (payment_source_type === 'paypal') {
-      console.log('Creating PayPal payment source');
       payment_source = {
         paypal: {
           vault_id: vault_id,
@@ -113,32 +97,18 @@ export const createCheckoutOrder = async orderData => {
       };
     } else {
       // Fallback to paypal if no type provided or unknown type
-      console.log(
-        'Falling back to PayPal - Unknown payment_source_type:',
-        payment_source_type
-      );
       payment_source = {
         paypal: {
           vault_id: vault_id,
         },
       };
     }
-
-    console.log(
-      'Final payment_source created:',
-      JSON.stringify(payment_source, null, 2)
-    );
-    console.log('=== END VAULT_ID PROCESSING ===\n');
   }
   // Check if payment_source is provided directly (for saved payment methods)
   else if (
     orderData.payment_source &&
     typeof orderData.payment_source === 'object'
   ) {
-    console.log(
-      'Using provided payment_source:',
-      JSON.stringify(orderData.payment_source)
-    );
     payment_source = orderData.payment_source;
   } else if (paymentSource === 'paypal') {
     payment_source.paypal = {
@@ -155,7 +125,6 @@ export const createCheckoutOrder = async orderData => {
 
     // Add vault attributes if requested (use savePaymentMethod parameter)
     const shouldVault = savePaymentMethod || vault;
-    console.log('PayPal vaulting requested:', shouldVault);
 
     if (shouldVault) {
       payment_source.paypal.attributes = {
@@ -187,11 +156,6 @@ export const createCheckoutOrder = async orderData => {
 
     // Add vault attributes if requested (use savePaymentMethod parameter)
     const shouldVault = savePaymentMethod || vault;
-    console.log('Venmo vaulting requested:', shouldVault);
-    console.log(
-      'Venmo payment_source before vaulting:',
-      JSON.stringify(payment_source.venmo, null, 2)
-    );
 
     if (shouldVault) {
       payment_source.venmo.attributes = {
@@ -201,10 +165,6 @@ export const createCheckoutOrder = async orderData => {
           customer_type: 'CONSUMER',
         },
       };
-      console.log(
-        'Venmo payment_source after adding vault attributes:',
-        JSON.stringify(payment_source.venmo, null, 2)
-      );
     }
 
     // Add customer ID if provided for returning users with payment methods
@@ -219,7 +179,6 @@ export const createCheckoutOrder = async orderData => {
   } else if (paymentSource === 'card') {
     // Add vault attributes if requested (use savePaymentMethod parameter)
     const shouldVault = savePaymentMethod || vault;
-    console.log('Card vaulting requested:', shouldVault);
 
     payment_source.card = {};
 
@@ -262,7 +221,6 @@ export const createCheckoutOrder = async orderData => {
 
     // Add vault attributes if requested (use savePaymentMethod parameter)
     const shouldVault = savePaymentMethod || vault;
-    console.log('Apple Pay vaulting requested:', shouldVault);
 
     if (shouldVault) {
       payment_source.apple_pay.attributes = {
@@ -292,7 +250,6 @@ export const createCheckoutOrder = async orderData => {
 
     // Add vault attributes if requested (use savePaymentMethod parameter)
     const shouldVault = savePaymentMethod || vault;
-    console.log('Google Pay vaulting requested:', shouldVault);
 
     if (shouldVault) {
       payment_source.google_pay.attributes = {
@@ -319,12 +276,6 @@ export const createCheckoutOrder = async orderData => {
     }
   }
 
-  // Debug: Log the final payment_source object
-  console.log(
-    'Final payment_source object:',
-    JSON.stringify(payment_source, null, 2)
-  );
-
   // Build purchase unit with shipping details if provided
   const purchaseUnit = {
     amount: {
@@ -340,7 +291,6 @@ export const createCheckoutOrder = async orderData => {
 
   // Always use AUTHORIZE intent for all checkout orders
   const intent = 'AUTHORIZE';
-  console.log(`Using intent: ${intent} (vault requested: ${vault})`);
 
   const url = `${base}/v2/checkout/orders`;
   const response = await fetch(url, {
@@ -428,6 +378,9 @@ export const createUpstreamQlOrder = async totalAmount => {
     ],
   };
 
+  console.log('API Request: POST /v2/checkout/orders');
+  console.log('Request Body:', JSON.stringify(payload, null, 2));
+
   const response = await fetch(`${base}/v2/checkout/orders`, {
     method: 'post',
     headers: {
@@ -436,7 +389,9 @@ export const createUpstreamQlOrder = async totalAmount => {
     },
     body: JSON.stringify(payload),
   });
-  console.log('Create Order Response: ', await response.clone().json());
+
+  const responseData = await response.clone().json();
+  console.log('API Response:', JSON.stringify(responseData, null, 2));
   return await handleResponse(response);
 };
 
@@ -458,7 +413,11 @@ export const capturePayment = async orderId => {
 
 // capture authorization request
 export const captureAuthorization = async authorizationId => {
-  console.log('capturing authorization with ID:', authorizationId);
+  console.log(
+    'API Request: POST /v2/payments/authorizations/' +
+      authorizationId +
+      '/capture'
+  );
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/payments/authorizations/${authorizationId}/capture`;
   const response = await fetch(url, {
@@ -474,7 +433,7 @@ export const captureAuthorization = async authorizationId => {
 
 // get order details request
 export const getOrderDetails = async orderId => {
-  console.log('getting order details for ID:', orderId);
+  console.log('API Request: GET /v2/checkout/orders/' + orderId);
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders/${orderId}`;
   const response = await fetch(url, {
@@ -490,7 +449,9 @@ export const getOrderDetails = async orderId => {
 
 // authorize payment request
 export const authorizePayment = async orderId => {
-  console.log('authorizing payment with order ID:', orderId);
+  console.log(
+    'API Request: POST /v2/checkout/orders/' + orderId + '/authorize'
+  );
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders/${orderId}/authorize`;
   const response = await fetch(url, {
@@ -510,7 +471,7 @@ export async function createOrderWithBillingAgreement(
   amount = '10.00'
 ) {
   const accessToken = await generateAccessToken();
-  console.log('billingAgreementId: ', billingAgreementId);
+
   const payload = {
     intent: 'CAPTURE',
     purchase_units: [
@@ -528,7 +489,8 @@ export async function createOrderWithBillingAgreement(
       },
     },
   };
-  console.log('Order payload:', JSON.stringify(payload, null, 2));
+  console.log('API Request: POST /v2/checkout/orders (with billing agreement)');
+  console.log('Request Body:', JSON.stringify(payload, null, 2));
   const response = await fetch(
     'https://api-m.sandbox.paypal.com/v2/checkout/orders',
     {
@@ -540,7 +502,8 @@ export async function createOrderWithBillingAgreement(
       body: JSON.stringify(payload),
     }
   );
-  console.log('Create Order with Billing Agreement Response: ', response);
+  const responseData = await response.clone().json();
+  console.log('API Response:', JSON.stringify(responseData, null, 2));
   return handleResponse(response);
 }
 
@@ -576,10 +539,8 @@ export const createOneTimeOrderWithPayee = async (
     },
   };
 
-  console.log(
-    'Creating one-time order with payee:',
-    JSON.stringify(payload, null, 2)
-  );
+  console.log('API Request: POST /v2/checkout/orders (one-time with payee)');
+  console.log('Request Body:', JSON.stringify(payload, null, 2));
 
   const response = await fetch(`${base}/v2/checkout/orders`, {
     method: 'POST',
@@ -622,10 +583,8 @@ export const createVaultedOrderWithPayee = async (
     },
   };
 
-  console.log(
-    'Creating vaulted order with payee:',
-    JSON.stringify(payload, null, 2)
-  );
+  console.log('API Request: POST /v2/checkout/orders (vaulted with payee)');
+  console.log('Request Body:', JSON.stringify(payload, null, 2));
 
   const response = await fetch(`${base}/v2/checkout/orders`, {
     method: 'POST',
@@ -677,9 +636,9 @@ export const createOrderWithVaulting = async (
   };
 
   console.log(
-    `Creating order with vaulting for merchant ${merchantNumber}:`,
-    JSON.stringify(createPayload, null, 2)
+    `API Request: POST /v2/checkout/orders (vaulting for merchant ${merchantNumber})`
   );
+  console.log('Request Body:', JSON.stringify(createPayload, null, 2));
 
   const createResponse = await fetch(`${base}/v2/checkout/orders`, {
     method: 'POST',
@@ -692,9 +651,8 @@ export const createOrderWithVaulting = async (
   });
 
   const orderResult = await handleResponse(createResponse);
-  console.log(
-    `Order created: ${orderResult.id}, status: ${orderResult.status}`
-  );
+  const responseData = await createResponse.clone().json();
+  console.log('API Response:', JSON.stringify(responseData, null, 2));
 
   return {
     orderId: orderResult.id,
@@ -721,10 +679,6 @@ export const createOrderWithVaultId = async (
   let tokenDetails;
   try {
     tokenDetails = await getPaymentTokenDetails(vaultId);
-    console.log(
-      'Token details for vault_id:',
-      JSON.stringify(tokenDetails, null, 2)
-    );
   } catch (error) {
     console.error('Error fetching token details:', error);
     throw new Error(
@@ -788,9 +742,9 @@ export const createOrderWithVaultId = async (
   };
 
   console.log(
-    `Creating order with vault_id for merchant ${merchantNumber}:`,
-    JSON.stringify(payload, null, 2)
+    `API Request: POST /v2/checkout/orders (vault_id for merchant ${merchantNumber})`
   );
+  console.log('Request Body:', JSON.stringify(payload, null, 2));
 
   const response = await fetch(`${base}/v2/checkout/orders`, {
     method: 'POST',
@@ -814,7 +768,7 @@ export const capturePaymentWithMerchant = async (
   const url = `${base}/v2/checkout/orders/${orderId}/capture`;
 
   console.log(
-    `Capturing order ${orderId} with merchant ${merchantNumber} credentials`
+    `API Request: POST /v2/checkout/orders/${orderId}/capture (merchant ${merchantNumber})`
   );
 
   const response = await fetch(url, {
@@ -843,7 +797,6 @@ export const createOrderWithVaultIdAndCapture = async (
   let tokenDetails;
   try {
     tokenDetails = await getPaymentTokenDetails(vaultId);
-    console.log('Token details:', JSON.stringify(tokenDetails, null, 2));
   } catch (error) {
     console.error('Error fetching token details:', error);
     throw new Error(
@@ -904,9 +857,9 @@ export const createOrderWithVaultIdAndCapture = async (
   };
 
   console.log(
-    `Creating and capturing order with vault_id for merchant ${merchantNumber}:`,
-    JSON.stringify(createPayload, null, 2)
+    `API Request: POST /v2/checkout/orders (create & capture vault_id for merchant ${merchantNumber})`
   );
+  console.log('Request Body:', JSON.stringify(createPayload, null, 2));
 
   const response = await fetch(`${base}/v2/checkout/orders`, {
     method: 'POST',
@@ -919,9 +872,8 @@ export const createOrderWithVaultIdAndCapture = async (
   });
 
   const result = await handleResponse(response);
-  console.log(
-    `Order created and captured: ${result.id}, status: ${result.status}`
-  );
+  const responseData = await response.clone().json();
+  console.log('API Response:', JSON.stringify(responseData, null, 2));
 
   return result;
 };

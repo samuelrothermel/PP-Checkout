@@ -61,7 +61,7 @@ export const generateAccessTokenForMerchant = async (merchantNumber = 1) => {
 
 // generate access token for returning payer
 export const returningAccessToken = async customerId => {
-  console.log('generating access token for returning payer with customer id ');
+  console.log('API Request: POST /v1/oauth2/token (returning payer)');
   const auth = Buffer.from(CLIENT_ID + ':' + APP_SECRET).toString('base64');
   const response = await fetch(`${base}/v1/oauth2/token`, {
     method: 'post',
@@ -77,7 +77,7 @@ export const returningAccessToken = async customerId => {
 
 // generate user ID token for first-time payer (required for Venmo vaulting)
 export const generateUserIdToken = async () => {
-  console.log('generating user ID token for first-time payer');
+  console.log('API Request: POST /v1/oauth2/token (first-time payer ID token)');
   const auth = Buffer.from(CLIENT_ID + ':' + APP_SECRET).toString('base64');
   const response = await fetch(`${base}/v1/oauth2/token`, {
     method: 'post',

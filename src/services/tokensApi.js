@@ -17,7 +17,7 @@ const handleResponse = async response => {
 
 // create vault setup token
 export const createVaultSetupToken = async ({ paymentSource }) => {
-  console.log('creating vault setup token for payment source:', paymentSource);
+  console.log('API Request: POST /v3/vault/setup-tokens');
   const paymentSources = {
     paypal: {
       description: 'Description for PayPal to be shown to PayPal payer',
@@ -69,10 +69,8 @@ export const createVaultSetupToken = async ({ paymentSource }) => {
     }),
   });
 
-  console.log(
-    'Create Vault Setup Token Response: ',
-    JSON.stringify(await response.clone().json(), null, 2)
-  );
+  const responseData = await response.clone().json();
+  console.log('API Response:', JSON.stringify(responseData, null, 2));
   return handleResponse(response);
 };
 
@@ -96,10 +94,7 @@ export const createVaultPaymentToken = async vaultSetupToken => {
   });
 
   const jsonResponse = await response.clone().json();
-  console.log(
-    'Create Vault Payment Token Response: ',
-    JSON.stringify(jsonResponse, null, 2)
-  );
+  console.log('API Response:', JSON.stringify(jsonResponse, null, 2));
   return handleResponse(response);
 };
 
@@ -128,7 +123,9 @@ export const createPaymentTokenFromCustomerId = async customerId => {
 
 // get payment tokens from customer ID
 export const fetchPaymentTokens = async customerId => {
-  console.log('Fetching payment tokens for customer ID:', customerId);
+  console.log(
+    'API Request: GET /v3/vault/payment-tokens?customer_id=' + customerId
+  );
   const accessToken = await generateAccessToken();
   const response = await fetch(
     `https://api-m.sandbox.paypal.com/v3/vault/payment-tokens?customer_id=${customerId}`,
@@ -139,32 +136,14 @@ export const fetchPaymentTokens = async customerId => {
     }
   );
   const data = await response.json();
-  console.log('Payment Tokens Response: ', JSON.stringify(data, null, 2));
+  console.log('API Response:', JSON.stringify(data, null, 2));
 
   // Log detailed customer and payment source information
   if (data.customer) {
-    console.log('Customer Details:', JSON.stringify(data.customer, null, 2));
   }
 
   if (data.payment_tokens && data.payment_tokens.length > 0) {
-    data.payment_tokens.forEach((token, index) => {
-      console.log(
-        `Payment Token ${index + 1}:`,
-        JSON.stringify(token, null, 2)
-      );
-      if (token.payment_source) {
-        console.log(
-          `Payment Source ${index + 1}:`,
-          JSON.stringify(token.payment_source, null, 2)
-        );
-      }
-      if (token.customer) {
-        console.log(
-          `Token Customer ${index + 1}:`,
-          JSON.stringify(token.customer, null, 2)
-        );
-      }
-    });
+    // Payment tokens fetched successfully
   }
 
   return data.payment_tokens || [];
@@ -172,7 +151,7 @@ export const fetchPaymentTokens = async customerId => {
 
 // get payment token details by vault_id
 export const getPaymentTokenDetails = async vaultId => {
-  console.log('Fetching payment token details for vault_id:', vaultId);
+  console.log('API Request: GET /v3/vault/payment-tokens/' + vaultId);
   const accessToken = await generateAccessToken();
   const response = await fetch(`${base}/v3/vault/payment-tokens/${vaultId}`, {
     headers: {

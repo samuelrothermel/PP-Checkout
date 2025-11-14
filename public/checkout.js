@@ -1039,11 +1039,117 @@ document.addEventListener('DOMContentLoaded', function () {
           savedPaymentSubmit.style.display = 'none';
         }
       }
+
+      // Show/hide card fields based on selected payment method
+      const cardButtonContainer = document.getElementById(
+        'card-button-container'
+      );
+      if (cardButtonContainer) {
+        if (event.target.id === 'card-radio') {
+          // Show card fields when card payment method is selected
+          cardButtonContainer.style.display = 'block';
+        } else {
+          // Hide card fields when other payment methods are selected
+          cardButtonContainer.style.display = 'none';
+        }
+      }
     }
   });
+
+  // Handle save payment method checkbox changes
+  const savePaymentToggle = document.getElementById('save-payment-method');
+  if (savePaymentToggle) {
+    savePaymentToggle.addEventListener('change', function () {
+      const isVaultingEnabled = this.checked;
+
+      // Show/hide vaulting limitations notice
+      const vaultingNotice = document.getElementById('vaulting-notice');
+      if (vaultingNotice) {
+        vaultingNotice.style.display = isVaultingEnabled ? 'block' : 'none';
+      }
+
+      // Hide Google Pay when vaulting is enabled (not available in sandbox or production)
+      const googlePayOption = document.getElementById('googlepay-option');
+      if (googlePayOption) {
+        if (isVaultingEnabled) {
+          googlePayOption.style.display = 'none';
+          // Uncheck Google Pay radio if it was selected
+          const googlePayRadio = document.getElementById('googlepay-radio');
+          if (googlePayRadio && googlePayRadio.checked) {
+            googlePayRadio.checked = false;
+          }
+        } else {
+          // Show Google Pay again if it was previously shown
+          const isReadyToPayElement =
+            googlePayOption.querySelector('.google-pay-ready');
+          if (isReadyToPayElement || window.googlePayConfig) {
+            googlePayOption.style.display = 'block';
+          }
+        }
+      }
+
+      // Handle Venmo sandbox notification
+      updateVenmoSandboxNotification(isVaultingEnabled);
+    });
+  }
 });
 
-const createOrder = (data, actions) => {
+// Update Venmo sandbox notification based on vaulting state
+function updateVenmoSandboxNotification(isVaultingEnabled) {
+  // Remove any existing notification
+  const existingNotification = document.getElementById(
+    'venmo-sandbox-notification'
+  );
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+
+  if (isVaultingEnabled) {
+    // Find Venmo payment option (look for paypal funding source with venmo)
+    const paypalFundingList = document.getElementById(
+      'paypal-funding-sources-list'
+    );
+    if (paypalFundingList) {
+      const venmoOption = paypalFundingList.querySelector(
+        '[id*="venmo"], [class*="venmo"]'
+      );
+      if (venmoOption) {
+        // Create sandbox notification
+        const notification = document.createElement('div');
+        notification.id = 'venmo-sandbox-notification';
+        notification.style.cssText = `
+          background-color: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 4px;
+          padding: 8px 12px;
+          margin-top: 8px;
+          font-size: 0.85em;
+          color: #856404;
+        `;
+        notification.innerHTML =
+          '⚠️ <strong>Note:</strong> Venmo vaulting is not available in PayPal Sandbox environment';
+
+        // Insert notification after Venmo option
+        venmoOption.parentNode.insertBefore(
+          notification,
+          venmoOption.nextSibling
+        );
+      }
+    }
+  }
+}
+
+const createOrder = async (data, actions) => {
+  // Check if this is Venmo with vaulting for first-time users
+  if (data.paymentSource === 'venmo') {
+    const vaultToggle = document.getElementById('save-payment-method');
+    const savePaymentMethod = vaultToggle && vaultToggle.checked;
+
+    if (savePaymentMethod) {
+      await ensureVenmoVaultingReady();
+    }
+  }
+
   const shippingInfo = {
     firstName: document.getElementById('shipping-first-name').value,
     lastName: document.getElementById('shipping-last-name').value,
@@ -1078,7 +1184,7 @@ const createOrder = (data, actions) => {
   }
 
   const requestBody = {
-    source: data.paymentSource, //paypal / venmo / etc.
+    paymentSource: data.paymentSource, //paypal / venmo / etc.
     cart: [
       {
         sku: '123456789',
@@ -1591,11 +1697,11 @@ function loadPayPalSDK(idToken) {
         console.log(
           '⏰ Creating PayPal buttons after customer context initialization delay'
         );
-        createPayPalFundingSourceRadios();
+        createPayPalSmartButtonStack();
       }, 500); // 500ms delay for customer context processing
     } else {
       // Create individual radio buttons for each PayPal funding source
-      createPayPalFundingSourceRadios();
+      createPayPalSmartButtonStack();
     }
 
     // Initialize the card fields and render them in the card button container
@@ -1733,8 +1839,8 @@ function loadPayPalSDK(idToken) {
   }, 100);
 }
 
-// Create individual radio buttons for PayPal funding sources
-function createPayPalFundingSourceRadios() {
+// Create PayPal smart payment button stack (includes PayPal, Venmo, Pay Later)
+function createPayPalSmartButtonStack() {
   const fundingSourcesList = document.getElementById(
     'paypal-funding-sources-list'
   );
@@ -1745,122 +1851,96 @@ function createPayPalFundingSourceRadios() {
   );
   existingFundingSources.forEach(element => element.remove());
 
-  let firstFundingSource = true;
+  // Create single PayPal payment method option with smart button stack
+  const paymentMethodOption = document.createElement('div');
+  paymentMethodOption.className = 'payment-method-option';
 
-  // Loop over each funding source / payment method
-  paypal.getFundingSources().forEach(function (fundingSource) {
-    // Skip CARD, CREDIT, and GOOGLEPAY funding sources to remove unwanted options
-    // Google Pay is handled separately with its own integration
-    const fundingSourceUpper = fundingSource.toUpperCase();
-    if (
-      fundingSourceUpper === 'CARD' ||
-      fundingSourceUpper === 'CREDIT' ||
-      fundingSourceUpper === 'DEBIT' ||
-      fundingSourceUpper === 'GOOGLEPAY'
-    ) {
-      return;
+  const radioId = 'paypal-smart-buttons';
+  const markContainerId = `${radioId}-mark-container`;
+  const buttonContainerId = `${radioId}-button-container`;
+
+  paymentMethodOption.innerHTML = `
+    <input type="radio" name="payment-method" id="${radioId}" value="paypal" checked>
+    <label for="${radioId}" class="payment-method-label">
+      <div id="${markContainerId}">PayPal</div>
+    </label>
+    <div class="payment-method-buttons" id="${buttonContainerId}"></div>
+  `;
+
+  fundingSourcesList.appendChild(paymentMethodOption);
+
+  // Render PayPal smart button stack (includes PayPal, Venmo, Pay Later automatically)
+  const buttonConfig = {
+    style: {
+      layout: 'vertical',
+      shape: 'rect',
+      color: 'gold',
+      label: 'paypal',
+    },
+    createOrder: (data, actions) => {
+      // Pass 'paypal' as the payment source for the smart button stack
+      return createOrder({ paymentSource: 'paypal' }, actions);
+    },
+    onApprove,
+    onCancel,
+    onError,
+  };
+
+  // Handle saved PayPal customer ID if available
+  if (window.savedPayPalCustomerId) {
+    console.log(
+      'Configuring PayPal smart buttons with customer ID:',
+      window.savedPayPalCustomerId
+    );
+    // Update the radio button label to show it's a saved PayPal account
+    const markContainer = document.getElementById(markContainerId);
+    if (markContainer) {
+      markContainer.innerHTML =
+        '<span class="saved-payment-badge">SAVED</span> PayPal Account';
     }
+  }
 
-    // Initialize the marks for this funding source
-    var mark = paypal.Marks({
-      fundingSource: fundingSource,
+  const buttonInstance = paypal.Buttons(buttonConfig);
+  buttonInstance
+    .render(`#${buttonContainerId}`)
+    .then(() => {
+      console.log('✅ PayPal smart button stack rendered successfully');
+      // Update the PayPal button for saved account if we have one
+      if (window.savedPayPalCustomerId) {
+        updatePayPalButtonForSavedAccount(buttonContainerId);
+      }
+
+      // Hide card fields initially since PayPal is selected by default
+      const cardButtonContainer = document.getElementById(
+        'card-button-container'
+      );
+      if (cardButtonContainer) {
+        cardButtonContainer.style.display = 'none';
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error rendering PayPal smart button stack:', error);
     });
 
-    // Check if the mark is eligible
-    if (mark.isEligible()) {
-      // Create the radio button container
-      const paymentMethodOption = document.createElement('div');
-      paymentMethodOption.className = 'payment-method-option';
-
-      const radioId = `paypal-${fundingSource.toLowerCase()}`;
-      const markContainerId = `${radioId}-mark-container`;
-      const buttonContainerId = `${radioId}-button-container`;
-
-      paymentMethodOption.innerHTML = `
-        <input type="radio" name="payment-method" id="${radioId}" value="${fundingSource.toLowerCase()}" ${
-        firstFundingSource ? 'checked' : ''
-      }>
-        <label for="${radioId}" class="payment-method-label">
-          <div id="${markContainerId}"></div>
-        </label>
-        <div class="payment-method-buttons" id="${buttonContainerId}"></div>
-      `;
-
-      fundingSourcesList.appendChild(paymentMethodOption);
-
-      // Render the standalone mark for that funding source
-      mark.render(`#${markContainerId}`);
-
-      // Render PayPal button for this funding source
-      const buttonConfig = {
-        fundingSource: fundingSource,
-        style: {
-          layout: 'vertical',
-        },
-        createOrder,
-        onApprove,
-        onCancel,
-        onError,
-      };
-
-      // If this is PayPal funding source and we have a saved PayPal customer ID, add customer configuration
-      if (fundingSource === 'paypal' && window.savedPayPalCustomerId) {
-        console.log(
-          'Configuring PayPal button with customer ID:',
-          window.savedPayPalCustomerId
+  // If we have a saved PayPal account, select this radio button
+  if (window.savedPayPalCustomerId) {
+    setTimeout(() => {
+      const paypalRadio = document.getElementById(radioId);
+      if (paypalRadio) {
+        paypalRadio.checked = true;
+        // Uncheck any other payment methods
+        const allOtherRadios = document.querySelectorAll(
+          `input[name="payment-method"]:not(#${radioId})`
         );
-        // According to PayPal docs, the customer ID should be included in the SDK script URL
-        // and the button will automatically show the saved payment method
-      }
-
-      // If this is PayPal funding source and we have a saved PayPal customer ID, add it
-      if (fundingSource === 'paypal' && window.savedPayPalCustomerId) {
-        console.log(
-          'Using saved PayPal customer ID for PayPal button:',
-          window.savedPayPalCustomerId
-        );
-        // The target_customer_id needs to be handled on the server side during token generation
-        // Update the radio button label to show it's a saved PayPal account
-        const markContainer = document.getElementById(markContainerId);
-        if (markContainer) {
-          markContainer.innerHTML =
-            '<span class="saved-payment-badge">SAVED</span> PayPal Account';
-        }
-      }
-
-      const buttonInstance = paypal.Buttons(buttonConfig);
-      buttonInstance
-        .render(`#${buttonContainerId}`)
-        .then(() => {
-          // Update the PayPal button for saved account if this is the PayPal funding source
-          if (fundingSource === 'paypal') {
-            updatePayPalButtonForSavedAccount(buttonContainerId);
-          }
-        })
-        .catch(error => {
-          console.error(`❌ Error rendering ${fundingSource} button:`, error);
+        allOtherRadios.forEach(radio => {
+          radio.checked = false;
         });
-
-      // If this is PayPal and we have a saved PayPal account, select this radio button
-      if (fundingSource === 'paypal' && window.savedPayPalCustomerId) {
-        setTimeout(() => {
-          const paypalRadio = document.getElementById(radioId);
-          if (paypalRadio) {
-            paypalRadio.checked = true;
-            // Uncheck any other payment methods
-            const allOtherRadios = document.querySelectorAll(
-              `input[name="payment-method"]:not(#${radioId})`
-            );
-            allOtherRadios.forEach(radio => {
-              radio.checked = false;
-            });
-          }
-        }, 50);
       }
+    }, 50);
+  }
 
-      firstFundingSource = false;
-    }
-  });
+  // PayPal smart button stack is configured for saved customer if available
+  // (Customer ID configuration is handled in the button rendering above)
 }
 
 const onApprove = (data, actions) => {
@@ -1970,6 +2050,15 @@ updateAmountTotal();
 
 // Generate user ID token for first-time users (required for Venmo vaulting)
 async function generateUserIdTokenForFirstTime() {
+  // Only generate if save payment method is checked
+  const vaultToggle = document.getElementById('save-payment-method');
+  if (!vaultToggle || !vaultToggle.checked) {
+    console.log(
+      '🎫 Skipping user ID token generation - vaulting not requested'
+    );
+    return null;
+  }
+
   try {
     console.log(
       '🎫 Generating user ID token for first-time payer (Venmo vaulting support)'
@@ -1997,14 +2086,68 @@ async function generateUserIdTokenForFirstTime() {
     // Store the token globally for use in Venmo vaulting
     window.firstTimeUserIdToken = idToken;
 
-    // Load PayPal SDK with the user ID token
-    loadPayPalSDK(idToken);
+    return idToken;
   } catch (error) {
     console.error('❌ Error generating first-time user ID token:', error);
-    // Fallback: load SDK without user ID token
-    loadPayPalSDK();
+    return null;
   }
 }
 
-// Initialize with user ID token for first-time users
-generateUserIdTokenForFirstTime();
+// Check if Venmo vaulting is needed and reload SDK with user ID token if necessary
+async function ensureVenmoVaultingReady() {
+  // Check if save payment method is checked
+  const vaultToggle = document.getElementById('save-payment-method');
+  const savePaymentMethod = vaultToggle && vaultToggle.checked;
+
+  // Check if user is first-time (no existing customer ID)
+  const isFirstTimeUser = !globalCustomerId;
+
+  if (savePaymentMethod && isFirstTimeUser) {
+    console.log(
+      '🎫 Venmo vaulting detected for first-time user - ensuring user ID token'
+    );
+
+    // Generate user ID token if not already generated
+    if (!window.firstTimeUserIdToken) {
+      const idToken = await generateUserIdTokenForFirstTime();
+      if (idToken) {
+        console.log(
+          '🎫 Reloading PayPal SDK with user ID token for Venmo vaulting'
+        );
+
+        // Remove existing PayPal SDK
+        const existingScript = document.querySelector(
+          'script[src*="paypal.com/sdk/js"]'
+        );
+        if (existingScript) {
+          existingScript.remove();
+          delete window.paypal;
+        }
+
+        // Reload SDK with user ID token
+        loadPayPalSDK(idToken);
+
+        // Wait for SDK to load
+        await new Promise(resolve => {
+          const checkPayPal = setInterval(() => {
+            if (window.paypal) {
+              clearInterval(checkPayPal);
+              resolve();
+            }
+          }, 100);
+        });
+
+        console.log('🎫 PayPal SDK reloaded with user ID token');
+        return true;
+      }
+    } else {
+      console.log('🎫 User ID token already available for Venmo vaulting');
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Initialize without user ID token initially (will be added when needed for Venmo vaulting)
+loadPayPalSDK();

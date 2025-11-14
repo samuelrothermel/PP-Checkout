@@ -140,9 +140,16 @@
             <h4>Select Payment Method</h4>
             
             <!-- Vault Toggle -->
-            <div class="checkbox-control" style="margin-bottom: 20px;">
+            <div class="checkbox-control" style="margin-bottom: 15px;">
               <input type="checkbox" id="save-payment-method">
               <label for="save-payment-method">Save my payment method for future purchases</label>
+            </div>
+            
+            <!-- Vaulting Limitations Notice -->
+            <div id="vaulting-notice" style="display: none; background-color: #e8f4fd; border: 1px solid #b8daff; border-radius: 4px; padding: 12px; margin-bottom: 15px; font-size: 0.9em; color: #004085;">
+              <strong>📝 Vaulting Limitations:</strong><br>
+              • <strong>Google Pay:</strong> Vaulting not available (sandbox or production)<br>
+              • <strong>Venmo:</strong> Vaulting not available in PayPal Sandbox environment
             </div>
             
             <!-- Payment Method Options with Radio Buttons -->

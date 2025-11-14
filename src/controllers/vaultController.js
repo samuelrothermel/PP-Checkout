@@ -14,8 +14,6 @@ import {
 
 // Create vault setup token
 export const createVaultSetupToken = async (req, res, next) => {
-  console.log('create vault setup token triggered');
-  console.log('');
   try {
     const { paymentSource } = req.body;
     const vaultSetupToken = await createVaultSetupTokenApi({
@@ -29,8 +27,6 @@ export const createVaultSetupToken = async (req, res, next) => {
 
 // Create vault payment token from setup token
 export const createVaultPaymentToken = async (req, res, next) => {
-  console.log('create vault payment token triggered');
-  console.log('');
   try {
     const { vaultSetupToken } = req.params;
     const paymentToken = await createVaultPaymentTokenApi(vaultSetupToken);
@@ -42,8 +38,6 @@ export const createVaultPaymentToken = async (req, res, next) => {
 
 // Create vault payment token from customer ID
 export const createPaymentTokenFromCustomerId = async (req, res, next) => {
-  console.log('create vault payment token from customer ID triggered');
-  console.log('');
   const { customerId } = req.body;
   try {
     const paymentToken = await createPaymentTokenFromCustomerIdApi(customerId);
@@ -55,8 +49,6 @@ export const createPaymentTokenFromCustomerId = async (req, res, next) => {
 
 // Get payment tokens from customer ID
 export const getPaymentTokens = async (req, res, next) => {
-  console.log('get payment tokens request triggered');
-  console.log('');
   const customerId = req.query.customer_id;
   try {
     const paymentTokens = await fetchPaymentTokens(customerId);
@@ -68,8 +60,6 @@ export const getPaymentTokens = async (req, res, next) => {
 
 // Create returning user access token
 export const createReturningUserToken = async (req, res, next) => {
-  console.log('create returning user access token triggered');
-  console.log('');
   try {
     const { customerId } = req.body;
     const idToken = await returningAccessToken(customerId);
@@ -81,8 +71,6 @@ export const createReturningUserToken = async (req, res, next) => {
 
 // Create user ID token for first-time payer (required for Venmo vaulting)
 export const createFirstTimeUserToken = async (req, res, next) => {
-  console.log('create first-time user ID token triggered');
-  console.log('');
   try {
     const idToken = await generateUserIdToken();
     res.json({ idToken });
@@ -93,8 +81,6 @@ export const createFirstTimeUserToken = async (req, res, next) => {
 
 // Create recurring payment setup token
 export const createRecurringSetupToken = async (req, res, next) => {
-  console.log('create recurring payment setup token triggered');
-  console.log('');
   try {
     const { paymentSource } = req.body;
     const vaultSetupToken = await createRecurringSetupTokenApi({
@@ -108,8 +94,6 @@ export const createRecurringSetupToken = async (req, res, next) => {
 
 // Create order with payment token for recurring billing
 export const createRecurringOrder = async (req, res, next) => {
-  console.log('create recurring order with payment token triggered');
-  console.log('');
   try {
     const { paymentTokenId } = req.body;
     const order = await createRecurringOrderApi(paymentTokenId);
@@ -121,8 +105,6 @@ export const createRecurringOrder = async (req, res, next) => {
 
 // Create and capture order using vault_id (for testing Apple Pay vaults)
 export const createOrderWithVaultId = async (req, res, next) => {
-  console.log('create order with vault_id triggered');
-  console.log('');
   try {
     const { vaultId, amount, merchantNumber = 1 } = req.body;
     const { createOrderWithVaultIdAndCapture } = await import(
@@ -141,8 +123,6 @@ export const createOrderWithVaultId = async (req, res, next) => {
 
 // Get payment tokens by customer ID array (for localStorage integration)
 export const getPaymentTokensByCustomerIds = async (req, res, next) => {
-  console.log('Get Payment Tokens by Customer IDs Request');
-  console.log('');
   try {
     const { customerIds } = req.body;
     const result = await getPaymentTokensByCustomerIdsApi(customerIds);
