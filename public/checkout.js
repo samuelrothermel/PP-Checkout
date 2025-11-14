@@ -242,14 +242,15 @@ async function setupGooglePay() {
         );
         if (markContainer) {
           markContainer.innerHTML = ''; // Clear any existing marks
-        }
 
-        const googlePayMark = paypal.Marks({
-          fundingSource: paypal.FUNDING.GOOGLEPAY,
-        });
-
-        if (googlePayMark.isEligible()) {
-          googlePayMark.render('#googlepay-mark-container');
+          // Create a simple Google Pay image instead of PayPal marks
+          const googlePayImg = document.createElement('img');
+          googlePayImg.src =
+            'https://developers.google.com/pay/api/web/guides/brand-guidelines/google-pay-mark.png';
+          googlePayImg.alt = 'Google Pay';
+          googlePayImg.style.height = '30px';
+          googlePayImg.style.marginRight = '8px';
+          markContainer.appendChild(googlePayImg);
         }
         const button = paymentsClient.createButton({
           onClick: onGooglePayButtonClicked,
@@ -677,13 +678,19 @@ async function setupApplepay() {
     // Show Apple Pay option
     document.getElementById('applepay-option').style.display = 'block';
 
-    // Render Apple Pay mark (individual funding source)
-    const applePayMark = paypal.Marks({
-      fundingSource: paypal.FUNDING.APPLEPAY,
-    });
+    // Clear and render Apple Pay mark (individual funding source)
+    const markContainer = document.getElementById('applepay-mark-container');
+    if (markContainer) {
+      markContainer.innerHTML = ''; // Clear any existing marks
 
-    if (applePayMark.isEligible()) {
-      applePayMark.render('#applepay-mark-container');
+      // Create a simple Apple Pay image instead of PayPal marks
+      const applePayImg = document.createElement('img');
+      applePayImg.src =
+        'https://developer.apple.com/apple-pay/marketing/shared/apple-pay-mark-rgb-041619.png';
+      applePayImg.alt = 'Apple Pay';
+      applePayImg.style.height = '30px';
+      applePayImg.style.marginRight = '8px';
+      markContainer.appendChild(applePayImg);
     }
 
     document.getElementById('applepay-button-container').innerHTML =
