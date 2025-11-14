@@ -35,5 +35,8 @@ router.get('/webhook-testing', renderWebhookTesting);
 router.get('/payee-test', renderPayeeTest);
 router.get('/orders', renderOrders);
 router.get('/vault', renderVault);
+router.get('/returning-payer', (req, res) => {
+  res.render('returning-payer', { clientId: process.env.CLIENT_ID });
+});
 
 export default router;

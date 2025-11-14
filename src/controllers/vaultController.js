@@ -7,6 +7,7 @@ import {
   fetchPaymentTokens,
   getPaymentTokensByCustomerIds as getPaymentTokensByCustomerIdsApi,
 } from '../services/tokensApi.js';
+import { returningAccessToken } from '../services/authApi.js';
 
 // Create vault setup token
 export const createVaultSetupToken = async (req, res, next) => {
@@ -68,7 +69,7 @@ export const createReturningUserToken = async (req, res, next) => {
   console.log('');
   try {
     const { customerId } = req.body;
-    const idToken = await paypal.returningAccessToken(customerId);
+    const idToken = await returningAccessToken(customerId);
     res.json({ idToken });
   } catch (err) {
     next(err);

@@ -56,10 +56,16 @@
               <label for="toggle-customer-id">Returning User?</label>
             </div>
             <form id="customer-id-form" style="display: none;">
-              <label for="customer-id">Enter PayPal Vault v3 Customer ID:</label>
-              <input type="text" id="customer-id" name="customer-id" required />
-              <button type="submit">Submit</button>
+              <label for="customer-id">Enter PayPal Customer ID:</label>
+              <input type="text" id="customer-id" name="customer-id" placeholder="e.g. 123456789" required />
+              <button type="submit">Load Payment Methods</button>
+              <p style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                Click the button above to load saved payment methods for this customer
+              </p>
             </form>
+            
+            <!-- Container for saved payment methods -->
+            <div id="saved-payment-methods-container" style="display: none;"></div>
           </div>
           
           <!-- Shipping Options -->
@@ -129,87 +135,52 @@
             </div>
           </div>
           
-          <!-- Saved Payment Methods (for returning users) -->
-          <div id="saved-payment-methods-container" style="display: none;"></div>
-          
-          <!-- PayPal Payment -->
+          <!-- Payment Methods Selection -->
           <div class="checkout-section">
-            <h4>Quick Checkout</h4>
+            <h4>Select Payment Method</h4>
             
             <!-- Vault Toggle -->
-            <div class="checkbox-control" style="margin-bottom: 15px;">
+            <div class="checkbox-control" style="margin-bottom: 20px;">
               <input type="checkbox" id="save-payment-method">
               <label for="save-payment-method">Save my payment method for future purchases</label>
             </div>
             
-            <div id="paypal-button-container"></div>
-            <div id="applepay-container"></div>
-            <div id="googlepay-container"></div>
-          </div>
-          
-          <!-- Card Payment -->
-          <div class="checkout-section">
-            <h4>Or Pay with Card</h4>
-            <div class="checkbox-group">
-              <div class="checkbox-option">
-                <input type="checkbox" id="billing-info-toggle" />
-                <label for="billing-info-toggle">Billing is different from Shipping</label>
+            <!-- Payment Method Options with Radio Buttons -->
+            <div id="payment-methods-container">
+              <!-- Saved Payment Methods will be inserted here first -->
+              <div id="saved-payment-methods-list"></div>
+              
+              <!-- PayPal Funding Sources (PayPal, Venmo, Pay Later) will be inserted here -->
+              <div id="paypal-funding-sources-list"></div>
+              
+              <div class="payment-method-option">
+                <input type="radio" name="payment-method" id="card-radio" value="card">
+                <label for="card-radio" class="payment-method-label">
+                  <div id="card-mark-container">Pay with Card</div>
+                </label>
+                <div class="payment-method-buttons" id="card-button-container"></div>
               </div>
-            </div>
-            
-            <div id="billing-info" class="billing-info" style="display: none;">
-              <h5>Billing Information</h5>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="billing-first-name">First Name</label>
-                  <input type="text" id="billing-first-name" name="billing-first-name" value="Jane" class="form-control" required />
-                </div>
-                <div class="form-group">
-                  <label for="billing-last-name">Last Name</label>
-                  <input type="text" id="billing-last-name" name="billing-last-name" value="Doe" class="form-control" required />
-                </div>
+              
+              <div class="payment-method-option" id="applepay-option" style="display: none;">
+                <input type="radio" name="payment-method" id="applepay-radio" value="applepay">
+                <label for="applepay-radio" class="payment-method-label">
+                  <div id="applepay-mark-container"></div>
+                </label>
+                <div class="payment-method-buttons" id="applepay-button-container"></div>
               </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="billing-email">Email Address</label>
-                  <input type="email" id="billing-email" name="billing-email" value="jane.doe@example.com" class="form-control" required />
-                </div>
-                <div class="form-group">
-                  <label for="billing-phone">Phone Number</label>
-                  <input type="text" id="billing-phone" name="billing-phone" value="1234567890" class="form-control" required />
-                </div>
+              
+              <div class="payment-method-option" id="googlepay-option" style="display: none;">
+                <input type="radio" name="payment-method" id="googlepay-radio" value="googlepay">
+                <label for="googlepay-radio" class="payment-method-label">
+                  <div id="googlepay-mark-container"></div>
+                </label>
+                <div class="payment-method-buttons" id="googlepay-button-container"></div>
               </div>
-              <div class="form-group">
-                <label for="billing-address-line1">Street Address</label>
-                <input type="text" id="billing-address-line1" name="billing-address-line1" value="123 Main St" class="form-control" required />
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="billing-admin-area2">City</label>
-                  <input type="text" id="billing-admin-area2" name="billing-admin-area2" value="Springfield" class="form-control" required />
-                </div>
-                <div class="form-group">
-                  <label for="billing-admin-area1">State</label>
-                  <input type="text" id="billing-admin-area1" name="billing-admin-area1" value="IL" class="form-control" required />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="billing-postal-code">Zip Code</label>
-                  <input type="text" id="billing-postal-code" name="billing-postal-code" value="62701" class="form-control" required />
-                </div>
-                <div class="form-group">
-                  <label for="billing-country-code">Country Code</label>
-                  <input type="text" id="billing-country-code" name="billing-country-code" value="US" class="form-control" required />
-                </div>
-              </div>
-            </div>
-            
-            <div class="card-fields">
-              <div id="card-number-field-container"></div>
-              <div id="card-expiry-field-container"></div>
-              <div id="card-cvv-field-container"></div>
-              <button id="multi-card-field-button" type="button">Checkout with Card</button>
+              
+              <!-- Submit button for saved payment methods -->
+              <button id="saved-payment-submit" type="button" class="submit-button" style="display: none; margin-top: 15px; width: 100%;">
+                Complete Checkout with Saved Payment
+              </button>
             </div>
           </div>
         </div>

@@ -1,0 +1,108 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
+    <title>Returning Payer Checkout</title>
+  </head>
+
+  <body>
+    <div class="container">
+      <header>
+        <h1>Returning Payer Checkout</h1>
+        <p>Simplified checkout for returning customers with saved payment methods</p>
+      </header>
+      
+      <div class="checkout-layout">
+        <!-- Left Side: Order Summary and Controls -->
+        <div class="checkout-left">
+          <div class="order-summary">
+            <h3>Order Summary</h3>
+            <div class="order-row">
+              <span>Cart Total:</span>
+              <span>$<span id="cart-total">50</span></span>
+            </div>
+            <div class="order-row total">
+              <span>Checkout Total:</span>
+              <span>$<span id="amount-total">50</span></span>
+            </div>
+          </div>
+          
+          <!-- PayPal Pay Later Messages -->
+          <div style="margin-bottom: 20px;">
+            <div
+              data-pp-message
+              data-pp-style-layout="text"
+              data-pp-style-logo-type="inline"
+              data-pp-style-text-color="black"
+              data-pp-style-text-size="12"
+              data-pp-amount="50"
+              data-pp-placement="payment">
+            </div>
+          </div>
+          
+          <!-- Returning User Controls -->
+          <div class="controls-section">
+            <div class="checkbox-control">
+              <input type="checkbox" id="toggle-customer-id" checked>
+              <label for="toggle-customer-id">Returning User</label>
+            </div>
+            <form id="customer-id-form" style="display: block;">
+              <label for="customer-id">Enter PayPal Customer ID:</label>
+              <input type="text" id="customer-id" name="customer-id" placeholder="e.g. 123456789" required />
+              <button type="submit">Load Payment Methods</button>
+              <p style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                Enter your customer ID to load saved payment methods
+              </p>
+            </form>
+            
+            <!-- Container for saved payment methods info -->
+            <div id="saved-payment-methods-container" style="display: none;">
+              <h4>Saved Payment Methods Loaded</h4>
+              <p id="saved-methods-info">Customer payment methods have been loaded into the PayPal buttons below.</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right Side: Payment Methods -->
+        <div class="checkout-right">
+          <!-- Payment Methods -->
+          <div class="checkout-section">
+            <h4>Payment Methods</h4>
+            <div class="payment-methods-container">
+              
+              <!-- Smart Payment Buttons Container -->
+              <div id="paypal-buttons-container" class="paypal-buttons-container">
+                <p>Loading PayPal payment options...</p>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Order Information Sections -->
+      <div class="info-sections">
+        <div id="order-info-section" class="info-section" style="display: none;">
+          <div id="create-order-info"></div>
+        </div>
+        <div id="capture-info-section" class="info-section" style="display: none;">
+          <div id="capture-order-info"></div>
+        </div>
+        <div id="payment-source-section" class="info-section" style="display: none;">
+          <div id="payment-source-type-info"></div>
+          <div id="vault-payment-info"></div>
+          <div id="vault-status-info"></div>
+          <div id="customer-id-info"></div>
+          <div id="payment-token-id-info"></div>
+          <p>Check Console Log for full API Response</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const clientId = '<%= clientId %>';
+    </script>
+    <script src="/returning-payer.js"></script>
+  </body>
+</html>

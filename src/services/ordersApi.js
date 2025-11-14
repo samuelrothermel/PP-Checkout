@@ -21,10 +21,13 @@ const handleResponse = async response => {
 
 // create order request
 export const createCheckoutOrder = async orderData => {
-  console.log(
-    'creating order from Checkout Page with data:',
-    JSON.stringify(orderData)
-  );
+  console.log('\n=== CREATE CHECKOUT ORDER DEBUG ===');
+  console.log('Full orderData received:', JSON.stringify(orderData, null, 2));
+  console.log('vault_id:', orderData.vault_id);
+  console.log('payment_source_type:', orderData.payment_source_type);
+  console.log('savePaymentMethod:', orderData.savePaymentMethod);
+  console.log('vault (legacy):', orderData.vault);
+  console.log('========================================\n');
   const {
     shippingInfo,
     billingInfo,
@@ -32,6 +35,10 @@ export const createCheckoutOrder = async orderData => {
     paymentSource,
     customerId,
     vault,
+    vault_id,
+    payment_source_type,
+    target_customer_id,
+    savePaymentMethod,
   } = orderData;
   const purchaseAmount = totalAmount || '100.00'; // Use provided amount or default to 100.00 (minimum $30 for Pay Later)
   const accessToken = await generateAccessToken();
@@ -64,7 +71,76 @@ export const createCheckoutOrder = async orderData => {
 
   // Build payment_source object dynamically
   let payment_source = {};
-  if (paymentSource === 'paypal') {
+
+  // Check if vault_id is provided for saved payment methods
+  if (vault_id) {
+    console.log('\n=== VAULT_ID PROCESSING ===');
+    console.log('Using vault_id for saved payment method:', vault_id);
+    console.log('Payment source type provided by client:', payment_source_type);
+    console.log('Type of payment_source_type:', typeof payment_source_type);
+
+    // Use the client-provided payment source type to construct the payment_source
+    if (payment_source_type === 'card') {
+      console.log('Creating card payment source');
+      payment_source = {
+        card: {
+          vault_id: vault_id,
+          stored_credential: {
+            payment_initiator: 'CUSTOMER',
+            payment_type: 'UNSCHEDULED',
+            usage: 'SUBSEQUENT',
+          },
+        },
+      };
+    } else if (payment_source_type === 'paypal') {
+      console.log('Creating PayPal payment source');
+      payment_source = {
+        paypal: {
+          vault_id: vault_id,
+        },
+      };
+    } else if (payment_source_type === 'apple_pay') {
+      payment_source = {
+        apple_pay: {
+          vault_id: vault_id,
+        },
+      };
+    } else if (payment_source_type === 'google_pay') {
+      payment_source = {
+        google_pay: {
+          vault_id: vault_id,
+        },
+      };
+    } else {
+      // Fallback to paypal if no type provided or unknown type
+      console.log(
+        'Falling back to PayPal - Unknown payment_source_type:',
+        payment_source_type
+      );
+      payment_source = {
+        paypal: {
+          vault_id: vault_id,
+        },
+      };
+    }
+
+    console.log(
+      'Final payment_source created:',
+      JSON.stringify(payment_source, null, 2)
+    );
+    console.log('=== END VAULT_ID PROCESSING ===\n');
+  }
+  // Check if payment_source is provided directly (for saved payment methods)
+  else if (
+    orderData.payment_source &&
+    typeof orderData.payment_source === 'object'
+  ) {
+    console.log(
+      'Using provided payment_source:',
+      JSON.stringify(orderData.payment_source)
+    );
+    payment_source = orderData.payment_source;
+  } else if (paymentSource === 'paypal') {
     payment_source.paypal = {
       experience_context: {
         return_url: 'http://localhost:8888/',
@@ -77,8 +153,11 @@ export const createCheckoutOrder = async orderData => {
       },
     };
 
-    // Add vault attributes if requested
-    if (vault) {
+    // Add vault attributes if requested (use savePaymentMethod parameter)
+    const shouldVault = savePaymentMethod || vault;
+    console.log('PayPal vaulting requested:', shouldVault);
+
+    if (shouldVault) {
       payment_source.paypal.attributes = {
         vault: {
           store_in_vault: 'ON_SUCCESS',
@@ -106,8 +185,11 @@ export const createCheckoutOrder = async orderData => {
       },
     };
 
-    // Add vault attributes if requested
-    if (vault) {
+    // Add vault attributes if requested (use savePaymentMethod parameter)
+    const shouldVault = savePaymentMethod || vault;
+    console.log('Venmo vaulting requested:', shouldVault);
+
+    if (shouldVault) {
       payment_source.venmo.attributes = {
         vault: {
           store_in_vault: 'ON_SUCCESS',
@@ -127,15 +209,21 @@ export const createCheckoutOrder = async orderData => {
       };
     }
   } else if (paymentSource === 'card') {
-    payment_source.card = {
-      attributes: {
+    // Add vault attributes if requested (use savePaymentMethod parameter)
+    const shouldVault = savePaymentMethod || vault;
+    console.log('Card vaulting requested:', shouldVault);
+
+    payment_source.card = {};
+
+    if (shouldVault) {
+      payment_source.card.attributes = {
         vault: {
           store_in_vault: 'ON_SUCCESS',
           usage_type: 'MERCHANT',
           customer_type: 'CONSUMER',
         },
-      },
-    };
+      };
+    }
 
     // Add customer name from billing or shipping info
     const nameInfo = billingInfo || shippingInfo;
@@ -164,8 +252,11 @@ export const createCheckoutOrder = async orderData => {
   } else if (paymentSource === 'apple_pay') {
     payment_source.apple_pay = {};
 
-    // Add vault attributes if requested
-    if (vault) {
+    // Add vault attributes if requested (use savePaymentMethod parameter)
+    const shouldVault = savePaymentMethod || vault;
+    console.log('Apple Pay vaulting requested:', shouldVault);
+
+    if (shouldVault) {
       payment_source.apple_pay.attributes = {
         vault: {
           store_in_vault: 'ON_SUCCESS',
@@ -191,8 +282,11 @@ export const createCheckoutOrder = async orderData => {
   } else if (paymentSource === 'google_pay') {
     payment_source.google_pay = {};
 
-    // Add vault attributes if requested
-    if (vault) {
+    // Add vault attributes if requested (use savePaymentMethod parameter)
+    const shouldVault = savePaymentMethod || vault;
+    console.log('Google Pay vaulting requested:', shouldVault);
+
+    if (shouldVault) {
       payment_source.google_pay.attributes = {
         vault: {
           store_in_vault: 'ON_SUCCESS',
