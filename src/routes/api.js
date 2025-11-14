@@ -9,6 +9,7 @@ import {
   authorizePayment,
   getOrdersByIds,
   captureAuthorizedPayment,
+  deleteOrder,
 } from '../controllers/orderController.js';
 import {
   createVaultSetupToken,
@@ -58,6 +59,7 @@ router.post('/quantum-test', createQuantumOrder);
 router.post('/orders/:orderID/capture', capturePayment);
 router.post('/orders/:orderID/capture-authorized', captureAuthorizedPayment); // New route for capturing authorized payments
 router.post('/orders/:orderID/authorize', authorizePayment);
+router.delete('/orders/:orderID/delete', deleteOrder); // New route for deleting orders from localStorage
 
 // Vault routes
 router.post('/vault/customers', getPaymentTokensByCustomerIds); // New route for fetching customers by ID array

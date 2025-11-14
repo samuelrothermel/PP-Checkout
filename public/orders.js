@@ -12,6 +12,18 @@ function getRecentOrderIds() {
   }
 }
 
+function removeOrderFromLocalStorage(orderId) {
+  try {
+    const recentOrderIds = getRecentOrderIds();
+    const updatedOrderIds = recentOrderIds.filter(id => id !== orderId);
+    localStorage.setItem('recentOrderIds', JSON.stringify(updatedOrderIds));
+    console.log('Order removed from localStorage:', orderId);
+    console.log('Updated order IDs:', updatedOrderIds);
+  } catch (error) {
+    console.error('Error removing order from localStorage:', error);
+  }
+}
+
 async function loadOrders() {
   const loadingElement = document.getElementById('loading');
   const contentElement = document.getElementById('orders-content');
@@ -182,29 +194,40 @@ function createOrderRow(order) {
 }
 
 function createActionButton(orderId, displayStatus, originalStatus) {
+  let actionButtons = '';
+
   if (displayStatus === 'AUTHORIZED') {
-    return `
+    actionButtons = `
             <button class="capture-btn" onclick="captureOrder('${orderId}')">
                 Capture Payment
             </button>
         `;
   } else if (displayStatus === 'CAPTURED') {
-    return `
+    actionButtons = `
             <button class="refund-btn" onclick="refundOrder('${orderId}')" disabled>
                 Refund Payment
             </button>
         `;
   } else if (originalStatus === 'APPROVED') {
-    return `
+    actionButtons = `
             <button class="capture-btn" onclick="captureOrder('${orderId}')">
                 Capture Payment
             </button>
         `;
   } else if (originalStatus === 'CREATED') {
-    return '<span class="action-status pending">Pending</span>';
+    actionButtons = '<span class="action-status pending">Pending</span>';
   } else {
-    return `<span class="action-status">${displayStatus}</span>`;
+    actionButtons = `<span class="action-status">${displayStatus}</span>`;
   }
+
+  // Add delete button for all orders
+  actionButtons += `
+    <button class="delete-btn" onclick="deleteOrder('${orderId}')" style="margin-left: 10px;" title="Delete Order">
+        Delete
+    </button>
+  `;
+
+  return actionButtons;
 }
 
 async function captureOrder(orderId) {
@@ -254,6 +277,58 @@ async function captureOrder(orderId) {
 async function refundOrder(orderId) {
   // Placeholder for refund functionality
   showMessage('Refund functionality not yet implemented', 'info');
+}
+
+async function deleteOrder(orderId) {
+  if (
+    !confirm(
+      `Are you sure you want to delete order ${orderId}? This action cannot be undone.`
+    )
+  ) {
+    return;
+  }
+
+  const button = event.target;
+  const originalText = button.textContent;
+
+  try {
+    button.disabled = true;
+    button.textContent = 'Deleting...';
+
+    // Call the delete order endpoint
+    const response = await fetch(`/api/orders/${orderId}/delete`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Delete failed: ${response.status}`);
+    }
+
+    const deleteData = await response.json();
+
+    // Log delete response
+    console.log('Delete order response:', JSON.stringify(deleteData, null, 2));
+
+    // Remove order from localStorage
+    removeOrderFromLocalStorage(orderId);
+
+    showMessage(`Order ${orderId} deleted successfully!`, 'success');
+
+    // Reload orders to show updated list
+    setTimeout(() => {
+      loadOrders();
+    }, 1000);
+  } catch (error) {
+    console.error('Delete error:', error);
+    showMessage(`Failed to delete order: ${error.message}`, 'error');
+
+    button.disabled = false;
+    button.textContent = originalText;
+  }
 }
 
 function showMessage(message, type = 'info') {

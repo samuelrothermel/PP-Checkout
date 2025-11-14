@@ -158,3 +158,24 @@ export const getOrdersByIds = async (req, res, next) => {
     next(err);
   }
 };
+
+// Delete order (remove from internal tracking, not actual PayPal API call)
+export const deleteOrder = async (req, res, next) => {
+  console.log('Delete Order Request (Internal Only)');
+  console.log('');
+  const { orderID } = req.params;
+
+  try {
+    console.log('Removing order from internal tracking:', orderID);
+
+    // Since this is internal only and doesn't actually call PayPal API,
+    // we just return success. The frontend will handle removing it from localStorage.
+    res.json({
+      success: true,
+      orderId: orderID,
+      message: `Order ${orderID} removed from internal tracking`,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
