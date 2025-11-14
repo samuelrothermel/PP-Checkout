@@ -99,16 +99,10 @@ let googlePayConfig = null;
 
 function onGooglePayLoaded() {
   if (document.readyState === 'loading') {
-    console.log(
-      '[Google Pay Debug] Document still loading, adding DOMContentLoaded listener'
-    );
     document.addEventListener('DOMContentLoaded', () =>
       waitForPayPalAndSetupGooglePay()
     );
   } else {
-    console.log(
-      '[Google Pay Debug] Document ready, waiting for PayPal SDK and setting up Google Pay'
-    );
     waitForPayPalAndSetupGooglePay();
   }
 }
@@ -116,9 +110,6 @@ function onGooglePayLoaded() {
 function waitForPayPalAndSetupGooglePay() {
   // Check if PayPal SDK is already loaded
   if (window.paypal && window.paypal.Googlepay) {
-    console.log(
-      '[Google Pay Debug] PayPal SDK already loaded, setting up Google Pay'
-    );
     setupGooglePay();
     return;
   }
@@ -129,9 +120,6 @@ function waitForPayPalAndSetupGooglePay() {
 
   const checkPayPal = setInterval(() => {
     attempts++;
-    console.log(
-      `[Google Pay Debug] Checking for PayPal SDK (attempt ${attempts}/${maxAttempts})...`
-    );
 
     if (window.paypal && window.paypal.Googlepay) {
       console.log(
@@ -181,30 +169,15 @@ async function setupGooglePay() {
     }
 
     // Get Google Pay configuration from PayPal - more explicit configuration
-    console.log(
-      '[Google Pay Debug] Getting PayPal Google Pay configuration...'
-    );
     try {
       const googlepayComponent = paypal.Googlepay();
       googlePayConfig = await googlepayComponent.config();
-      console.log(
-        '[Google Pay Debug] Google Pay config received:',
-        googlePayConfig
-      );
-      console.log(
-        '[Google Pay Debug] Google Pay isEligible:',
-        googlePayConfig.isEligible
-      );
 
       if (!googlePayConfig.isEligible) {
-        console.log(
-          '[Google Pay Debug] Google Pay is not eligible on this device/browser'
-        );
         throw new Error('Google Pay is not eligible');
       }
 
       // Create payments client with explicit environment from config and required callbacks
-      console.log('[Google Pay Debug] Creating Google Pay payments client...');
       const paymentsClient = new google.payments.api.PaymentsClient({
         environment: googlePayConfig.environment || 'TEST',
         paymentDataCallbacks: {
@@ -212,10 +185,8 @@ async function setupGooglePay() {
           onPaymentAuthorized: onPaymentAuthorized, // Required for PAYMENT_AUTHORIZATION intent
         },
       });
-      console.log('[Google Pay Debug] Payments client created successfully');
 
       // Check readiness with proper structure per PayPal docs
-      console.log('[Google Pay Debug] Checking Google Pay readiness...');
       const isReadyToPayRequest = {
         apiVersion: googlePayConfig.apiVersion || 2,
         apiVersionMinor: googlePayConfig.apiVersionMinor || 0,
@@ -226,7 +197,6 @@ async function setupGooglePay() {
       const isReadyToPay = await paymentsClient.isReadyToPay(
         isReadyToPayRequest
       );
-      console.log('[Google Pay Debug] isReadyToPay response:', isReadyToPay);
 
       if (isReadyToPay.result) {
         console.log(
@@ -264,7 +234,6 @@ async function setupGooglePay() {
           buttonType: 'buy',
           buttonSizeMode: 'fill', // Use 'fill' to make button fill container width
         });
-        console.log('[Google Pay Debug] Button created successfully');
 
         const container = document.getElementById('googlepay-button-container');
         if (container) {
@@ -281,10 +250,6 @@ async function setupGooglePay() {
             googlePayButton.style.margin = '0';
             googlePayButton.style.borderRadius = '4px';
           }
-
-          console.log(
-            '[Google Pay Debug] Button added to container successfully'
-          );
         } else {
           console.log(
             '[Google Pay Debug] ERROR: googlepay-container not found'
@@ -923,11 +888,6 @@ async function setupApplepay() {
 
 document.addEventListener('DOMContentLoaded', function () {
   loadPayPalComponents();
-
-  // Google Pay setup will be handled by the SDK callback or by waiting for PayPal SDK
-  console.log(
-    '[Google Pay Debug] DOMContentLoaded - Google Pay setup will be handled by SDK callback'
-  );
 
   const isAppleDevice = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
   const isSafari =

@@ -153,14 +153,6 @@
               <!-- PayPal Funding Sources (PayPal, Venmo, Pay Later) will be inserted here -->
               <div id="paypal-funding-sources-list"></div>
               
-              <div class="payment-method-option">
-                <input type="radio" name="payment-method" id="card-radio" value="card">
-                <label for="card-radio" class="payment-method-label">
-                  <div id="card-mark-container">Pay with Card</div>
-                </label>
-                <div class="payment-method-buttons" id="card-button-container"></div>
-              </div>
-              
               <div class="payment-method-option" id="applepay-option" style="display: none;">
                 <input type="radio" name="payment-method" id="applepay-radio" value="applepay">
                 <label for="applepay-radio" class="payment-method-label">
@@ -175,6 +167,14 @@
                   <div id="googlepay-mark-container"></div>
                 </label>
                 <div class="payment-method-buttons" id="googlepay-button-container"></div>
+              </div>
+              
+              <div class="payment-method-option">
+                <input type="radio" name="payment-method" id="card-radio" value="card">
+                <label for="card-radio" class="payment-method-label">
+                  <div id="card-mark-container">Pay with Card</div>
+                </label>
+                <div class="payment-method-buttons" id="card-button-container"></div>
               </div>
               
               <!-- Submit button for saved payment methods -->
