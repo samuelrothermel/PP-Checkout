@@ -1067,6 +1067,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.target.id === 'applepay-radio') {
           // Show Apple Pay button when Apple Pay is selected
           applePayButtonContainer.style.display = 'block';
+          // Initialize Apple Pay if it hasn't been initialized yet
+          if (!window.applePayInitialized) {
+            initializeApplePay();
+          }
         } else {
           // Hide Apple Pay button when other payment methods are selected
           applePayButtonContainer.style.display = 'none';
@@ -1081,6 +1085,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.target.id === 'googlepay-radio') {
           // Show Google Pay button when Google Pay is selected
           googlePayButtonContainer.style.display = 'block';
+          // Initialize Google Pay if it hasn't been initialized yet
+          if (!window.googlePayInitialized) {
+            initializeGooglePay();
+          }
         } else {
           // Hide Google Pay button when other payment methods are selected
           googlePayButtonContainer.style.display = 'none';
@@ -1746,9 +1754,7 @@ function loadPayPalSDK(idToken) {
     }
 
     // Card fields will be initialized lazily when the card radio button is first selected
-
-    // Setup Google Pay after PayPal SDK loads
-    setupGooglePay();
+    // Google Pay and Apple Pay will be initialized lazily when their radio buttons are selected
 
     // Payment method radio handling is now done via CSS
   };
@@ -2112,15 +2118,52 @@ function initializeCardFields() {
 
   console.log('Initializing PayPal card fields...');
 
+  // Ensure PayPal SDK is fully loaded before initializing card fields
+  if (!window.paypal.CardFields) {
+    console.log('⏳ PayPal CardFields not yet available, retrying in 500ms...');
+    setTimeout(() => initializeCardFields(), 500);
+    return;
+  }
+
   const cardField = window.paypal.CardFields({
     createOrder,
     onApprove,
     onError,
+    style: {
+      input: {
+        'font-size': '16px',
+        'font-family': 'Arial, sans-serif',
+        color: '#3A3A3A',
+      },
+      ':focus': {
+        color: '#0070ba',
+      },
+      '.valid': {
+        color: '#28a745',
+      },
+      '.invalid': {
+        color: '#dc3545',
+      },
+    },
   });
 
   if (cardField.isEligible()) {
+    // Clear any existing card field containers first to prevent duplicates
+    const container = document.getElementById('card-button-container');
+    container.innerHTML = '';
+
+    // Remove any duplicate card field elements that might exist elsewhere
+    document
+      .querySelectorAll('.card-fields:not(#card-button-container .card-fields)')
+      .forEach(el => el.remove());
+    document
+      .querySelectorAll(
+        '[id*="card-"][id*="field-container"]:not(#card-button-container [id*="card-"][id*="field-container"])'
+      )
+      .forEach(el => el.remove());
+
     // Create card fields HTML structure in the card button container
-    document.getElementById('card-button-container').innerHTML = `
+    container.innerHTML = `
       <div class="checkbox-group">
         <div class="checkbox-option">
           <input type="checkbox" id="billing-info-toggle" />
@@ -2183,14 +2226,64 @@ function initializeCardFields() {
       </div>
     `;
 
-    const numberField = cardField.NumberField();
-    numberField.render('#card-number-field-container');
+    // Add a delay to ensure container is fully visible and DOM is ready
+    setTimeout(() => {
+      try {
+        const numberField = cardField.NumberField();
+        const cvvField = cardField.CVVField();
+        const expiryField = cardField.ExpiryField();
 
-    const cvvField = cardField.CVVField();
-    cvvField.render('#card-cvv-field-container');
+        // Render fields sequentially with small delays
+        numberField
+          .render('#card-number-field-container')
+          .then(() => {
+            console.log('✅ Card number field rendered');
+            return cvvField.render('#card-cvv-field-container');
+          })
+          .then(() => {
+            console.log('✅ CVV field rendered');
+            return expiryField.render('#card-expiry-field-container');
+          })
+          .then(() => {
+            console.log('✅ Expiry field rendered');
+            console.log('✅ All card fields rendered successfully');
 
-    const expiryField = cardField.ExpiryField();
-    expiryField.render('#card-expiry-field-container');
+            // Add event listeners to detect field interactions and validation
+            numberField.on('focus', () => {
+              console.log('🎯 Card number field focused');
+            });
+
+            numberField.on('blur', () => {
+              console.log('👋 Card number field blurred');
+            });
+
+            numberField.on('inputChange', event => {
+              console.log('📝 Card number field changed:', event);
+            });
+
+            cvvField.on('focus', () => {
+              console.log('🎯 CVV field focused');
+            });
+
+            cvvField.on('inputChange', event => {
+              console.log('📝 CVV field changed:', event);
+            });
+
+            expiryField.on('focus', () => {
+              console.log('🎯 Expiry field focused');
+            });
+
+            expiryField.on('inputChange', event => {
+              console.log('📝 Expiry field changed:', event);
+            });
+          })
+          .catch(error => {
+            console.error('❌ Error rendering card fields:', error);
+          });
+      } catch (error) {
+        console.error('❌ Error initializing card fields:', error);
+      }
+    }, 250);
 
     // Store cardField reference globally so the unified submit button can use it
     window.cardFieldInstance = cardField;
@@ -2214,6 +2307,30 @@ function initializeCardFields() {
   } else {
     console.log('❌ Card fields are not eligible in this environment');
   }
+}
+
+// Initialize Google Pay when first needed (when Google Pay radio button is selected)
+function initializeGooglePay() {
+  if (window.googlePayInitialized) {
+    return;
+  }
+
+  console.log('Initializing Google Pay...');
+  setupGooglePay();
+  window.googlePayInitialized = true;
+}
+
+// Initialize Apple Pay when first needed (when Apple Pay radio button is selected)
+function initializeApplePay() {
+  if (window.applePayInitialized) {
+    return;
+  }
+
+  console.log('Initializing Apple Pay...');
+  setupApplepay().catch(() => {
+    console.log('Apple Pay initialization failed or not available');
+  });
+  window.applePayInitialized = true;
 }
 
 // Initialize without user ID token initially (will be added when needed for Venmo vaulting)
