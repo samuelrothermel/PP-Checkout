@@ -73,17 +73,35 @@ const Utils = {
 
 // PayPal Integration
 const PayPalIntegration = {
-  async createOrder() {
+  async createOrder(data) {
     try {
-      const response = await fetch('/api/orders', {
+      const requestBody = {
+        source: data?.paymentSource || 'paypal', // Default to paypal if no payment source specified
+        totalAmount: Utils.getCurrentTotal(),
+        shippingInfo: this.getShippingInfo(),
+        cart: [
+          {
+            sku: '123456789',
+            quantity: '1',
+          },
+        ],
+      };
+
+      // Include billing info if different from shipping
+      const billingInfo = this.getBillingInfo();
+      if (billingInfo) {
+        requestBody.billingInfo = billingInfo;
+      }
+
+      // Include customer ID if available
+      if (CheckoutConfig.currentCustomerId) {
+        requestBody.customerId = CheckoutConfig.currentCustomerId;
+      }
+
+      const response = await fetch('/api/checkout-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: Utils.getCurrentTotal(),
-          customerId: CheckoutConfig.currentCustomerId,
-          shippingData: this.getShippingData(),
-          billingData: this.getBillingData(),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) throw new Error('Order creation failed');
@@ -98,50 +116,54 @@ const PayPalIntegration = {
 
   async approveOrder(data) {
     try {
-      const response = await fetch(`/api/orders/${data.orderID}/capture`, {
+      const response = await fetch(`/api/orders/${data.orderID}/authorize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
 
-      if (!response.ok) throw new Error('Order capture failed');
+      if (!response.ok) throw new Error('Order authorization failed');
       const orderData = await response.json();
 
       this.displayResults(orderData);
       return orderData;
     } catch (error) {
-      console.error('Error capturing order:', error);
+      console.error('Error authorizing order:', error);
       throw error;
     }
   },
 
-  getShippingData() {
+  getShippingInfo() {
     return {
       firstName: document.getElementById('shipping-first-name')?.value,
       lastName: document.getElementById('shipping-last-name')?.value,
       email: document.getElementById('shipping-email')?.value,
       phone: document.getElementById('shipping-phone')?.value,
-      addressLine1: document.getElementById('shipping-address-line1')?.value,
-      city: document.getElementById('shipping-admin-area2')?.value,
-      state: document.getElementById('shipping-admin-area1')?.value,
-      postalCode: document.getElementById('shipping-postal-code')?.value,
-      countryCode: document.getElementById('shipping-country-code')?.value,
+      address: {
+        addressLine1: document.getElementById('shipping-address-line1')?.value,
+        adminArea2: document.getElementById('shipping-admin-area2')?.value,
+        adminArea1: document.getElementById('shipping-admin-area1')?.value,
+        postalCode: document.getElementById('shipping-postal-code')?.value,
+        countryCode: document.getElementById('shipping-country-code')?.value,
+      },
     };
   },
 
-  getBillingData() {
+  getBillingInfo() {
     const isDifferent = document.getElementById('billing-info-toggle')?.checked;
-    if (!isDifferent) return this.getShippingData();
+    if (!isDifferent) return null;
 
     return {
       firstName: document.getElementById('billing-first-name')?.value,
       lastName: document.getElementById('billing-last-name')?.value,
       email: document.getElementById('billing-email')?.value,
       phone: document.getElementById('billing-phone')?.value,
-      addressLine1: document.getElementById('billing-address-line1')?.value,
-      city: document.getElementById('billing-admin-area2')?.value,
-      state: document.getElementById('billing-admin-area1')?.value,
-      postalCode: document.getElementById('billing-postal-code')?.value,
-      countryCode: document.getElementById('billing-country-code')?.value,
+      address: {
+        addressLine1: document.getElementById('billing-address-line1')?.value,
+        adminArea2: document.getElementById('billing-admin-area2')?.value,
+        adminArea1: document.getElementById('billing-admin-area1')?.value,
+        postalCode: document.getElementById('billing-postal-code')?.value,
+        countryCode: document.getElementById('billing-country-code')?.value,
+      },
     };
   },
 
@@ -184,7 +206,7 @@ const CardFields = {
 
     try {
       this.cardFieldsComponent = window.paypal.CardFields({
-        createOrder: () => PayPalIntegration.createOrder(),
+        createOrder: data => PayPalIntegration.createOrder(data),
         onApprove: data => PayPalIntegration.approveOrder(data),
         onError: err => {
           console.error('Card fields error:', err);
@@ -235,7 +257,7 @@ const PayPalButtons = {
     try {
       const buttonsComponent = window.paypal.Buttons({
         fundingSource: window.paypal.FUNDING.PAYPAL,
-        createOrder: () => PayPalIntegration.createOrder(),
+        createOrder: data => PayPalIntegration.createOrder(data),
         onApprove: data => PayPalIntegration.approveOrder(data),
         onError: err => {
           console.error('PayPal button error:', err);
@@ -270,7 +292,7 @@ const VenmoButtons = {
     try {
       const venmoComponent = window.paypal.Buttons({
         fundingSource: window.paypal.FUNDING.VENMO,
-        createOrder: () => PayPalIntegration.createOrder(),
+        createOrder: data => PayPalIntegration.createOrder(data),
         onApprove: data => PayPalIntegration.approveOrder(data),
         onError: err => {
           console.error('Venmo button error:', err);
@@ -308,7 +330,7 @@ const PayLaterButtons = {
     try {
       const payLaterComponent = window.paypal.Buttons({
         fundingSource: window.paypal.FUNDING.PAYLATER,
-        createOrder: () => PayPalIntegration.createOrder(),
+        createOrder: data => PayPalIntegration.createOrder(data),
         onApprove: data => PayPalIntegration.approveOrder(data),
         onError: err => {
           console.error('Pay Later button error:', err);

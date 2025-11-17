@@ -1502,6 +1502,33 @@ apple-pay-button {
   border-bottom: 2px solid #e9ecef;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.delete-all-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.delete-all-btn:hover {
+  background-color: #c82333;
+}
+
+.delete-all-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
 .orders-table {
   width: 100%;
   border-collapse: collapse;

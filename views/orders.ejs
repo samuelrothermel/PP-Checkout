@@ -10,9 +10,14 @@
     <div class="orders-container">
         <div class="orders-header">
             <h1>Order Management</h1>
-            <div class="nav-links">
-                <a href="/" class="nav-link">Home</a>
-                <a href="/vault" class="nav-link">Vault</a>
+            <div class="header-actions">
+                <button id="delete-all-orders-btn" class="delete-all-btn" onclick="deleteAllOrders()" title="Clear all order IDs from local storage">
+                    Delete All Orders
+                </button>
+                <div class="nav-links">
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/vault" class="nav-link">Vault</a>
+                </div>
             </div>
         </div>
         

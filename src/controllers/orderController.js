@@ -10,27 +10,16 @@ import {
 
 // Create order request
 export const createOrder = async (req, res, next) => {
-  console.log('Create and Authorize Order Request');
+  console.log('Create Order Request');
   console.log('Request body:', JSON.stringify(req.body, null, 2));
 
   try {
-    // Create the order first
+    // Create the order only - user must approve before authorization
     const order = await createCheckoutOrderApi(req.body);
     console.log('Order created:', order.id);
 
-    // If using vault_id, the order may already be authorized/completed by PayPal
-    if (req.body.vault_id) {
-      console.log(
-        'Using vault_id - order may already be authorized, checking status...'
-      );
-      // For vault_id payments, the order is typically already completed
-      res.json(order);
-    } else {
-      // For non-vault payments, authorize the order
-      const authorizeData = await authorizePaymentApi(order.id);
-      console.log('Order authorized:', authorizeData.id);
-      res.json(authorizeData);
-    }
+    // Return the order for user approval
+    res.json(order);
   } catch (err) {
     next(err);
   }

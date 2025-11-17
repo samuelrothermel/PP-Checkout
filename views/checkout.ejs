@@ -295,7 +295,8 @@
 <script>
   const clientId = '<%= clientId %>';
 </script>
-<script src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&currency=USD&components=buttons,card-fields,marks,messages&enable-funding=venmo,paylater"></script>
+    <!-- PayPal JavaScript SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&currency=USD&components=buttons,card-fields,marks,messages&enable-funding=venmo,paylater&intent=authorize"></script>
 <script src="/checkout-simplified.js"></script>
 </body>
 </html>

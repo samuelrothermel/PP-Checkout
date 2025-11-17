@@ -24,6 +24,15 @@ function removeOrderFromLocalStorage(orderId) {
   }
 }
 
+function clearAllOrdersFromLocalStorage() {
+  try {
+    localStorage.removeItem('recentOrderIds');
+    console.log('All orders cleared from localStorage');
+  } catch (error) {
+    console.error('Error clearing all orders from localStorage:', error);
+  }
+}
+
 async function loadOrders() {
   const loadingElement = document.getElementById('loading');
   const contentElement = document.getElementById('orders-content');
@@ -181,8 +190,10 @@ function createOrderRow(order) {
             ${paymentSource}
         </td>
         <td>
-            <span class="status-badge status-${displayStatus.toLowerCase()}">
-                ${displayStatus}
+            <span class="status-badge status-${(
+              displayStatus || 'unknown'
+            ).toLowerCase()}">
+                ${displayStatus || 'Unknown'}
             </span>
         </td>
         <td>
@@ -277,6 +288,39 @@ async function captureOrder(orderId) {
 async function refundOrder(orderId) {
   // Placeholder for refund functionality
   showMessage('Refund functionality not yet implemented', 'info');
+}
+
+function deleteAllOrders() {
+  const recentOrderIds = getRecentOrderIds();
+
+  if (recentOrderIds.length === 0) {
+    showMessage('No orders to delete', 'info');
+    return;
+  }
+
+  if (
+    !confirm(
+      `Are you sure you want to delete ALL ${recentOrderIds.length} orders? This action cannot be undone.`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    clearAllOrdersFromLocalStorage();
+    showMessage(
+      `All ${recentOrderIds.length} orders deleted successfully!`,
+      'success'
+    );
+
+    // Reload orders to show empty list
+    setTimeout(() => {
+      loadOrders();
+    }, 500);
+  } catch (error) {
+    console.error('Delete all orders error:', error);
+    showMessage(`Failed to delete all orders: ${error.message}`, 'error');
+  }
 }
 
 function deleteOrder(orderId) {
