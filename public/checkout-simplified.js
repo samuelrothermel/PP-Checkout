@@ -87,6 +87,11 @@ const PayPalIntegration = {
         ],
       };
 
+      // Set paymentSource for API compatibility
+      if (data?.paymentSource) {
+        requestBody.paymentSource = data.paymentSource;
+      }
+
       // Include billing info if different from shipping
       const billingInfo = this.getBillingInfo();
       if (billingInfo) {
@@ -96,6 +101,13 @@ const PayPalIntegration = {
       // Include customer ID if available
       if (CheckoutConfig.currentCustomerId) {
         requestBody.customerId = CheckoutConfig.currentCustomerId;
+      }
+
+      // Check if user wants to save payment method
+      const savePaymentMethod = document.getElementById('save-payment-method');
+      if (savePaymentMethod && savePaymentMethod.checked) {
+        requestBody.vault = true;
+        console.log('Vault requested: payment method will be saved');
       }
 
       const response = await fetch('/api/checkout-orders', {
@@ -116,6 +128,7 @@ const PayPalIntegration = {
 
   async approveOrder(data) {
     try {
+      // Always authorize only - no capture during checkout
       const response = await fetch(`/api/orders/${data.orderID}/authorize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -186,10 +199,74 @@ const PayPalIntegration = {
 
     if (captureInfoSection) {
       captureInfoSection.style.display = 'block';
+
+      // Update authorization info based on order data
+      const authId =
+        orderData.purchase_units?.[0]?.payments?.authorizations?.[0]?.id;
+      const captureId =
+        orderData.purchase_units?.[0]?.payments?.captures?.[0]?.id;
+
+      const captureOrderInfo = document.getElementById('capture-order-info');
+      if (captureOrderInfo) {
+        if (authId) {
+          captureOrderInfo.textContent = `Authorization ID: ${authId}`;
+        } else if (captureId) {
+          captureOrderInfo.textContent = `Payment Captured: ${captureId}`;
+        } else {
+          captureOrderInfo.textContent = `Order ID: ${orderData.id}`;
+        }
+      }
     }
 
     if (paymentSourceSection) {
       paymentSourceSection.style.display = 'block';
+
+      // Determine payment source type
+      const paymentSource = orderData.payment_source;
+      let paymentSourceType = 'unknown';
+
+      if (paymentSource?.card) {
+        paymentSourceType = 'card';
+      } else if (paymentSource?.paypal) {
+        paymentSourceType = 'paypal';
+      } else if (paymentSource?.venmo) {
+        paymentSourceType = 'venmo';
+      } else if (paymentSource?.apple_pay) {
+        paymentSourceType = 'apple_pay';
+      } else if (paymentSource?.google_pay) {
+        paymentSourceType = 'google_pay';
+      }
+
+      const paymentSourceTypeInfo = document.getElementById(
+        'payment-source-type-info'
+      );
+      if (paymentSourceTypeInfo) {
+        paymentSourceTypeInfo.textContent = `Payment Source: ${paymentSourceType}`;
+      }
+
+      // Display vault information if available
+      const vaultStatus =
+        paymentSource?.[paymentSourceType]?.attributes?.vault?.status;
+      const customerId =
+        paymentSource?.[paymentSourceType]?.attributes?.vault?.customer?.id;
+      const paymentTokenId =
+        paymentSource?.[paymentSourceType]?.attributes?.vault?.id;
+
+      const vaultStatusInfo = document.getElementById('vault-status-info');
+      const customerIdInfo = document.getElementById('customer-id-info');
+      const paymentTokenIdInfo = document.getElementById(
+        'payment-token-id-info'
+      );
+
+      if (vaultStatusInfo && vaultStatus) {
+        vaultStatusInfo.textContent = `Vault Status: ${vaultStatus}`;
+      }
+      if (customerIdInfo && customerId) {
+        customerIdInfo.textContent = `Customer ID: ${customerId}`;
+      }
+      if (paymentTokenIdInfo && paymentTokenId) {
+        paymentTokenIdInfo.textContent = `Payment Token ID: ${paymentTokenId}`;
+      }
     }
   },
 };
@@ -354,6 +431,434 @@ const PayLaterButtons = {
       console.error('Error initializing Pay Later buttons:', error);
       Utils.hideElement('paylater-option');
     }
+  },
+};
+
+// Apple Pay Integration
+const ApplePayButtons = {
+  async initialize() {
+    try {
+      console.log('🍎 Starting Apple Pay setup...');
+      console.log('🌐 Current protocol:', location.protocol);
+      console.log('🏠 Current hostname:', location.hostname);
+
+      // Check if we're on HTTPS (required for Apple Pay)
+      if (
+        location.protocol !== 'https:' &&
+        location.hostname !== 'localhost' &&
+        location.hostname !== '127.0.0.1'
+      ) {
+        console.warn('⚠️ Apple Pay requires HTTPS in production environments');
+        throw new Error('Apple Pay requires HTTPS connection');
+      }
+
+      // Check if PayPal SDK is loaded
+      console.log('🔍 Checking PayPal SDK availability...');
+      if (!window.paypal?.Applepay) {
+        throw new Error('PayPal SDK or Apple Pay component not loaded');
+      }
+
+      // Check if Apple Pay is available
+      console.log('🔍 Checking ApplePaySession availability...');
+      if (typeof ApplePaySession === 'undefined') {
+        throw new Error(
+          'ApplePaySession is not available - script may be blocked by CSP or device not supported'
+        );
+      }
+
+      // Check if we're on a supported platform
+      try {
+        if (!ApplePaySession.canMakePayments()) {
+          console.warn(
+            'Apple Pay is not available on this device/browser - likely testing on PC'
+          );
+          throw new Error('Apple Pay is not supported on this device');
+        }
+      } catch (canMakePaymentsError) {
+        console.warn(
+          'ApplePaySession.canMakePayments() failed:',
+          canMakePaymentsError
+        );
+        throw new Error(
+          'Apple Pay availability check failed - likely not on Apple device'
+        );
+      }
+
+      const applepay = window.paypal.Applepay();
+      let config;
+
+      try {
+        config = await applepay.config();
+      } catch (configError) {
+        console.error('Failed to get Apple Pay configuration:', configError);
+        throw new Error(
+          'Failed to configure Apple Pay - this is expected on PC/Windows'
+        );
+      }
+
+      console.log('Apple Pay config:', config);
+
+      const {
+        isEligible,
+        countryCode,
+        currencyCode,
+        merchantCapabilities,
+        supportedNetworks,
+      } = config;
+
+      if (!isEligible) {
+        console.warn('Apple Pay is not eligible on this device/browser');
+        throw new Error('Apple Pay is not eligible');
+      }
+
+      console.log('Apple Pay is eligible, setting up button...');
+
+      // Create Apple Pay button
+      const container = document.getElementById('applepay-button-container');
+      if (container) {
+        container.innerHTML =
+          '<apple-pay-button id="btn-appl" buttonstyle="black" type="buy" locale="en"></apple-pay-button>';
+
+        // Ensure the Apple Pay button gets proper styling
+        const applePayButton = document.getElementById('btn-appl');
+        if (applePayButton) {
+          applePayButton.style.width = '100%';
+          applePayButton.style.height = '40px';
+          applePayButton.style.borderRadius = '4px';
+          applePayButton.style.margin = '0';
+          applePayButton.style.display = 'block';
+
+          applePayButton.addEventListener('click', async () => {
+            await this.handleApplePayClick(applepay, config);
+          });
+        }
+      }
+
+      console.log('Apple Pay button rendered successfully');
+    } catch (error) {
+      console.error('Apple Pay setup failed:', error);
+      // Re-throw error so the parent can handle showing/hiding the option
+      throw error;
+    }
+  },
+
+  async handleApplePayClick(applepay, config) {
+    try {
+      const { countryCode, merchantCapabilities, supportedNetworks } = config;
+
+      const paymentRequest = {
+        countryCode,
+        currencyCode: 'USD',
+        merchantCapabilities,
+        supportedNetworks,
+        requiredBillingContactFields: [
+          'name',
+          'phone',
+          'email',
+          'postalAddress',
+        ],
+        requiredShippingContactFields: [],
+        total: {
+          label: 'Demo (Card is not charged)',
+          amount: Utils.getCurrentTotal(),
+          type: 'final',
+        },
+      };
+
+      const session = new ApplePaySession(4, paymentRequest);
+
+      session.onvalidatemerchant = event => {
+        applepay
+          .validateMerchant({
+            validationUrl: event.validationURL,
+          })
+          .then(payload => {
+            session.completeMerchantValidation(payload.merchantSession);
+          })
+          .catch(err => {
+            console.error('Merchant validation failed:', err);
+            session.abort();
+          });
+      };
+
+      session.onpaymentmethodselected = () => {
+        session.completePaymentMethodSelection({
+          newTotal: paymentRequest.total,
+        });
+      };
+
+      session.onpaymentauthorized = async event => {
+        try {
+          // Create order with Apple Pay source
+          const orderId = await PayPalIntegration.createOrder({
+            paymentSource: 'apple_pay',
+          });
+
+          // Confirm payment with Apple Pay
+          await applepay.confirmOrder({
+            orderId: orderId,
+            token: event.payment.token,
+            billingContact: event.payment.billingContact,
+            shippingContact: event.payment.shippingContact,
+          });
+
+          // Authorize the order (no capture during checkout)
+          const result = await PayPalIntegration.approveOrder({
+            orderID: orderId,
+          });
+
+          session.completePayment({
+            status: window.ApplePaySession.STATUS_SUCCESS,
+          });
+
+          console.log('Apple Pay payment authorized:', result);
+        } catch (err) {
+          console.error('Payment processing failed:', err);
+          session.completePayment({
+            status: window.ApplePaySession.STATUS_FAILURE,
+          });
+        }
+      };
+
+      session.oncancel = () => {
+        console.log('Apple Pay Cancelled');
+      };
+
+      session.begin();
+    } catch (clickError) {
+      console.error('Apple Pay session error:', clickError);
+      if (clickError.message.includes('insecure document')) {
+        alert(
+          'Apple Pay requires HTTPS. Please test on a Mac with Safari over HTTPS, or deploy to a secure server.'
+        );
+      } else {
+        alert(
+          'Apple Pay failed to start. This is expected when testing on PC/Windows.'
+        );
+      }
+    }
+  },
+};
+
+// Google Pay Integration
+const GooglePayButtons = {
+  paymentsClient: null,
+  googlePayConfig: null,
+
+  async initialize() {
+    try {
+      console.log('💳 Starting Google Pay setup...');
+
+      // Check if we're on HTTPS (required for Google Pay in production)
+      const isLocalhost =
+        location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      const isHTTPS = location.protocol === 'https:';
+
+      if (!isHTTPS && !isLocalhost) {
+        console.warn('⚠️ Google Pay requires HTTPS for full functionality');
+      }
+
+      // Check if required SDKs are loaded
+      if (typeof google === 'undefined' || !google.payments) {
+        throw new Error('Google Pay SDK not loaded');
+      }
+
+      if (!window.paypal?.Googlepay) {
+        throw new Error('PayPal SDK or Google Pay component not loaded');
+      }
+
+      // Get Google Pay configuration from PayPal
+      try {
+        this.googlePayConfig = await window.paypal.Googlepay().config();
+        console.log('Google Pay config:', this.googlePayConfig);
+      } catch (configError) {
+        console.error('Google Pay config error:', configError);
+        throw new Error('Google Pay requires HTTPS for testing');
+      }
+
+      if (!this.googlePayConfig.isEligible) {
+        console.warn('Google Pay is not eligible on this device/browser');
+        throw new Error('Google Pay is not eligible');
+      }
+
+      // Initialize payments client
+      this.paymentsClient = new google.payments.api.PaymentsClient({
+        environment: 'TEST', // Change to 'PRODUCTION' for live
+        paymentDataCallbacks: {
+          onPaymentAuthorized: this.onPaymentAuthorized.bind(this),
+        },
+      });
+
+      // Check if Google Pay is ready
+      const baseRequest = {
+        apiVersion: 2,
+        apiVersionMinor: 0,
+      };
+
+      const isReadyToPayRequest = {
+        ...baseRequest,
+        allowedPaymentMethods: this.googlePayConfig.allowedPaymentMethods,
+      };
+
+      const isReadyToPay = await this.paymentsClient.isReadyToPay(
+        isReadyToPayRequest
+      );
+
+      if (isReadyToPay.result) {
+        console.log('Google Pay is ready, adding button...');
+        this.addGooglePayButton();
+      } else {
+        throw new Error('Google Pay is not available on this device/browser');
+      }
+    } catch (error) {
+      console.error('Google Pay setup failed:', error);
+      this.handleSetupError(error);
+    }
+  },
+
+  addGooglePayButton() {
+    const button = this.paymentsClient.createButton({
+      onClick: this.onGooglePaymentButtonClicked.bind(this),
+      buttonColor: 'black',
+      buttonType: 'buy',
+      buttonSizeMode: 'fill',
+    });
+
+    const container = document.getElementById('googlepay-button-container');
+    if (container) {
+      container.innerHTML = ''; // Clear any existing content
+      container.appendChild(button);
+      console.log('Google Pay button rendered successfully');
+    }
+  },
+
+  async onGooglePaymentButtonClicked() {
+    try {
+      const paymentDataRequest = await this.getGooglePaymentDataRequest();
+
+      // This will trigger the onPaymentAuthorized callback when the user approves
+      this.paymentsClient.loadPaymentData(paymentDataRequest);
+    } catch (error) {
+      console.error('Google Pay button click failed:', error);
+      alert('Google Pay payment failed: ' + error.message);
+    }
+  },
+
+  async getGooglePaymentDataRequest() {
+    if (!this.googlePayConfig) {
+      throw new Error('Google Pay configuration not loaded');
+    }
+
+    const baseRequest = {
+      apiVersion: 2,
+      apiVersionMinor: 0,
+    };
+
+    const paymentDataRequest = Object.assign({}, baseRequest);
+    paymentDataRequest.allowedPaymentMethods =
+      this.googlePayConfig.allowedPaymentMethods;
+    paymentDataRequest.transactionInfo = {
+      currencyCode: 'USD',
+      totalPriceStatus: 'FINAL',
+      totalPrice: Utils.getCurrentTotal(),
+    };
+    paymentDataRequest.merchantInfo = this.googlePayConfig.merchantInfo;
+    paymentDataRequest.callbackIntents = ['PAYMENT_AUTHORIZATION'];
+
+    return paymentDataRequest;
+  },
+
+  async onPaymentAuthorized(paymentData) {
+    console.log('Google Pay payment authorized:', paymentData);
+
+    try {
+      const result = await this.processGooglePayPayment(paymentData);
+      return result;
+    } catch (error) {
+      console.error('Payment processing failed:', error);
+      return {
+        transactionState: 'ERROR',
+        error: {
+          intent: 'PAYMENT_AUTHORIZATION',
+          message: error.message,
+          reason: 'PAYMENT_DATA_INVALID',
+        },
+      };
+    }
+  },
+
+  async processGooglePayPayment(paymentData) {
+    try {
+      // Create order with Google Pay source
+      const orderId = await PayPalIntegration.createOrder({
+        paymentSource: 'google_pay',
+      });
+
+      // Confirm the order with PayPal
+      const confirmOrderResponse = await window.paypal
+        .Googlepay()
+        .confirmOrder({
+          orderId: orderId,
+          paymentMethodData: paymentData.paymentMethodData,
+        });
+
+      console.log('Confirm order response:', confirmOrderResponse);
+
+      if (confirmOrderResponse.status === 'APPROVED') {
+        // Authorize the order (no capture during checkout)
+        const result = await PayPalIntegration.approveOrder({
+          orderID: orderId,
+        });
+
+        console.log('Google Pay payment authorized:', result);
+        return { transactionState: 'SUCCESS' };
+      } else {
+        throw new Error(
+          `Order confirmation failed with status: ${confirmOrderResponse.status}`
+        );
+      }
+    } catch (error) {
+      console.error('Google Pay payment processing failed:', error);
+      throw error;
+    }
+  },
+
+  handleSetupError(error) {
+    const container = document.getElementById('googlepay-button-container');
+    if (container) {
+      if (
+        error.message.includes('HTTPS') ||
+        error.message.includes('CORS') ||
+        error.message.includes('Failed to fetch')
+      ) {
+        // Show informative message for HTTPS requirement
+        container.innerHTML = `
+          <div style="
+            padding: 12px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            margin: 8px 0;
+            font-size: 14px;
+            color: #856404;
+            text-align: center;
+            line-height: 1.4;
+          ">
+            <strong>🔒 Google Pay</strong><br>
+            <small>Requires HTTPS for sandbox testing.<br>
+            Deploy to staging/production with SSL to test Google Pay functionality.</small>
+          </div>
+        `;
+        // Show the option even if it's just an informational message
+        Utils.showElement('googlepay-option');
+      } else {
+        // Hide the container for other errors
+        container.style.display = 'none';
+      }
+    }
+
+    // Re-throw error so the parent can handle showing/hiding the option
+    throw error;
   },
 };
 
@@ -557,6 +1062,8 @@ class CheckoutApp {
       PayLaterButtons.initialize(),
       CardFields.initialize(),
       PayPalMessages.initialize(),
+      this.initializeApplePay(),
+      this.initializeGooglePay(),
     ]);
 
     // Setup event listeners
@@ -569,6 +1076,63 @@ class CheckoutApp {
     Utils.showPaymentMethodButton('paypal');
 
     console.log('Checkout initialized successfully');
+  }
+
+  async initializeApplePay() {
+    // Only initialize Apple Pay on supported devices
+    const isAppleDevice = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+    const isSafari =
+      /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+
+    if (isAppleDevice && isSafari && typeof ApplePaySession !== 'undefined') {
+      try {
+        if (
+          ApplePaySession?.supportsVersion(4) &&
+          ApplePaySession?.canMakePayments()
+        ) {
+          await ApplePayButtons.initialize();
+          // Show Apple Pay option if initialization succeeded
+          Utils.showElement('applepay-option');
+        } else {
+          console.log('Apple Pay not available on this device/browser');
+          Utils.hideElement('applepay-option');
+        }
+      } catch (error) {
+        console.warn('Apple Pay initialization failed:', error);
+        Utils.hideElement('applepay-option');
+      }
+    } else {
+      console.log('Non-Apple device or non-Safari browser - hiding Apple Pay');
+      Utils.hideElement('applepay-option');
+    }
+  }
+
+  async initializeGooglePay() {
+    // Wait for Google Pay SDK to load
+    if (typeof google !== 'undefined' && google.payments) {
+      try {
+        await GooglePayButtons.initialize();
+        // Show Google Pay option if initialization succeeded
+        Utils.showElement('googlepay-option');
+      } catch (error) {
+        console.warn('Google Pay initialization failed:', error);
+        Utils.hideElement('googlepay-option');
+      }
+    } else {
+      // Set up callback for when Google Pay SDK loads
+      window.onGooglePayLoaded = () => {
+        console.log('💳 Google Pay SDK loaded via callback');
+        GooglePayButtons.initialize()
+          .then(() => {
+            Utils.showElement('googlepay-option');
+          })
+          .catch(error => {
+            console.warn('Google Pay initialization failed:', error);
+            Utils.hideElement('googlepay-option');
+          });
+      };
+      console.log('Waiting for Google Pay SDK to load...');
+    }
   }
 
   waitForPayPalSDK() {
@@ -627,6 +1191,8 @@ window.CheckoutApp = {
   PayPalButtons,
   VenmoButtons,
   PayLaterButtons,
+  ApplePayButtons,
+  GooglePayButtons,
   CardFields,
   CustomerManagement,
   CheckoutConfig,

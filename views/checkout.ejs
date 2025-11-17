@@ -265,6 +265,14 @@
                 </div>
               </div>
               
+              <!-- Save Payment Method Option -->
+              <div class="checkbox-group" style="margin-top: 15px;">
+                <div class="checkbox-option">
+                  <input type="checkbox" id="save-payment-method" />
+                  <label for="save-payment-method">Save this payment method for future purchases</label>
+                </div>
+              </div>
+              
               <!-- Submit button for saved payment methods and new credit cards -->
               <button id="submit-order-button" type="button" class="submit-button" style="display: none; margin-top: 15px; width: 100%;">
                 Submit Order
@@ -295,8 +303,12 @@
 <script>
   const clientId = '<%= clientId %>';
 </script>
-    <!-- PayPal JavaScript SDK -->
-    <script src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&currency=USD&components=buttons,card-fields,marks,messages&enable-funding=venmo,paylater&intent=authorize"></script>
-<script src="/checkout-simplified.js"></script>
+    <!-- Google Pay JavaScript SDK -->
+    <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
+    
+    <!-- PayPal JavaScript SDK with Apple Pay and Google Pay components -->
+    <script src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&currency=USD&components=buttons,card-fields,marks,messages,applepay,googlepay&enable-funding=venmo,paylater&intent=authorize"></script>
+    
+    <script src="/checkout-simplified.js"></script>
 </body>
 </html>
