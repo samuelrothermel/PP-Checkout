@@ -44,6 +44,7 @@ const Utils = {
   },
 
   showPaymentMethodButton(paymentMethod) {
+    // Hide all payment method buttons
     this.hideElement('paypal-button-container');
     this.hideElement('venmo-button-container');
     this.hideElement('paylater-button-container');
@@ -52,6 +53,7 @@ const Utils = {
     this.hideElement('card-button-container');
     this.hideElement('submit-order-button');
 
+    // Show the appropriate button based on selected payment method
     if (paymentMethod === 'paypal') {
       this.showElement('paypal-button-container');
     } else if (paymentMethod === 'venmo') {
@@ -532,6 +534,9 @@ const ApplePayButtons = {
             await this.handleApplePayClick(applepay, config);
           });
         }
+
+        // Hide the button initially - it will be shown when radio button is selected
+        container.style.display = 'none';
       }
 
       console.log('Apple Pay button rendered successfully');
@@ -728,7 +733,11 @@ const GooglePayButtons = {
     if (container) {
       container.innerHTML = ''; // Clear any existing content
       container.appendChild(button);
-      console.log('Google Pay button rendered successfully');
+      // Hide the button initially - it will be shown when radio button is selected
+      container.style.display = 'none';
+      console.log(
+        'Google Pay button rendered successfully (hidden until selected)'
+      );
     }
   },
 
