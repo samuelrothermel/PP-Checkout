@@ -1,5 +1,8 @@
 // Simplified Checkout JavaScript - Modular Approach
 
+// Load StorageManager for enhanced localStorage functionality
+const storageManager = window.paypalStorageManager || new StorageManager();
+
 // Configuration and State
 const CheckoutConfig = {
   currentCustomerId: null,
@@ -215,6 +218,35 @@ const PayPalIntegration = {
   },
 
   displayResults(orderData) {
+    // Save order to localStorage with enhanced metadata
+    if (orderData?.id) {
+      const paymentSource = orderData.payment_source;
+      let paymentMethod = 'unknown';
+
+      if (paymentSource?.card) {
+        paymentMethod = 'card';
+      } else if (paymentSource?.paypal) {
+        paymentMethod = 'paypal';
+      } else if (paymentSource?.venmo) {
+        paymentMethod = 'venmo';
+      } else if (paymentSource?.apple_pay) {
+        paymentMethod = 'apple_pay';
+      } else if (paymentSource?.google_pay) {
+        paymentMethod = 'google_pay';
+      }
+
+      const orderMetadata = {
+        amount: CheckoutConfig.totalAmount,
+        paymentMethod: paymentMethod,
+        status: 'authorized',
+        authorizationId:
+          orderData.purchase_units?.[0]?.payments?.authorizations?.[0]?.id ||
+          null,
+      };
+
+      storageManager.saveOrder(orderData.id, orderMetadata);
+    }
+
     // Show order results
     const orderInfoSection = document.getElementById('order-info-section');
     const captureInfoSection = document.getElementById('capture-info-section');
@@ -297,6 +329,13 @@ const PayPalIntegration = {
       }
       if (customerIdInfo && customerId) {
         customerIdInfo.textContent = `Customer ID: ${customerId}`;
+        // Save customer ID to localStorage when vaulting occurs with enhanced metadata
+        const customerMetadata = {
+          paymentMethods: [paymentSourceType],
+          vaultStatus: vaultStatus,
+          paymentTokenId: paymentTokenId,
+        };
+        storageManager.saveCustomer(customerId, customerMetadata);
       }
       if (paymentTokenIdInfo && paymentTokenId) {
         paymentTokenIdInfo.textContent = `Payment Token ID: ${paymentTokenId}`;
@@ -1243,4 +1282,20 @@ window.CheckoutApp = {
   CardFields,
   CustomerManagement,
   CheckoutConfig,
+  storageManager,
 };
+
+// Initialize StorageManager debug utilities if in debug mode
+if (
+  window.location.search.includes('debug=true') ||
+  window.location.search.includes('storage=true')
+) {
+  storageManager.attachToWindow();
+  console.log('🚀 StorageManager debug utilities enabled!');
+  console.log('💾 Access storage data via window.storage methods:');
+  console.log('   window.storage.orders() - View saved orders');
+  console.log('   window.storage.customers() - View saved customers');
+  console.log('   window.storage.stats() - View storage statistics');
+  console.log('   window.storage.export() - Export all data');
+  console.log('   window.storage.clear() - Clear all data');
+}
