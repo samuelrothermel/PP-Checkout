@@ -876,8 +876,10 @@ const GooglePayButtons = {
             Deploy to staging/production with SSL to test Google Pay functionality.</small>
           </div>
         `;
-        // Show the option even if it's just an informational message
+        // Show the Google Pay option but keep the button container hidden initially
         Utils.showElement('googlepay-option');
+        // Important: Keep the button container hidden - only showPaymentMethodButton should show it
+        Utils.hideElement('googlepay-button-container');
       } else {
         // Hide the container for other errors
         container.style.display = 'none';
@@ -1141,6 +1143,8 @@ class CheckoutApp {
         await GooglePayButtons.initialize();
         // Show Google Pay option if initialization succeeded
         Utils.showElement('googlepay-option');
+        // Ensure button container is hidden initially (will be shown when radio selected)
+        Utils.hideElement('googlepay-button-container');
       } catch (error) {
         console.warn('Google Pay initialization failed:', error);
         Utils.hideElement('googlepay-option');
@@ -1152,6 +1156,8 @@ class CheckoutApp {
         GooglePayButtons.initialize()
           .then(() => {
             Utils.showElement('googlepay-option');
+            // Ensure button container is hidden initially
+            Utils.hideElement('googlepay-button-container');
           })
           .catch(error => {
             console.warn('Google Pay initialization failed:', error);
