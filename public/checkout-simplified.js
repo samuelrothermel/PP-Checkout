@@ -35,12 +35,26 @@ const Utils = {
 
   showElement(id) {
     const element = document.getElementById(id);
-    if (element) element.style.display = 'block';
+    if (element) {
+      // Use !important for Google Pay button container to override previous hiding
+      if (id === 'googlepay-button-container') {
+        element.style.setProperty('display', 'block', 'important');
+      } else {
+        element.style.display = 'block';
+      }
+    }
   },
 
   hideElement(id) {
     const element = document.getElementById(id);
-    if (element) element.style.display = 'none';
+    if (element) {
+      // Use !important for Google Pay button container to ensure it stays hidden
+      if (id === 'googlepay-button-container') {
+        element.style.setProperty('display', 'none', 'important');
+      } else {
+        element.style.display = 'none';
+      }
+    }
   },
 
   showPaymentMethodButton(paymentMethod) {
@@ -751,10 +765,10 @@ const GooglePayButtons = {
     if (container) {
       container.innerHTML = ''; // Clear any existing content
       container.appendChild(button);
-      // Hide the button initially - it will be shown when radio button is selected
-      container.style.display = 'none';
+      // Force hide the button container with !important to override any other styles
+      container.style.setProperty('display', 'none', 'important');
       console.log(
-        'Google Pay button rendered successfully (hidden until selected)'
+        'Google Pay button rendered and explicitly hidden until selected'
       );
     }
   },
