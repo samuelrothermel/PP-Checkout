@@ -1,0 +1,637 @@
+/* Checkout Page Styles - Simplified and Optimized */
+
+/* Base Styles */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+  margin: 0;
+  padding: 20px;
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Header */
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  font-size: 2.2em;
+  margin: 0;
+  color: #1a1a1a;
+  font-weight: 300;
+}
+
+/* Checkout Layout */
+.checkout-layout {
+  display: flex;
+  gap: 30px;
+  margin-top: 20px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.checkout-left {
+  flex: 1;
+  max-width: 400px;
+}
+
+.checkout-right {
+  flex: 1;
+  min-width: 350px;
+}
+
+/* Order Summary */
+.order-summary {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.order-summary h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.2em;
+  color: #333;
+  font-weight: 600;
+}
+
+.order-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.95em;
+}
+
+.order-row.total {
+  font-weight: 600;
+  font-size: 1.1em;
+  padding-top: 10px;
+  border-top: 1px solid #dee2e6;
+  color: #1a1a1a;
+}
+
+/* Checkout Sections */
+.checkout-section {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.checkout-section h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.1em;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.checkout-section h5 {
+  margin: 15px 0 10px 0;
+  font-size: 1em;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Form Styling */
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-group {
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #555;
+  font-weight: 500;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9em;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #0070ba;
+  box-shadow: 0 0 0 2px rgba(0, 112, 186, 0.1);
+}
+
+/* Radio and Checkbox Controls */
+.radio-group {
+  margin-bottom: 15px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.radio-option input[type='radio'] {
+  margin-right: 8px;
+}
+
+.radio-option label {
+  font-size: 0.9em;
+  color: #555;
+}
+
+.checkbox-group {
+  margin: 15px 0;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.checkbox-option input[type='checkbox'] {
+  margin-right: 8px;
+}
+
+.checkbox-option label {
+  font-size: 0.9em;
+  color: #555;
+}
+
+.checkbox-control {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.checkbox-control input[type='checkbox'] {
+  margin-right: 8px;
+}
+
+.checkbox-control label {
+  font-size: 0.9em;
+  color: #555;
+  font-weight: 500;
+}
+
+/* Controls Section */
+.controls-section {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+#customer-id-form {
+  margin-top: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+#customer-id-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+#customer-id-form input[type='text'] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+#customer-id-form input[type='text']:focus {
+  outline: none;
+  border-color: #0070ba;
+  box-shadow: 0 0 0 2px rgba(0, 112, 186, 0.1);
+}
+
+#customer-id-form button {
+  margin-top: 12px;
+  padding: 8px 16px;
+  background-color: #0070ba;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#customer-id-form button:hover {
+  background-color: #005ea6;
+}
+
+/* Payment Method Options */
+.payment-method-option {
+  margin-bottom: 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.payment-method-option:hover {
+  border-color: #0070ba;
+  background-color: #f8f9fa;
+}
+
+.payment-method-option input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.payment-method-label {
+  display: block;
+  padding: 15px;
+  cursor: pointer;
+  position: relative;
+}
+
+.payment-method-label::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border: 2px solid #dee2e6;
+  border-radius: 50%;
+  background: white;
+}
+
+.payment-method-option input[type='radio']:checked + .payment-method-label {
+  background-color: #e3f2fd;
+}
+
+.payment-method-option
+  input[type='radio']:checked
+  + .payment-method-label::before {
+  border-color: #0070ba;
+  background-color: #0070ba;
+  box-shadow: inset 0 0 0 3px white;
+}
+
+.payment-method-label > div {
+  margin-left: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 32px;
+  padding: 4px 0;
+}
+
+/* Payment Button Containers */
+.payment-method-buttons {
+  margin-left: 35px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  padding: 15px 0;
+  display: none;
+}
+
+.payment-method-option input[type='radio']:checked ~ .payment-method-buttons {
+  display: block;
+}
+
+.payment-method-buttons > div,
+.payment-method-buttons iframe,
+.payment-method-buttons button {
+  margin: 0 auto 10px auto;
+  display: block;
+  max-width: 350px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* PayPal Button Styling */
+#paypal-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+  max-width: 350px;
+  margin: 0 auto 15px auto;
+}
+
+#paypal-button-container > div {
+  max-width: 350px !important;
+  width: 100% !important;
+}
+
+/* Venmo Button Styling */
+#venmo-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+  max-width: 350px;
+  margin: 0 auto 15px auto;
+}
+
+#venmo-button-container > div {
+  max-width: 350px !important;
+  width: 100% !important;
+}
+
+/* Pay Later Button Styling */
+#paylater-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+  max-width: 350px;
+  margin: 0 auto 15px auto;
+}
+
+#paylater-button-container > div {
+  max-width: 350px !important;
+  width: 100% !important;
+}
+
+/* Apple Pay Button Styling */
+#applepay-button-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-bottom: 15px !important;
+}
+
+#btn-appl,
+apple-pay-button {
+  max-width: 350px !important;
+  width: 100% !important;
+  height: 44px !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* Google Pay Button Styling */
+#googlepay-button-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-bottom: 15px !important;
+}
+
+#googlepay-button-container button,
+#googlepay-button-container > div {
+  max-width: 350px !important;
+  width: 100% !important;
+  height: 44px !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* Card Field Styling - Let PayPal handle all styling */
+#card-button-container {
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto 20px auto;
+}
+
+.card-fields {
+  width: 100%;
+  margin: 15px auto;
+}
+
+/* Minimal container styling - let PayPal handle the rest */
+#card-name-field-container,
+#card-number-field-container,
+#card-cvv-field-container,
+#card-expiry-field-container {
+  margin-bottom: 8px;
+}
+
+/* Billing Information */
+#billing-info.billing-info {
+  margin-top: 20px;
+  padding: 15px 0;
+  border-top: 1px solid #e9ecef;
+  width: 100%;
+  max-width: 350px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#card-button-container #billing-info {
+  display: none;
+}
+
+/* Submit Button */
+#submit-order-button {
+  width: 100%;
+  max-width: 350px;
+  height: 44px;
+  padding: 10px 20px;
+  background-color: #0070ba;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#submit-order-button:hover {
+  background-color: #005ea6;
+}
+
+/* Mark Containers */
+#paypal-mark-container,
+#venmo-mark-container,
+#paylater-mark-container,
+#applepay-mark-container,
+#googlepay-mark-container,
+#card-mark-container {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+#paypal-mark-container > div,
+#venmo-mark-container > div,
+#paylater-mark-container > div {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+#applepay-mark-container img,
+#googlepay-mark-container img {
+  height: 26px !important;
+  max-width: 100px !important;
+  object-fit: contain !important;
+}
+
+#card-mark-container {
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  color: #333 !important;
+}
+
+/* Saved Payment Methods */
+.saved-payment-method-option {
+  margin-bottom: 15px;
+  border: 2px solid #28a745;
+  border-radius: 8px;
+  background-color: #d4edda;
+}
+
+.saved-payment-method-option:hover {
+  border-color: #218838;
+  background-color: #c3e6cb;
+}
+
+.saved-payment-method-option .payment-method-label::before {
+  border-color: #28a745;
+}
+
+.saved-payment-method-option
+  input[type='radio']:checked
+  + .payment-method-label::before {
+  border-color: #28a745;
+  background-color: #28a745;
+}
+
+.saved-payment-details {
+  font-size: 0.9em;
+  color: #495057;
+}
+
+.saved-payment-badge {
+  display: inline-block;
+  background: #28a745;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+/* Info Sections */
+.info-sections {
+  margin-top: 30px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.info-section {
+  padding: 15px;
+  margin: 10px 0;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #0070ba;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+}
+
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 15px;
+  }
+
+  .checkout-layout {
+    flex-direction: column;
+    gap: 20px;
+    max-width: 100%;
+  }
+
+  .checkout-left,
+  .checkout-right {
+    max-width: none;
+    min-width: auto;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .payment-method-buttons {
+    padding: 10px 5px 15px 5px;
+    margin-left: 35px;
+  }
+
+  .payment-method-buttons > div,
+  .payment-method-buttons iframe,
+  .payment-method-buttons button,
+  #paypal-button-container > div,
+  #btn-appl,
+  #googlepay-button-container button,
+  .card-fields,
+  #submit-order-button {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .checkout-layout {
+    gap: 15px;
+  }
+
+  .checkout-section {
+    padding: 15px;
+  }
+
+  .order-summary {
+    padding: 15px;
+  }
+
+  .payment-method-label > div {
+    margin-left: 30px;
+  }
+
+  .payment-method-buttons {
+    margin-left: 30px;
+    padding: 10px 0 15px 0;
+  }
+
+  header h1 {
+    font-size: 1.8em;
+  }
+}

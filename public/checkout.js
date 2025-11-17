@@ -1041,23 +1041,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       }
 
-      // Show/hide card fields based on selected payment method
-      const cardButtonContainer = document.getElementById(
-        'card-button-container'
-      );
-      if (cardButtonContainer) {
-        if (event.target.id === 'card-radio') {
-          // Show card fields when card payment method is selected
-          cardButtonContainer.style.display = 'block';
-          // Initialize card fields if they haven't been initialized yet
-          if (!window.cardFieldsInitialized) {
-            initializeCardFields();
-          }
-        } else {
-          // Hide card fields when other payment methods are selected
-          cardButtonContainer.style.display = 'none';
-        }
-      }
+      // Card fields are now always visible - no need to show/hide them
 
       // Show/hide Apple Pay button based on selected payment method
       const applePayButtonContainer = document.getElementById(
@@ -1851,18 +1835,16 @@ function createPayPalSmartButtonStack() {
     .render(`#${buttonContainerId}`)
     .then(() => {
       console.log('✅ PayPal smart button stack rendered successfully');
+
+      // Initialize card fields alongside PayPal buttons (but keep them hidden)
+      initializeCardFields();
+
       // Update the PayPal button for saved account if we have one
       if (window.savedPayPalCustomerId) {
         updatePayPalButtonForSavedAccount(buttonContainerId);
       }
 
-      // Hide card fields initially since PayPal is selected by default
-      const cardButtonContainer = document.getElementById(
-        'card-button-container'
-      );
-      if (cardButtonContainer) {
-        cardButtonContainer.style.display = 'none';
-      }
+      // Card fields are now always visible - no need to hide them initially
 
       // Hide Apple Pay and Google Pay buttons initially since PayPal is selected by default
       const applePayButtonContainer = document.getElementById(
@@ -2110,9 +2092,63 @@ async function ensureVenmoVaultingReady() {
   return false;
 }
 
-// Initialize card fields when first needed (when card radio button is selected)
+// Debug function to inspect card field containers
+function debugCardFields() {
+  console.log('🔍 Debugging card field containers...');
+  const containers = [
+    '#card-number-field-container',
+    '#card-cvv-field-container',
+    '#card-expiry-field-container',
+  ];
+
+  containers.forEach(selector => {
+    const container = document.querySelector(selector);
+    if (container) {
+      const iframes = container.querySelectorAll('iframe');
+      const styles = container.querySelectorAll('style');
+      console.log(`${selector}:`, {
+        totalChildren: container.children.length,
+        iframes: iframes.length,
+        styles: styles.length,
+        innerHTML:
+          container.innerHTML.length > 200
+            ? `${container.innerHTML.substring(0, 200)}...`
+            : container.innerHTML,
+      });
+    }
+  });
+}
+
+// Clean up any existing card fields
+function cleanupCardFields() {
+  console.log('🧹 Cleaning up existing card fields...');
+
+  // Clear container contents
+  const containers = [
+    '#card-number-field-container',
+    '#card-cvv-field-container',
+    '#card-expiry-field-container',
+  ];
+
+  containers.forEach(selector => {
+    const container = document.querySelector(selector);
+    if (container) {
+      container.innerHTML = '';
+      console.log(`Cleared ${selector}`);
+    }
+  });
+
+  // Reset global references
+  window.cardFieldInstance = null;
+  window.cardFieldsInitialized = false;
+
+  console.log('✅ Card fields cleanup complete');
+}
+
+// Initialize card fields alongside PayPal buttons (but keep them hidden initially)
 function initializeCardFields() {
   if (!window.paypal || window.cardFieldsInitialized) {
+    console.log('Card fields already initialized or PayPal not ready');
     return;
   }
 
@@ -2124,6 +2160,27 @@ function initializeCardFields() {
     setTimeout(() => initializeCardFields(), 500);
     return;
   }
+
+  // Set flag immediately to prevent multiple initialization attempts
+  window.cardFieldsInitialized = true;
+
+  console.log('🔧 Creating CardField instance...');
+
+  // Clear any existing card field content to prevent duplicates
+  const containers = [
+    '#card-number-field-container',
+    '#card-cvv-field-container',
+    '#card-expiry-field-container',
+  ];
+
+  containers.forEach(selector => {
+    const container = document.querySelector(selector);
+    if (container) {
+      // Remove all existing content (iframes, styles, etc.)
+      container.innerHTML = '';
+      console.log(`Cleared existing content from ${selector}`);
+    }
+  });
 
   const cardField = window.paypal.CardFields({
     createOrder,
@@ -2148,164 +2205,51 @@ function initializeCardFields() {
   });
 
   if (cardField.isEligible()) {
-    // Clear any existing card field containers first to prevent duplicates
-    const container = document.getElementById('card-button-container');
-    container.innerHTML = '';
+    console.log('🎯 CardField is eligible, creating field instances...');
 
-    // Remove any duplicate card field elements that might exist elsewhere
-    document
-      .querySelectorAll('.card-fields:not(#card-button-container .card-fields)')
-      .forEach(el => el.remove());
-    document
-      .querySelectorAll(
-        '[id*="card-"][id*="field-container"]:not(#card-button-container [id*="card-"][id*="field-container"])'
-      )
-      .forEach(el => el.remove());
+    // Simply render to the existing containers in the HTML - no dynamic HTML generation needed!
+    const numberField = cardField.NumberField();
+    const cvvField = cardField.CVVField();
+    const expiryField = cardField.ExpiryField();
 
-    // Create card fields HTML structure in the card button container
-    container.innerHTML = `
-      <div class="checkbox-group">
-        <div class="checkbox-option">
-          <input type="checkbox" id="billing-info-toggle" />
-          <label for="billing-info-toggle">Billing is different from Shipping</label>
-        </div>
-      </div>
-      
-      <div id="billing-info" class="billing-info" style="display: none;">
-        <h5>Billing Information</h5>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="billing-first-name">First Name</label>
-            <input type="text" id="billing-first-name" name="billing-first-name" value="Jane" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label for="billing-last-name">Last Name</label>
-            <input type="text" id="billing-last-name" name="billing-last-name" value="Doe" class="form-control" required />
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="billing-email">Email Address</label>
-            <input type="email" id="billing-email" name="billing-email" value="jane.doe@example.com" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label for="billing-phone">Phone Number</label>
-            <input type="text" id="billing-phone" name="billing-phone" value="1234567890" class="form-control" required />
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="billing-address-line1">Street Address</label>
-          <input type="text" id="billing-address-line1" name="billing-address-line1" value="123 Main St" class="form-control" required />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="billing-admin-area2">City</label>
-            <input type="text" id="billing-admin-area2" name="billing-admin-area2" value="Springfield" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label for="billing-admin-area1">State</label>
-            <input type="text" id="billing-admin-area1" name="billing-admin-area1" value="IL" class="form-control" required />
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="billing-postal-code">Zip Code</label>
-            <input type="text" id="billing-postal-code" name="billing-postal-code" value="62701" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label for="billing-country-code">Country Code</label>
-            <input type="text" id="billing-country-code" name="billing-country-code" value="US" class="form-control" required />
-          </div>
-        </div>
-      </div>
-      
-      <div class="card-fields">
-        <div id="card-number-field-container"></div>
-        <div id="card-expiry-field-container"></div>
-        <div id="card-cvv-field-container"></div>
-      </div>
-    `;
+    console.log('📱 Rendering card fields to containers...');
 
-    // Add a delay to ensure container is fully visible and DOM is ready
-    setTimeout(() => {
-      try {
-        const numberField = cardField.NumberField();
-        const cvvField = cardField.CVVField();
-        const expiryField = cardField.ExpiryField();
+    // Render fields to existing containers
+    Promise.all([
+      numberField.render('#card-number-field-container'),
+      cvvField.render('#card-cvv-field-container'),
+      expiryField.render('#card-expiry-field-container'),
+    ])
+      .then(() => {
+        console.log('✅ All card fields rendered successfully');
 
-        // Render fields sequentially with small delays
-        numberField
-          .render('#card-number-field-container')
-          .then(() => {
-            console.log('✅ Card number field rendered');
-            return cvvField.render('#card-cvv-field-container');
-          })
-          .then(() => {
-            console.log('✅ CVV field rendered');
-            return expiryField.render('#card-expiry-field-container');
-          })
-          .then(() => {
-            console.log('✅ Expiry field rendered');
-            console.log('✅ All card fields rendered successfully');
+        // Debug the containers after rendering
+        debugCardFields();
 
-            // Add event listeners to detect field interactions and validation
-            numberField.on('focus', () => {
-              console.log('🎯 Card number field focused');
-            });
+        // Store cardField reference globally so the unified submit button can use it
+        window.cardFieldInstance = cardField;
 
-            numberField.on('blur', () => {
-              console.log('👋 Card number field blurred');
-            });
+        // Setup billing info toggle
+        const billingToggle = document.getElementById('billing-info-toggle');
+        const billingInfo = document.getElementById('billing-info');
 
-            numberField.on('inputChange', event => {
-              console.log('📝 Card number field changed:', event);
-            });
-
-            cvvField.on('focus', () => {
-              console.log('🎯 CVV field focused');
-            });
-
-            cvvField.on('inputChange', event => {
-              console.log('📝 CVV field changed:', event);
-            });
-
-            expiryField.on('focus', () => {
-              console.log('🎯 Expiry field focused');
-            });
-
-            expiryField.on('inputChange', event => {
-              console.log('📝 Expiry field changed:', event);
-            });
-          })
-          .catch(error => {
-            console.error('❌ Error rendering card fields:', error);
+        if (billingToggle && billingInfo) {
+          billingToggle.addEventListener('change', function () {
+            billingInfo.style.display = this.checked ? 'block' : 'none';
           });
-      } catch (error) {
-        console.error('❌ Error initializing card fields:', error);
-      }
-    }, 250);
-
-    // Store cardField reference globally so the unified submit button can use it
-    window.cardFieldInstance = cardField;
-
-    // Setup billing info toggle for card payments
-    const billingToggle = document.getElementById('billing-info-toggle');
-    const billingInfo = document.getElementById('billing-info');
-
-    if (billingToggle) {
-      billingToggle.addEventListener('change', function () {
-        if (this.checked) {
-          billingInfo.style.display = 'block';
-        } else {
-          billingInfo.style.display = 'none';
         }
-      });
-    }
 
-    window.cardFieldsInitialized = true;
-    console.log('✅ PayPal card fields initialized successfully');
+        console.log('✅ Card fields initialization complete');
+      })
+      .catch(error => {
+        console.error('❌ Error rendering card fields:', error);
+        // Reset flag on error so it can be retried
+        window.cardFieldsInitialized = false;
+      });
   } else {
     console.log('❌ Card fields are not eligible in this environment');
+    // Reset flag if not eligible
+    window.cardFieldsInitialized = false;
   }
 }
 

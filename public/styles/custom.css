@@ -621,30 +621,106 @@ header h1 {
   display: none;
 }
 
-/* Hide any default/duplicate card field elements that might be created by external CSS or previous implementations */
+/* Comprehensive approach to prevent card field styling conflicts */
+/* Hide ALL external card field styling that could conflict with hosted fields */
+body .card_field,
+body .card_container,
 body .card-field-wrapper,
 body .card-field-container,
 body .ppcp-card-fields-wrapper,
 body [data-card-field],
 body #card-fields,
 body .paypal-card-field,
-body .card-fields:not(#card-button-container .card-fields) {
+body .card-fields:not(#card-button-container .card-fields),
+body [class*='card-field']:not(#card-button-container [class*='card-field']),
+body [class*='CardField']:not(#card-button-container [class*='CardField']),
+body [class*='card_field']:not(#card-button-container [class*='card_field']),
+body [id*='card-field']:not(#card-button-container [id*='card-field']),
+body [id*='CardField']:not(#card-button-container [id*='CardField']),
+body [id*='card_field']:not(#card-button-container [id*='card_field']),
+body iframe[src*='paypal']:not(#card-button-container iframe),
+body iframe[title*='card']:not(#card-button-container iframe),
+body iframe[name*='card']:not(#card-button-container iframe) {
   display: none !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  opacity: 0 !important;
+  z-index: -1 !important;
+}
+
+/* Prevent any PayPal CSS from creating visual card field elements */
+body .card_field_50,
+body .card_field_75,
+body input[type='text'].card_field,
+body select.card_field,
+body textarea.card_field {
+  display: none !important;
+  visibility: hidden !important;
 }
 
 /* Hide any duplicate card field containers outside our main container */
 body > .card-fields,
 .container > .card-fields:not(#card-button-container .card-fields),
 #payment-methods-container
-  .card-fields:not(#card-button-container .card-fields) {
+  .card-fields:not(#card-button-container .card-fields),
+.checkout-section .card-fields:not(#card-button-container .card-fields),
+.checkout-right .card-fields:not(#card-button-container .card-fields) {
   display: none !important;
+  visibility: hidden !important;
 }
 
 /* Only show our specific card field containers when they're inside our card button container */
 #card-button-container #card-number-field-container,
 #card-button-container #card-cvv-field-container,
-#card-button-container #card-expiry-field-container {
+#card-button-container #card-expiry-field-container,
+#card-button-container .card-fields,
+#card-button-container iframe {
   display: block !important;
+  visibility: visible !important;
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  opacity: 1 !important;
+  z-index: auto !important;
+}
+
+/* Ensure our card field containers have proper styling and no conflicts */
+#card-button-container .card-fields {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 20px auto !important;
+  max-width: 350px !important;
+  width: 100% !important;
+}
+
+/* Style our card field containers - remove placeholder appearance */
+#card-button-container #card-number-field-container,
+#card-button-container #card-cvv-field-container,
+#card-button-container #card-expiry-field-container {
+  width: 100% !important;
+  /* Remove fixed height and background - no placeholder boxes */
+  min-height: 0 !important;
+  height: auto !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Style the PayPal hosted iframes when they load */
+#card-button-container iframe {
+  width: 100% !important;
+  height: 48px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  background: white !important;
+  margin-bottom: 10px !important;
+  box-sizing: border-box !important;
 }
 
 /* Saved Payment Methods Styles */
@@ -1266,26 +1342,10 @@ apple-pay-button {
   min-height: auto;
 }
 
-/* Hide card fields by default */
+/* Keep card fields always visible - no more hide/show complexity */
 #card-button-container .card-fields,
 #card-button-container #multi-card-field-button,
 #card-button-container .checkbox-group {
-  display: none;
-}
-
-/* Show card fields when card radio is selected */
-.payment-method-option
-  input[type='radio']#card-radio:checked
-  ~ .payment-method-buttons
-  .card-fields,
-.payment-method-option
-  input[type='radio']#card-radio:checked
-  ~ .payment-method-buttons
-  #multi-card-field-button,
-.payment-method-option
-  input[type='radio']#card-radio:checked
-  ~ .payment-method-buttons
-  .checkbox-group {
   display: block;
 }
 
@@ -1314,6 +1374,28 @@ apple-pay-button {
   background: white;
 }
 
+/* Ensure only the first iframe in each card field container is visible */
+#card-number-field-container iframe:first-of-type,
+#card-cvv-field-container iframe:first-of-type,
+#card-expiry-field-container iframe:first-of-type {
+  width: 100% !important;
+  height: 48px !important;
+  border: none !important;
+  border-radius: 4px !important;
+  display: block !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Hide any additional iframes that might be duplicates */
+#card-number-field-container iframe:not(:first-of-type),
+#card-cvv-field-container iframe:not(:first-of-type),
+#card-expiry-field-container iframe:not(:first-of-type) {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Fallback for general card field iframes */
 .card-fields iframe {
   width: 100%;
   height: 48px;

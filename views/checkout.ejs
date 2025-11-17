@@ -2,12 +2,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link
-    rel="stylesheet"
-    type="text/css"
-    href="https://www.paypalobjects.com/webstatic/en_US/developer/docs/css/cardfields.css"
-/>
-    <link rel="stylesheet" type="text/css" href="/styles/custom.css" />
+    <link rel="stylesheet" type="text/css" href="/styles/checkout.css" />
     <title>One-Time Payments - Checkout Page</title>
   </head>
 
@@ -24,7 +19,7 @@
             <h3>Order Summary</h3>
             <div class="order-row">
               <span>Cart Total:</span>
-              <span>$<span id="cart-total">50</span></span>
+              <span>$<span id="cart-total">100</span></span>
             </div>
             <div class="order-row">
               <span>Shipping:</span>
@@ -32,7 +27,7 @@
             </div>
             <div class="order-row total">
               <span>Checkout Total:</span>
-              <span>$<span id="amount-total">50</span></span>
+              <span>$<span id="amount-total">100</span></span>
             </div>
           </div>
           
@@ -44,7 +39,7 @@
               data-pp-style-logo-type="inline"
               data-pp-style-text-color="black"
               data-pp-style-text-size="12"
-              data-pp-amount="50"
+              data-pp-amount="100"
               data-pp-placement="payment">
             </div>
           </div>
@@ -157,8 +152,32 @@
               <!-- Saved Payment Methods will be inserted here first -->
               <div id="saved-payment-methods-list"></div>
               
-              <!-- PayPal Funding Sources (PayPal, Venmo, Pay Later) will be inserted here -->
-              <div id="paypal-funding-sources-list"></div>
+              <!-- PayPal Button -->
+              <div class="payment-method-option">
+                <input type="radio" name="payment-method" id="paypal-radio" value="paypal" checked>
+                <label for="paypal-radio" class="payment-method-label">
+                  <div>PayPal</div>
+                </label>
+                <div class="payment-method-buttons" id="paypal-button-container"></div>
+              </div>
+              
+              <!-- Venmo Button -->
+              <div class="payment-method-option" id="venmo-option">
+                <input type="radio" name="payment-method" id="venmo-radio" value="venmo">
+                <label for="venmo-radio" class="payment-method-label">
+                  <div>Venmo</div>
+                </label>
+                <div class="payment-method-buttons" id="venmo-button-container"></div>
+              </div>
+              
+              <!-- Pay Later Button -->
+              <div class="payment-method-option" id="paylater-option">
+                <input type="radio" name="payment-method" id="paylater-radio" value="paylater">
+                <label for="paylater-radio" class="payment-method-label">
+                  <div>Pay Later</div>
+                </label>
+                <div class="payment-method-buttons" id="paylater-button-container"></div>
+              </div>
               
               <div class="payment-method-option" id="applepay-option" style="display: none;">
                 <input type="radio" name="payment-method" id="applepay-radio" value="applepay">
@@ -181,7 +200,69 @@
                 <label for="card-radio" class="payment-method-label">
                   <div id="card-mark-container">Pay with Card</div>
                 </label>
-                <div class="payment-method-buttons" id="card-button-container"></div>
+                <div class="payment-method-buttons" id="card-button-container">
+                  <div class="checkbox-group">
+                    <div class="checkbox-option">
+                      <input type="checkbox" id="billing-info-toggle" />
+                      <label for="billing-info-toggle">Billing is different from Shipping</label>
+                    </div>
+                  </div>
+                  
+                  <div id="billing-info" class="billing-info" style="display: none;">
+                    <h5>Billing Information</h5>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="billing-first-name">First Name</label>
+                        <input type="text" id="billing-first-name" name="billing-first-name" value="Jane" class="form-control" required />
+                      </div>
+                      <div class="form-group">
+                        <label for="billing-last-name">Last Name</label>
+                        <input type="text" id="billing-last-name" name="billing-last-name" value="Doe" class="form-control" required />
+                      </div>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="billing-email">Email Address</label>
+                        <input type="email" id="billing-email" name="billing-email" value="jane.doe@example.com" class="form-control" required />
+                      </div>
+                      <div class="form-group">
+                        <label for="billing-phone">Phone Number</label>
+                        <input type="text" id="billing-phone" name="billing-phone" value="1234567890" class="form-control" required />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="billing-address-line1">Street Address</label>
+                      <input type="text" id="billing-address-line1" name="billing-address-line1" value="123 Main St" class="form-control" required />
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="billing-admin-area2">City</label>
+                        <input type="text" id="billing-admin-area2" name="billing-admin-area2" value="Springfield" class="form-control" required />
+                      </div>
+                      <div class="form-group">
+                        <label for="billing-admin-area1">State</label>
+                        <input type="text" id="billing-admin-area1" name="billing-admin-area1" value="IL" class="form-control" required />
+                      </div>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="billing-postal-code">Zip Code</label>
+                        <input type="text" id="billing-postal-code" name="billing-postal-code" value="62701" class="form-control" required />
+                      </div>
+                      <div class="form-group">
+                        <label for="billing-country-code">Country Code</label>
+                        <input type="text" id="billing-country-code" name="billing-country-code" value="US" class="form-control" required />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="card-fields">
+                    <div id="card-name-field-container"></div>
+                    <div id="card-number-field-container"></div>
+                    <div id="card-expiry-field-container"></div>
+                    <div id="card-cvv-field-container"></div>
+                  </div>
+                </div>
               </div>
               
               <!-- Submit button for saved payment methods and new credit cards -->
@@ -214,8 +295,7 @@
 <script>
   const clientId = '<%= clientId %>';
 </script>
-    <script src="/checkout.js"></script>
-<script src="https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js"></script>
-<script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
+<script src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&currency=USD&components=buttons,card-fields,marks,messages&enable-funding=venmo,paylater"></script>
+<script src="/checkout-simplified.js"></script>
 </body>
 </html>

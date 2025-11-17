@@ -1,0 +1,51 @@
+<!-- Example: How to include optional checkout modules -->
+
+<!-- Basic checkout (simplified version only) -->
+<script src="/checkout-simplified.js"></script>
+
+<!-- OR: Include module loader for optional features -->
+<script src="/modules/module-loader.js"></script>
+<script src="/checkout-simplified.js"></script>
+
+<!-- OR: Include specific modules manually -->
+<script src="/modules/error-manager.js"></script>
+<script src="/modules/storage-manager.js"></script>
+<script src="/checkout-simplified.js"></script>
+
+<!-- OR: Include all modules -->
+<script src="/modules/error-manager.js"></script>
+<script src="/modules/debug-manager.js"></script>
+<script src="/modules/storage-manager.js"></script>
+<script src="/modules/shipping-calculator.js"></script>
+<script src="/modules/module-loader.js"></script>
+<script src="/checkout-simplified.js"></script>
+
+<!-- Examples of using modules programmatically -->
+<script>
+// Load modules dynamically
+window.checkoutModules.load('error-manager');
+window.checkoutModules.load('storage-manager');
+
+// Or load all conditional modules
+window.checkoutModules.loadConditional();
+
+// Check module status
+console.log(window.checkoutModules.status());
+
+// Access module functionality
+if (window.paypalStorageManager) {
+  console.log('Recent orders:', window.paypalStorageManager.getOrders());
+}
+
+if (window.paypalShippingCalculator) {
+  const shipping = window.paypalShippingCalculator.calculateShipping({
+    countryCode: 'US',
+    state: 'CA'
+  }, 100);
+  console.log('Shipping options:', shipping);
+}
+
+// Enable debug mode
+localStorage.setItem('paypal-debug', 'true');
+// Then reload page to auto-load debug module
+</script>
