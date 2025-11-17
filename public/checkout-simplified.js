@@ -77,8 +77,19 @@ const Utils = {
 const PayPalIntegration = {
   async createOrder(data) {
     try {
+      console.log('PayPal SDK data passed to createOrder:', data);
+
+      // Determine the payment source based on the funding source
+      let paymentSource = 'paypal'; // default
+      if (data?.fundingSource === 'venmo') {
+        paymentSource = 'venmo';
+      } else if (data?.paymentSource) {
+        paymentSource = data.paymentSource;
+      }
+      // Note: Pay Later uses 'paypal' as payment source, fundingSource just affects UI
+
       const requestBody = {
-        source: data?.paymentSource || 'paypal', // Default to paypal if no payment source specified
+        source: paymentSource,
         totalAmount: Utils.getCurrentTotal(),
         shippingInfo: this.getShippingInfo(),
         cart: [
@@ -90,9 +101,7 @@ const PayPalIntegration = {
       };
 
       // Set paymentSource for API compatibility
-      if (data?.paymentSource) {
-        requestBody.paymentSource = data.paymentSource;
-      }
+      requestBody.paymentSource = paymentSource;
 
       // Include billing info if different from shipping
       const billingInfo = this.getBillingInfo();
@@ -112,13 +121,22 @@ const PayPalIntegration = {
         console.log('Vault requested: payment method will be saved');
       }
 
+      console.log('Sending request to server:', requestBody);
+
       const response = await fetch('/api/checkout-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
       });
 
-      if (!response.ok) throw new Error('Order creation failed');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', response.status, errorText);
+        throw new Error(
+          `Order creation failed: ${response.status} - ${errorText}`
+        );
+      }
+
       const orderData = await response.json();
       console.log('Order created:', orderData.id);
       return orderData.id;

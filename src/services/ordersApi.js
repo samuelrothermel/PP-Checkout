@@ -275,6 +275,7 @@ export const createCheckoutOrder = async orderData => {
       };
     }
   }
+  // Note: Pay Later uses 'paypal' as paymentSource - no special handling needed
 
   // Build purchase unit with shipping details if provided
   const purchaseUnit = {
@@ -292,6 +293,22 @@ export const createCheckoutOrder = async orderData => {
   // Always use AUTHORIZE intent for all checkout orders
   const intent = 'AUTHORIZE';
 
+  // Build the order payload
+  const orderPayload = {
+    intent,
+    purchase_units: [purchaseUnit],
+  };
+
+  // Only include payment_source if it has properties (not empty for Pay Later)
+  if (Object.keys(payment_source).length > 0) {
+    orderPayload.payment_source = payment_source;
+  }
+
+  console.log(
+    'Creating order with payload:',
+    JSON.stringify(orderPayload, null, 2)
+  );
+
   const url = `${base}/v2/checkout/orders`;
   const response = await fetch(url, {
     method: 'post',
@@ -300,11 +317,7 @@ export const createCheckoutOrder = async orderData => {
       'PayPal-Request-Id': Date.now().toString(),
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({
-      intent,
-      purchase_units: [purchaseUnit],
-      payment_source,
-    }),
+    body: JSON.stringify(orderPayload),
   });
 
   return handleResponse(response);
