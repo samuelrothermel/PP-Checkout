@@ -1,7 +1,28 @@
 // Simplified Checkout JavaScript - Modular Approach
 
-// Load StorageManager for enhanced localStorage functionality
-const storageManager = window.paypalStorageManager || new StorageManager();
+// Use StorageManager from window.paypalStorageManager (loaded via storage-manager.js)
+// No need to declare storageManager here as it's already available globally
+
+// Global callback for Google Pay SDK loading
+window.onGooglePayLoaded = function () {
+  console.log('💳 Google Pay SDK loaded via callback');
+  if (window.GooglePayButtons) {
+    window.GooglePayButtons.initialize()
+      .then(() => {
+        if (window.Utils) {
+          window.Utils.showElement('googlepay-option');
+          // Ensure button container is hidden initially
+          window.Utils.hideElement('googlepay-button-container');
+        }
+      })
+      .catch(error => {
+        console.warn('Google Pay initialization failed:', error);
+        if (window.Utils) {
+          window.Utils.hideElement('googlepay-option');
+        }
+      });
+  }
+};
 
 // Configuration and State
 const CheckoutConfig = {
@@ -244,7 +265,7 @@ const PayPalIntegration = {
           null,
       };
 
-      storageManager.saveOrder(orderData.id, orderMetadata);
+      window.paypalStorageManager.saveOrder(orderData.id, orderMetadata);
     }
 
     // Show order results
@@ -335,7 +356,7 @@ const PayPalIntegration = {
           vaultStatus: vaultStatus,
           paymentTokenId: paymentTokenId,
         };
-        storageManager.saveCustomer(customerId, customerMetadata);
+        window.paypalStorageManager.saveCustomer(customerId, customerMetadata);
       }
       if (paymentTokenIdInfo && paymentTokenId) {
         paymentTokenIdInfo.textContent = `Payment Token ID: ${paymentTokenId}`;
@@ -1203,21 +1224,8 @@ class CheckoutApp {
         Utils.hideElement('googlepay-option');
       }
     } else {
-      // Set up callback for when Google Pay SDK loads
-      window.onGooglePayLoaded = () => {
-        console.log('💳 Google Pay SDK loaded via callback');
-        GooglePayButtons.initialize()
-          .then(() => {
-            Utils.showElement('googlepay-option');
-            // Ensure button container is hidden initially
-            Utils.hideElement('googlepay-button-container');
-          })
-          .catch(error => {
-            console.warn('Google Pay initialization failed:', error);
-            Utils.hideElement('googlepay-option');
-          });
-      };
       console.log('Waiting for Google Pay SDK to load...');
+      // The global onGooglePayLoaded callback will handle initialization when the SDK loads
     }
   }
 
@@ -1282,15 +1290,19 @@ window.CheckoutApp = {
   CardFields,
   CustomerManagement,
   CheckoutConfig,
-  storageManager,
+  storageManager: window.paypalStorageManager,
 };
+
+// Export necessary objects to global scope for Google Pay callback
+window.Utils = Utils;
+window.GooglePayButtons = GooglePayButtons;
 
 // Initialize StorageManager debug utilities if in debug mode
 if (
   window.location.search.includes('debug=true') ||
   window.location.search.includes('storage=true')
 ) {
-  storageManager.attachToWindow();
+  window.paypalStorageManager.attachToWindow();
   console.log('🚀 StorageManager debug utilities enabled!');
   console.log('💾 Access storage data via window.storage methods:');
   console.log('   window.storage.orders() - View saved orders');
