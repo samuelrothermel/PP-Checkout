@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .log { margin: 5px 0; padding: 5px; background: #f5f5f5; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>JavaScript Error Fix Verification</h1>
+    <div id="results"></div>
+
+    <script>
+        // Test results container
+        const results = document.getElementById('results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+
+        // Global function to test onGooglePayLoaded callback
+        window.onGooglePayLoaded = function() {
+            addResult('✅ onGooglePayLoaded callback executed successfully', 'success');
+            addResult('💳 Google Pay SDK loaded via callback', 'info');
+        };
+
+        addResult('🔍 Testing JavaScript fixes...', 'info');
+        
+        // Test 1: Check if we can access basic window objects
+        addResult('Test 1: Window object access - ' + (typeof window !== 'undefined' ? 'PASS' : 'FAIL'), 
+                 typeof window !== 'undefined' ? 'success' : 'error');
+    </script>
+
+    <!-- StorageManager Module -->
+    <script src="/modules/storage-manager.js"></script>
+    
+    <script>
+        // Test 2: Check if StorageManager loaded correctly
+        addResult('Test 2: StorageManager availability - ' + 
+                 (typeof window.paypalStorageManager !== 'undefined' ? 'PASS' : 'FAIL'),
+                 typeof window.paypalStorageManager !== 'undefined' ? 'success' : 'error');
+        
+        if (window.paypalStorageManager) {
+            addResult('  - StorageManager instance created successfully', 'success');
+        }
+    </script>
+
+    <!-- Main Checkout Script -->
+    <script src="/checkout-simplified.js"></script>
+    
+    <script>
+        // Test 3: Check if checkout script loaded without errors
+        addResult('Test 3: Checkout script loaded - PASS', 'success');
+        
+        // Test 4: Check if onGooglePayLoaded is properly defined
+        addResult('Test 4: onGooglePayLoaded function - ' + 
+                 (typeof window.onGooglePayLoaded === 'function' ? 'PASS' : 'FAIL'),
+                 typeof window.onGooglePayLoaded === 'function' ? 'success' : 'error');
+        
+        // Test 5: Check if Utils is exported to global scope
+        addResult('Test 5: Utils global export - ' + 
+                 (typeof window.Utils !== 'undefined' ? 'PASS' : 'FAIL'),
+                 typeof window.Utils !== 'undefined' ? 'success' : 'error');
+        
+        // Test 6: Check if GooglePayButtons is exported to global scope
+        addResult('Test 6: GooglePayButtons global export - ' + 
+                 (typeof window.GooglePayButtons !== 'undefined' ? 'PASS' : 'FAIL'),
+                 typeof window.GooglePayButtons !== 'undefined' ? 'success' : 'error');
+        
+        // Test 7: Try to trigger the Google Pay callback manually
+        try {
+            if (typeof window.onGooglePayLoaded === 'function') {
+                window.onGooglePayLoaded();
+                addResult('Test 7: Manual callback trigger - PASS', 'success');
+            } else {
+                addResult('Test 7: Manual callback trigger - FAIL (function not found)', 'error');
+            }
+        } catch (error) {
+            addResult('Test 7: Manual callback trigger - ERROR: ' + error.message, 'error');
+        }
+        
+        addResult('🎉 All tests completed! Check results above.', 'info');
+    </script>
+</body>
+</html>

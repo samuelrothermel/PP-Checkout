@@ -6,22 +6,27 @@
 // Global callback for Google Pay SDK loading
 window.onGooglePayLoaded = function () {
   console.log('💳 Google Pay SDK loaded via callback');
-  if (window.GooglePayButtons) {
-    window.GooglePayButtons.initialize()
-      .then(() => {
-        if (window.Utils) {
-          window.Utils.showElement('googlepay-option');
-          // Ensure button container is hidden initially
-          window.Utils.hideElement('googlepay-button-container');
-        }
-      })
-      .catch(error => {
-        console.warn('Google Pay initialization failed:', error);
-        if (window.Utils) {
-          window.Utils.hideElement('googlepay-option');
-        }
-      });
+
+  // If our checkout components aren't ready yet, queue the initialization
+  if (!window.GooglePayButtons || !window.Utils) {
+    console.log(
+      '💳 Checkout components not ready yet, queuing Google Pay initialization'
+    );
+    window.googlePayPendingInit = true;
+    return;
   }
+
+  // Initialize Google Pay
+  window.GooglePayButtons.initialize()
+    .then(() => {
+      window.Utils.showElement('googlepay-option');
+      // Ensure button container is hidden initially
+      window.Utils.hideElement('googlepay-button-container');
+    })
+    .catch(error => {
+      console.warn('Google Pay initialization failed:', error);
+      window.Utils.hideElement('googlepay-option');
+    });
 };
 
 // Configuration and State
@@ -265,7 +270,20 @@ const PayPalIntegration = {
           null,
       };
 
-      window.paypalStorageManager.saveOrder(orderData.id, orderMetadata);
+      console.log(
+        '💾 Saving order to StorageManager:',
+        orderData.id,
+        orderMetadata
+      );
+      const saveResult = window.paypalStorageManager.saveOrder(
+        orderData.id,
+        orderMetadata
+      );
+      console.log('💾 Save result:', saveResult);
+
+      // Debug: Check what's actually in storage
+      const savedOrders = window.paypalStorageManager.getOrders();
+      console.log('💾 All orders in storage:', savedOrders);
     }
 
     // Show order results
@@ -1296,6 +1314,13 @@ window.CheckoutApp = {
 // Export necessary objects to global scope for Google Pay callback
 window.Utils = Utils;
 window.GooglePayButtons = GooglePayButtons;
+
+// Check if Google Pay initialization was queued
+if (window.googlePayPendingInit) {
+  console.log('💳 Processing queued Google Pay initialization');
+  window.onGooglePayLoaded();
+  window.googlePayPendingInit = false;
+}
 
 // Initialize StorageManager debug utilities if in debug mode
 if (

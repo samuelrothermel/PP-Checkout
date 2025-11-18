@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .log { background: #f5f5f5; padding: 5px; margin: 5px 0; font-family: monospace; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Storage and Google Pay Debug Test</h1>
+    
+    <div class="section">
+        <h2>Storage Manager Test</h2>
+        <div id="storage-results"></div>
+        <button onclick="testStorage()">Test Storage</button>
+        <button onclick="checkStoredOrders()">Check Stored Orders</button>
+    </div>
+    
+    <div class="section">
+        <h2>Google Pay Test</h2>
+        <div id="googlepay-results"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info', containerId = 'storage-results') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            container.appendChild(div);
+        }
+
+        // Test Google Pay callback
+        window.onGooglePayLoaded = function() {
+            log('✅ Google Pay SDK loaded successfully!', 'success', 'googlepay-results');
+            log('Google Pay object available: ' + (typeof google !== 'undefined' && google.payments), 'info', 'googlepay-results');
+        };
+
+        function testStorage() {
+            log('Testing storage functionality...', 'info');
+            
+            if (!window.paypalStorageManager) {
+                log('❌ StorageManager not available', 'error');
+                return;
+            }
+            
+            log('✅ StorageManager available', 'success');
+            
+            // Test saving an order
+            const testOrderId = 'TEST_' + Date.now();
+            const metadata = {
+                amount: '25.00',
+                paymentMethod: 'test',
+                status: 'test-authorized'
+            };
+            
+            const saveResult = window.paypalStorageManager.saveOrder(testOrderId, metadata);
+            log('Save test order result: ' + saveResult, saveResult ? 'success' : 'error');
+            
+            // Test retrieving orders
+            const orders = window.paypalStorageManager.getOrders();
+            log('Retrieved orders count: ' + orders.length, 'info');
+            log('Latest order: ' + JSON.stringify(orders[0] || 'none'), 'info');
+        }
+        
+        function checkStoredOrders() {
+            log('Checking all stored orders...', 'info');
+            
+            if (!window.paypalStorageManager) {
+                log('❌ StorageManager not available', 'error');
+                return;
+            }
+            
+            const orders = window.paypalStorageManager.getOrders();
+            log('Total orders in storage: ' + orders.length, 'info');
+            
+            orders.forEach((order, index) => {
+                log(`Order ${index + 1}: ${order.id} - ${order.amount} - ${order.paymentMethod}`, 'info');
+            });
+            
+            // Check raw localStorage
+            const rawStorage = localStorage.getItem('paypal-checkout-orders');
+            log('Raw storage key exists: ' + (rawStorage !== null), 'info');
+            if (rawStorage) {
+                log('Raw storage length: ' + rawStorage.length + ' chars', 'info');
+            }
+        }
+    </script>
+
+    <!-- Google Pay SDK -->
+    <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
+    
+    <!-- StorageManager -->
+    <script src="/modules/storage-manager.js"></script>
+    
+    <script>
+        // Log when scripts finish loading
+        log('✅ Page scripts loaded', 'success');
+        log('StorageManager available: ' + (typeof window.paypalStorageManager !== 'undefined'), 'info');
+        log('onGooglePayLoaded defined: ' + (typeof window.onGooglePayLoaded === 'function'), 'info');
+    </script>
+</body>
+</html>

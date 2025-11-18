@@ -291,6 +291,13 @@
     </div>
 <script>
   const clientId = '<%= clientId %>';
+  
+  // Define Google Pay callback early to avoid "not defined" errors
+  // This will be replaced by the actual implementation in checkout-simplified.js
+  window.onGooglePayLoaded = function() {
+    console.log('💳 Google Pay SDK loaded (early callback)');
+    // The actual implementation will be set by checkout-simplified.js
+  };
 </script>
     <!-- Google Pay JavaScript SDK -->
     <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>

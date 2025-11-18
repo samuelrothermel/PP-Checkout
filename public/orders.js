@@ -2,9 +2,16 @@ document.addEventListener('DOMContentLoaded', function () {
   loadOrders();
 });
 
-// Helper functions for localStorage management
+// Helper functions for localStorage management using StorageManager
 function getRecentOrderIds() {
   try {
+    // First try to get orders from StorageManager
+    if (window.paypalStorageManager) {
+      const orders = window.paypalStorageManager.getOrders();
+      return orders.map(order => order.id);
+    }
+
+    // Fallback to legacy method for backward compatibility
     return JSON.parse(localStorage.getItem('recentOrderIds') || '[]');
   } catch (error) {
     console.error('Error reading order IDs from localStorage:', error);
@@ -14,6 +21,16 @@ function getRecentOrderIds() {
 
 function removeOrderFromLocalStorage(orderId) {
   try {
+    // Use StorageManager if available
+    if (window.paypalStorageManager) {
+      const orders = window.paypalStorageManager.getOrders();
+      const updatedOrders = orders.filter(order => order.id !== orderId);
+      window.paypalStorageManager.setItem('orders', updatedOrders);
+      console.log('Order removed from StorageManager:', orderId);
+      return;
+    }
+
+    // Fallback to legacy method
     const recentOrderIds = getRecentOrderIds();
     const updatedOrderIds = recentOrderIds.filter(id => id !== orderId);
     localStorage.setItem('recentOrderIds', JSON.stringify(updatedOrderIds));
@@ -26,6 +43,14 @@ function removeOrderFromLocalStorage(orderId) {
 
 function clearAllOrdersFromLocalStorage() {
   try {
+    // Use StorageManager if available
+    if (window.paypalStorageManager) {
+      window.paypalStorageManager.setItem('orders', []);
+      console.log('All orders cleared from StorageManager');
+      return;
+    }
+
+    // Fallback to legacy method
     localStorage.removeItem('recentOrderIds');
     console.log('All orders cleared from localStorage');
   } catch (error) {

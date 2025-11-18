@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Checkout Scripts</title>
+</head>
+<body>
+    <h1>Test Checkout Scripts</h1>
+    <div id="console-output"></div>
+
+    <script>
+        // Capture console messages to show on page
+        const output = document.getElementById('console-output');
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            output.innerHTML += '<div style="color: green;">LOG: ' + args.join(' ') + '</div>';
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            output.innerHTML += '<div style="color: red;">ERROR: ' + args.join(' ') + '</div>';
+        };
+    </script>
+
+    <!-- Google Pay JavaScript SDK -->
+    <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
+    
+    <!-- StorageManager for enhanced localStorage functionality -->
+    <script src="/modules/storage-manager.js"></script>
+    
+    <!-- Test the checkout script -->
+    <script src="/checkout-simplified.js"></script>
+
+    <script>
+        // Test our fixes
+        console.log('Testing storageManager:', typeof window.paypalStorageManager);
+        console.log('Testing onGooglePayLoaded:', typeof window.onGooglePayLoaded);
+        
+        // Try to access storageManager to make sure it works
+        if (window.paypalStorageManager) {
+            console.log('StorageManager is available and working');
+        } else {
+            console.error('StorageManager is not available');
+        }
+        
+        // Check if onGooglePayLoaded is properly defined
+        if (typeof window.onGooglePayLoaded === 'function') {
+            console.log('onGooglePayLoaded function is properly defined');
+        } else {
+            console.error('onGooglePayLoaded function is not defined');
+        }
+    </script>
+</body>
+</html>

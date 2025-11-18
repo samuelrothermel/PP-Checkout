@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Fix Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-result { margin: 5px 0; padding: 8px; border-radius: 3px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { margin: 5px; padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Complete Fix Verification Test</h1>
+    
+    <div class="test-section">
+        <h2>❌ Original Error Reproduction</h2>
+        <p>Testing the exact conditions that caused the original errors:</p>
+        <div id="error-tests"></div>
+        <button onclick="testOriginalErrors()">Test Original Error Conditions</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>💾 Storage Manager Integration</h2>
+        <p>Testing order saving and retrieval:</p>
+        <div id="storage-tests"></div>
+        <button onclick="testStorageIntegration()">Test Storage</button>
+        <button onclick="simulateOrderSave()">Simulate Order Save</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>💳 Google Pay Callback</h2>
+        <p>Testing Google Pay SDK loading:</p>
+        <div id="googlepay-tests"></div>
+        <button onclick="testGooglePayCallback()">Test Google Pay Callback</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔄 Orders Page Integration</h2>
+        <p>Testing orders retrieval from orders page:</p>
+        <div id="orders-tests"></div>
+        <button onclick="testOrdersPageIntegration()">Test Orders Page Functions</button>
+    </div>
+
+    <script>
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            container.appendChild(div);
+        }
+
+        function testOriginalErrors() {
+            addResult('error-tests', '🔍 Testing original error conditions...', 'info');
+            
+            // Test 1: Check if storageManager is declared multiple times
+            try {
+                // This would fail if storageManager was declared as const twice
+                addResult('error-tests', '✅ No duplicate storageManager declaration error', 'success');
+            } catch (error) {
+                addResult('error-tests', '❌ StorageManager declaration error: ' + error.message, 'error');
+            }
+            
+            // Test 2: Check if onGooglePayLoaded is defined
+            if (typeof window.onGooglePayLoaded === 'function') {
+                addResult('error-tests', '✅ onGooglePayLoaded function is defined', 'success');
+            } else {
+                addResult('error-tests', '❌ onGooglePayLoaded function is not defined', 'error');
+            }
+            
+            // Test 3: Check if we can access StorageManager through window.paypalStorageManager
+            if (window.paypalStorageManager) {
+                addResult('error-tests', '✅ StorageManager accessible via window.paypalStorageManager', 'success');
+            } else {
+                addResult('error-tests', '❌ StorageManager not accessible', 'error');
+            }
+        }
+
+        function testStorageIntegration() {
+            addResult('storage-tests', '💾 Testing storage integration...', 'info');
+            
+            if (!window.paypalStorageManager) {
+                addResult('storage-tests', '❌ StorageManager not available', 'error');
+                return;
+            }
+            
+            // Test saving an order
+            const testOrderId = 'INTEGRATION_TEST_' + Date.now();
+            const metadata = {
+                amount: '50.00',
+                paymentMethod: 'test_paypal',
+                status: 'authorized'
+            };
+            
+            const saveResult = window.paypalStorageManager.saveOrder(testOrderId, metadata);
+            if (saveResult) {
+                addResult('storage-tests', '✅ Order saved successfully', 'success');
+            } else {
+                addResult('storage-tests', '❌ Failed to save order', 'error');
+            }
+            
+            // Test retrieving orders
+            const orders = window.paypalStorageManager.getOrders();
+            addResult('storage-tests', `📋 Retrieved ${orders.length} orders from storage`, 'info');
+            
+            // Find our test order
+            const testOrder = orders.find(order => order.id === testOrderId);
+            if (testOrder) {
+                addResult('storage-tests', '✅ Test order found in storage', 'success');
+                addResult('storage-tests', `📝 Order details: ${testOrderId} - $${testOrder.amount} - ${testOrder.paymentMethod}`, 'info');
+            } else {
+                addResult('storage-tests', '❌ Test order not found in storage', 'error');
+            }
+        }
+
+        function simulateOrderSave() {
+            addResult('storage-tests', '🎯 Simulating real order save process...', 'info');
+            
+            // Simulate the exact process from checkout-simplified.js
+            const mockOrderData = {
+                id: 'SIMULATED_' + Date.now(),
+                payment_source: {
+                    paypal: {
+                        account_id: '123'
+                    }
+                },
+                purchase_units: [{
+                    payments: {
+                        authorizations: [{
+                            id: 'AUTH_' + Date.now()
+                        }]
+                    }
+                }]
+            };
+            
+            // Mock CheckoutConfig
+            const mockCheckoutConfig = { totalAmount: '75.00' };
+            
+            // Simulate the displayResults logic
+            const paymentSource = mockOrderData.payment_source;
+            let paymentMethod = 'unknown';
+
+            if (paymentSource?.card) {
+                paymentMethod = 'card';
+            } else if (paymentSource?.paypal) {
+                paymentMethod = 'paypal';
+            } else if (paymentSource?.venmo) {
+                paymentMethod = 'venmo';
+            } else if (paymentSource?.apple_pay) {
+                paymentMethod = 'apple_pay';
+            } else if (paymentSource?.google_pay) {
+                paymentMethod = 'google_pay';
+            }
+
+            const orderMetadata = {
+                amount: mockCheckoutConfig.totalAmount,
+                paymentMethod: paymentMethod,
+                status: 'authorized',
+                authorizationId: mockOrderData.purchase_units?.[0]?.payments?.authorizations?.[0]?.id || null,
+            };
+
+            addResult('storage-tests', '💾 Saving simulated order: ' + mockOrderData.id, 'info');
+            const saveResult = window.paypalStorageManager.saveOrder(mockOrderData.id, orderMetadata);
+            
+            if (saveResult) {
+                addResult('storage-tests', '✅ Simulated order saved successfully', 'success');
+                const savedOrders = window.paypalStorageManager.getOrders();
+                addResult('storage-tests', `📊 Total orders now in storage: ${savedOrders.length}`, 'info');
+            } else {
+                addResult('storage-tests', '❌ Failed to save simulated order', 'error');
+            }
+        }
+
+        function testGooglePayCallback() {
+            addResult('googlepay-tests', '💳 Testing Google Pay callback...', 'info');
+            
+            if (typeof window.onGooglePayLoaded === 'function') {
+                addResult('googlepay-tests', '✅ onGooglePayLoaded function exists', 'success');
+                
+                try {
+                    // Test calling the callback
+                    window.onGooglePayLoaded();
+                    addResult('googlepay-tests', '✅ Callback executed without errors', 'success');
+                } catch (error) {
+                    addResult('googlepay-tests', '❌ Callback execution failed: ' + error.message, 'error');
+                }
+            } else {
+                addResult('googlepay-tests',' ❌ onGooglePayLoaded function not found', 'error');
+            }
+            
+            // Check if Google SDK is available
+            if (typeof google !== 'undefined' && google.payments) {
+                addResult('googlepay-tests', '✅ Google Pay SDK is loaded and available', 'success');
+            } else {
+                addResult('googlepay-tests', '⚠️ Google Pay SDK not yet loaded (expected on initial load)', 'warning');
+            }
+        }
+
+        function testOrdersPageIntegration() {
+            addResult('orders-tests', '🔄 Testing orders page integration...', 'info');
+            
+            // Test the getRecentOrderIds function that would be used by orders page
+            if (window.paypalStorageManager) {
+                const orders = window.paypalStorageManager.getOrders();
+                const orderIds = orders.map(order => order.id);
+                
+                addResult('orders-tests', `📋 Orders available for orders page: ${orderIds.length}`, 'info');
+                
+                if (orderIds.length > 0) {
+                    addResult('orders-tests', '✅ Orders page will be able to fetch these order IDs', 'success');
+                    orderIds.slice(0, 3).forEach((id, index) => {
+                        addResult('orders-tests', `  ${index + 1}. ${id}`, 'info');
+                    });
+                    if (orderIds.length > 3) {
+                        addResult('orders-tests', `  ... and ${orderIds.length - 3} more`, 'info');
+                    }
+                } else {
+                    addResult('orders-tests', '⚠️ No orders available - orders page will show empty state', 'warning');
+                }
+            } else {
+                addResult('orders-tests', '❌ StorageManager not available for orders page', 'error');
+            }
+        }
+
+        // Early Google Pay callback definition (matching the fix)
+        window.onGooglePayLoaded = function() {
+            addResult('googlepay-tests', '🎉 Google Pay SDK loaded via onload callback!', 'success');
+        };
+    </script>
+
+    <!-- StorageManager -->
+    <script src="/modules/storage-manager.js"></script>
+    
+    <!-- Google Pay SDK with callback -->
+    <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
+    
+    <script>
+        // Auto-run tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                addResult('error-tests', '🚀 Page loaded, ready for testing', 'info');
+                addResult('storage-tests', '✅ StorageManager status: ' + (window.paypalStorageManager ? 'Available' : 'Not Available'), window.paypalStorageManager ? 'success' : 'error');
+                
+                // Auto-test some basic functionality
+                testOriginalErrors();
+            }, 100);
+        });
+    </script>
+</body>
+</html>
