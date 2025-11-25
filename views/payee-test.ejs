@@ -22,8 +22,7 @@
             <p><strong>Test Flow:</strong></p>
             <ul>
                 <li><strong>Step 1:</strong> Create vaulted payment token (stores payment method)</li>
-                <li><strong>Step 2:</strong> Use vault v3 token format with different payee merchant ID</li>
-                <li><strong>Step 3:</strong> Compare vault v3 vs legacy vault behavior</li>
+                <li><strong>Step 2:</strong> Create capture intent order with different payee merchant ID</li>
             </ul>
             <p>This tests PayPal's new vault v3 API format and security model.</p>
         </div>
@@ -54,51 +53,21 @@
             <div id="vault-token" style="display: none;"></div>
         </div>
 
-        <!-- Test 2: Vault v3 Format Test -->
+        <!-- Test 2: Create Capture Order with Different Payee -->
         <div class="test-section">
-            <h3>Step 2: Test Vault v3 Payment Method Token Format</h3>
-            <p>Test the new vault v3 format with <code>PAYMENT_METHOD_TOKEN</code> type.</p>
-            <p><strong>API Format:</strong></p>
-            <pre><code>{
-  "payment_source": {
-    "token": {
-      "id": "your_vault_id",
-      "type": "PAYMENT_METHOD_TOKEN"
-    }
-  }
-}</code></pre>
+            <h3>Step 2: Create Capture Order with Different Payee</h3>
+            <p>Create a new order with capture intent using the vaulted payment token and disberse funds to the specified payee merchant account.</p>
+            <p><strong>Expected:</strong> Should succeed if you own the vault_id and funds will be disbursed to the separate PayPal business account.</p>
+            <p><strong>Process:</strong> Create Order (intent: capture) → Use vaulted token → Specify payee → Immediate capture and disbursement</p>
             
-            <button class="btn" id="test-vault-v3-btn" onclick="testVaultV3Format()" disabled>
-                Test Vault v3 Format
+            <button class="btn" id="create-capture-order-btn" onclick="createCaptureOrderWithPayee()" disabled>
+                Create Capture Order with Payee
             </button>
             
-            <div id="vault-v3-results" class="results" style="display: none;"></div>
+            <div id="capture-order-results" class="results" style="display: none;"></div>
         </div>
 
-        <!-- Test 3: Vault v3 with Different Payee -->
-        <div class="test-section">
-            <h3>Step 3: Test Vault v3 with Different Payee</h3>
-            <p>Test vault v3 format with different payee merchant ID to verify security model.</p>
-            <p><strong>Expected:</strong> Should work with same merchant, may fail with different payee.</p>
-            
-            <button class="btn" id="test-vault-v3-payee-btn" onclick="testVaultV3WithPayee()" disabled>
-                Test Vault v3 with Different Payee
-            </button>
-            
-            <div id="vault-v3-payee-results" class="results" style="display: none;"></div>
-        </div>
 
-        <!-- Test 4: Legacy vs v3 Comparison -->
-        <div class="test-section">
-            <h3>Step 4: Legacy Vault vs Vault v3 Comparison</h3>
-            <p>Compare the old vault format with the new vault v3 format.</p>
-            
-            <button class="btn" id="test-legacy-comparison-btn" onclick="testLegacyVsV3()" disabled>
-                Compare Legacy vs Vault v3
-            </button>
-            
-            <div id="legacy-comparison-results" class="results" style="display: none;"></div>
-        </div>
 
         <!-- Results Summary -->
         <div class="test-section">
@@ -116,9 +85,7 @@
         let vaultedToken = null;
         let testResults = {
             vaultCreation: null,
-            vaultV3: null,
-            vaultV3Payee: null,
-            legacyComparison: null
+            captureOrder: null
         };
 
         // Auto-fill the payee merchant ID field
@@ -126,81 +93,8 @@
             document.getElementById('payee-merchant-id').value = 'QA9TDBGQ8E5RS';
         });
 
-        // Test vault v3 format
-        function testVaultV3Format() {
-            if (!vaultedToken) {
-                alert('Please create a vaulted token first');
-                return;
-            }
-
-            const amount = document.getElementById('test-amount').value;
-            
-            showResults('vault-v3-results', 'Testing vault v3 PAYMENT_METHOD_TOKEN format...', 'warning');
-
-            fetch('/api/test-vault-v3', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    vaultedToken: vaultedToken,
-                    amount: amount
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                testResults.vaultV3 = data;
-                
-                let resultMessage = `🧪 VAULT V3 FORMAT TEST RESULTS:\n\n`;
-                
-                if (data.success) {
-                    resultMessage += `✅ ORDER CREATION: SUCCESS\n`;
-                    resultMessage += `Order ID: ${data.orderId}\n`;
-                    resultMessage += `Status: ${data.status}\n`;
-                    
-                    if (data.capture && data.capture.success) {
-                        resultMessage += `✅ CAPTURE: SUCCESS\n`;
-                        resultMessage += `Capture ID: ${data.capture.captureId}\n`;
-                        resultMessage += `Amount: $${data.capture.amount}\n`;
-                    } else if (data.capture && data.capture.error) {
-                        resultMessage += `❌ CAPTURE: FAILED\n`;
-                        resultMessage += `Error: ${data.capture.error}\n`;
-                    }
-                    
-                    resultMessage += `\n📋 PAYMENT SOURCE FORMAT:\n`;
-                    resultMessage += `{\n`;
-                    resultMessage += `  "payment_source": {\n`;
-                    resultMessage += `    "token": {\n`;
-                    resultMessage += `      "id": "${vaultedToken}",\n`;
-                    resultMessage += `      "type": "PAYMENT_METHOD_TOKEN"\n`;
-                    resultMessage += `    }\n`;
-                    resultMessage += `  }\n`;
-                    resultMessage += `}\n\n`;
-                    
-                    showResults('vault-v3-results', resultMessage, 'success');
-                } else {
-                    resultMessage += `❌ ORDER CREATION: FAILED\n`;
-                    resultMessage += `Error: ${data.error}\n\n`;
-                    
-                    showResults('vault-v3-results', resultMessage, 'error');
-                }
-                
-                resultMessage += `📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
-                document.getElementById('vault-v3-results').textContent = resultMessage;
-                
-                document.getElementById('test-vault-v3-payee-btn').disabled = false;
-                document.getElementById('test-legacy-comparison-btn').disabled = false;
-                updateSummary();
-            })
-            .catch(error => {
-                testResults.vaultV3 = { success: false, error: error.message };
-                showResults('vault-v3-results', `❌ ERROR: ${error.message}`, 'error');
-                updateSummary();
-            });
-        }
-
-        // Test vault v3 format with different payee
-        function testVaultV3WithPayee() {
+        // Create capture order with different payee
+        function createCaptureOrderWithPayee() {
             if (!vaultedToken) {
                 alert('Please create a vaulted token first');
                 return;
@@ -210,13 +104,13 @@
             const amount = document.getElementById('test-amount').value;
             
             if (!payeeMerchantId) {
-                alert('Please enter a different payee merchant ID');
+                alert('Please enter a payee merchant ID');
                 return;
             }
 
-            showResults('vault-v3-payee-results', 'Testing vault v3 format with different payee...', 'warning');
+            showResults('capture-order-results', 'Creating capture order with different payee...', 'warning');
 
-            fetch('/api/test-vault-v3-payee', {
+            fetch('/api/create-capture-order-with-payee', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -229,119 +123,68 @@
             })
             .then(response => response.json())
             .then(data => {
-                testResults.vaultV3Payee = data;
+                testResults.captureOrder = data;
                 
-                let resultMessage = `🧪 VAULT V3 + DIFFERENT PAYEE TEST:\n\n`;
+                let resultMessage = `💳 CAPTURE ORDER WITH PAYEE TEST:\n\n`;
                 
                 if (data.success) {
-                    resultMessage += `${data.orderCreation.success ? '✅' : '❌'} ORDER CREATION: ${data.orderCreation.success ? 'SUCCESS' : 'FAILED'}\n`;
+                    resultMessage += `✅ ORDER CREATION: SUCCESS\n`;
+                    resultMessage += `Order ID: ${data.orderId}\n`;
+                    resultMessage += `Intent: CAPTURE\n`;
+                    resultMessage += `Amount: $${amount}\n`;
+                    resultMessage += `Payee Merchant ID: ${payeeMerchantId}\n`;
+                    resultMessage += `Vault Token Used: ${vaultedToken}\n\n`;
                     
-                    if (data.orderCreation.success) {
-                        resultMessage += `Order ID: ${data.orderId}\n`;
-                        resultMessage += `Payee: ${payeeMerchantId}\n`;
-                        
-                        if (data.capture && data.capture.success) {
+                    if (data.capture) {
+                        if (data.capture.success) {
                             resultMessage += `✅ CAPTURE: SUCCESS\n`;
-                            resultMessage += `💰 Funds disbursed to different payee!\n`;
-                        } else if (data.capture && data.capture.error) {
+                            resultMessage += `Capture ID: ${data.capture.captureId}\n`;
+                            resultMessage += `Status: ${data.capture.status}\n`;
+                            resultMessage += `� Funds successfully disbursed to payee!\n`;
+                            resultMessage += `🎯 This confirms you own the vault_id and funds went to the separate PayPal business account.\n\n`;
+                        } else {
                             resultMessage += `❌ CAPTURE: FAILED\n`;
-                            resultMessage += `Error: ${data.capture.error}\n`;
+                            resultMessage += `Error: ${data.capture.error}\n\n`;
                         }
                     }
                     
-                    showResults('vault-v3-payee-results', resultMessage, data.capture?.success ? 'success' : 'warning');
-                } else {
-                    resultMessage += `❌ ORDER CREATION: FAILED (Expected for security)\n`;
-                    resultMessage += `Error: ${data.error}\n`;
-                    resultMessage += `🔒 Security: Vault tokens tied to original merchant\n`;
+                    resultMessage += `📋 ORDER STRUCTURE:\n`;
+                    resultMessage += `{\n`;
+                    resultMessage += `  "intent": "CAPTURE",\n`;
+                    resultMessage += `  "payment_source": {\n`;
+                    resultMessage += `    "token": {\n`;
+                    resultMessage += `      "id": "${vaultedToken}",\n`;
+                    resultMessage += `      "type": "PAYMENT_METHOD_TOKEN"\n`;
+                    resultMessage += `    }\n`;
+                    resultMessage += `  },\n`;
+                    resultMessage += `  "purchase_units": [{\n`;
+                    resultMessage += `    "amount": { "currency_code": "USD", "value": "${amount}" },\n`;
+                    resultMessage += `    "payee": { "merchant_id": "${payeeMerchantId}" }\n`;
+                    resultMessage += `  }]\n`;
+                    resultMessage += `}\n\n`;
                     
-                    showResults('vault-v3-payee-results', resultMessage, 'success');
+                    showResults('capture-order-results', resultMessage, data.capture?.success ? 'success' : 'warning');
+                } else {
+                    resultMessage += `❌ ORDER CREATION: FAILED\n`;
+                    resultMessage += `Error: ${data.error}\n\n`;
+                    
+                    if (data.error.includes('PERMISSION_DENIED') || data.error.includes('vault')) {
+                        resultMessage += `🔒 This indicates you may not own the vault_id or there's a security restriction.\n`;
+                    } else if (data.error.includes('payee')) {
+                        resultMessage += `👤 This may indicate an issue with the payee merchant ID.\n`;
+                    }
+                    
+                    showResults('capture-order-results', resultMessage, 'error');
                 }
                 
-                resultMessage += `\n📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
-                document.getElementById('vault-v3-payee-results').textContent = resultMessage;
+                resultMessage += `📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
+                document.getElementById('capture-order-results').textContent = resultMessage;
                 
                 updateSummary();
             })
             .catch(error => {
-                testResults.vaultV3Payee = { success: false, error: error.message };
-                showResults('vault-v3-payee-results', `✅ EXPECTED: ${error.message}`, 'success');
-                updateSummary();
-            });
-        }
-
-        // Compare legacy vault vs vault v3
-        function testLegacyVsV3() {
-            if (!vaultedToken) {
-                alert('Please create a vaulted token first');
-                return;
-            }
-
-            const amount = document.getElementById('test-amount').value;
-            
-            showResults('legacy-comparison-results', 'Comparing legacy vault vs vault v3 formats...', 'warning');
-
-            fetch('/api/test-legacy-vs-v3', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    vaultedToken: vaultedToken,
-                    amount: amount
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                testResults.legacyComparison = data;
-                
-                let resultMessage = `🔄 LEGACY vs VAULT V3 COMPARISON:\n\n`;
-                
-                // Legacy results
-                resultMessage += `📊 LEGACY VAULT FORMAT:\n`;
-                if (data.legacy.success) {
-                    resultMessage += `✅ Status: SUCCESS\n`;
-                    resultMessage += `Order ID: ${data.legacy.orderId}\n`;
-                    resultMessage += `Format: { "paypal": { "vault_id": "${vaultedToken}" } }\n`;
-                } else {
-                    resultMessage += `❌ Status: FAILED\n`;
-                    resultMessage += `Error: ${data.legacy.error}\n`;
-                }
-                
-                resultMessage += `\n📊 VAULT V3 FORMAT:\n`;
-                if (data.v3.success) {
-                    resultMessage += `✅ Status: SUCCESS\n`;
-                    resultMessage += `Order ID: ${data.v3.orderId}\n`;
-                    resultMessage += `Format: { "token": { "id": "${vaultedToken}", "type": "PAYMENT_METHOD_TOKEN" } }\n`;
-                } else {
-                    resultMessage += `❌ Status: FAILED\n`;
-                    resultMessage += `Error: ${data.v3.error}\n`;
-                }
-                
-                resultMessage += `\n🎯 COMPARISON RESULTS:\n`;
-                const bothWork = data.legacy.success && data.v3.success;
-                const neitherWork = !data.legacy.success && !data.v3.success;
-                const onlyLegacy = data.legacy.success && !data.v3.success;
-                const onlyV3 = !data.legacy.success && data.v3.success;
-                
-                if (bothWork) {
-                    resultMessage += `✅ Both formats work - backward compatibility maintained\n`;
-                } else if (neitherWork) {
-                    resultMessage += `❌ Neither format works - possible API issues\n`;
-                } else if (onlyLegacy) {
-                    resultMessage += `⚠️ Only legacy format works - v3 may not be fully deployed\n`;
-                } else if (onlyV3) {
-                    resultMessage += `🆕 Only v3 format works - legacy deprecated\n`;
-                }
-                
-                resultMessage += `\n📊 Full Response:\n${JSON.stringify(data, null, 2)}`;
-                
-                showResults('legacy-comparison-results', resultMessage, 'success');
-                updateSummary();
-            })
-            .catch(error => {
-                testResults.legacyComparison = { success: false, error: error.message };
-                showResults('legacy-comparison-results', `❌ ERROR: ${error.message}`, 'error');
+                testResults.captureOrder = { success: false, error: error.message };
+                showResults('capture-order-results', `❌ ERROR: ${error.message}`, 'error');
                 updateSummary();
             });
         }
@@ -385,8 +228,8 @@
                 document.getElementById('vault-token').style.display = 'block';
                 document.getElementById('vault-token').innerHTML = `<strong>Vault Token ID:</strong> ${vaultedToken}`;
                 
-                // Enable vault v3 test buttons
-                document.getElementById('test-vault-v3-btn').disabled = false;
+                // Enable capture order test button
+                document.getElementById('create-capture-order-btn').disabled = false;
                 
                 showResults('vault-results', `✅ Vault token created successfully!\n\nToken ID: ${vaultedToken}\n\n🧪 Ready for vault v3 testing!\n\nFull Response:\n${JSON.stringify(tokenData, null, 2)}`, 'success');
                 
@@ -414,7 +257,7 @@
         }
 
         function updateSummary() {
-            let summary = '🧪 PayPal Vault v3 Test Results:\n\n';
+            let summary = '💳 PayPal Payee Test Results:\n\n';
             
             if (testResults.vaultCreation !== null) {
                 summary += `1️⃣ VAULT TOKEN CREATION:\n`;
@@ -422,69 +265,56 @@
                 summary += `   Token ID: ${vaultedToken || 'N/A'}\n\n`;
             }
             
-            if (testResults.vaultV3 !== null) {
-                summary += `2️⃣ VAULT V3 FORMAT TEST:\n`;
-                summary += `   Status: ${testResults.vaultV3.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
-                summary += `   API Format: PAYMENT_METHOD_TOKEN\n`;
+            if (testResults.captureOrder !== null) {
+                summary += `2️⃣ CAPTURE ORDER WITH PAYEE:\n`;
+                summary += `   Order Creation: ${testResults.captureOrder.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
                 
-                if (testResults.vaultV3.success && testResults.vaultV3.capture) {
-                    summary += `   Capture: ${testResults.vaultV3.capture.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
-                }
-                summary += '\n';
-            }
-            
-            if (testResults.vaultV3Payee !== null) {
-                summary += `3️⃣ VAULT V3 + DIFFERENT PAYEE:\n`;
-                summary += `   Order Creation: ${testResults.vaultV3Payee.success ? '❌ UNEXPECTED SUCCESS' : '✅ EXPECTED FAILURE'}\n`;
-                
-                if (testResults.vaultV3Payee.success && testResults.vaultV3Payee.capture) {
-                    summary += `   Capture: ${testResults.vaultV3Payee.capture.success ? '🚨 SECURITY ISSUE' : '✅ BLOCKED'}\n`;
-                    summary += `   Security: ${testResults.vaultV3Payee.capture.success ? '❌ COMPROMISED' : '✅ PROTECTED'}\n`;
+                if (testResults.captureOrder.success) {
+                    summary += `   Order ID: ${testResults.captureOrder.orderId}\n`;
+                    summary += `   Intent: CAPTURE\n`;
+                    
+                    if (testResults.captureOrder.capture) {
+                        summary += `   Capture: ${testResults.captureOrder.capture.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
+                        
+                        if (testResults.captureOrder.capture.success) {
+                            summary += `   💰 Funds disbursed to payee account\n`;
+                            summary += `   🎯 Vault ownership confirmed\n`;
+                            summary += `   ✅ Payee disbursement working\n`;
+                        } else {
+                            summary += `   ❌ Capture failed: ${testResults.captureOrder.capture.error}\n`;
+                        }
+                    }
                 } else {
-                    summary += `   Security: ✅ Vault tokens properly tied to original merchant\n`;
-                }
-                summary += '\n';
-            }
-            
-            if (testResults.legacyComparison !== null) {
-                summary += `4️⃣ LEGACY vs VAULT V3 COMPARISON:\n`;
-                const legacy = testResults.legacyComparison.legacy;
-                const v3 = testResults.legacyComparison.v3;
-                
-                summary += `   Legacy Format: ${legacy?.success ? '✅ WORKS' : '❌ FAILED'}\n`;
-                summary += `   Vault v3 Format: ${v3?.success ? '✅ WORKS' : '❌ FAILED'}\n`;
-                
-                const bothWork = legacy?.success && v3?.success;
-                const neitherWork = !legacy?.success && !v3?.success;
-                const onlyLegacy = legacy?.success && !v3?.success;
-                const onlyV3 = !legacy?.success && v3?.success;
-                
-                if (bothWork) {
-                    summary += `   Compatibility: ✅ Both formats supported\n`;
-                } else if (neitherWork) {
-                    summary += `   Compatibility: ❌ Neither format works\n`;
-                } else if (onlyLegacy) {
-                    summary += `   Compatibility: ⚠️ Only legacy works\n`;
-                } else if (onlyV3) {
-                    summary += `   Compatibility: 🆕 Only v3 works\n`;
+                    summary += `   Error: ${testResults.captureOrder.error}\n`;
+                    
+                    if (testResults.captureOrder.error && testResults.captureOrder.error.includes('vault')) {
+                        summary += `   🔒 Vault ownership issue detected\n`;
+                    }
                 }
                 summary += '\n';
             }
             
             // Overall assessment
-            const hasVaultV3Results = testResults.vaultV3 !== null && testResults.vaultV3Payee !== null;
-            if (hasVaultV3Results) {
-                const v3Works = testResults.vaultV3.success;
-                const securityMaintained = !testResults.vaultV3Payee.success || 
-                    (testResults.vaultV3Payee.success && !testResults.vaultV3Payee.capture?.success);
+            const hasResults = testResults.vaultCreation !== null && testResults.captureOrder !== null;
+            if (hasResults) {
+                const vaultWorked = testResults.vaultCreation.success;
+                const captureWorked = testResults.captureOrder.success && testResults.captureOrder.capture?.success;
                 
-                summary += `🎯 VAULT V3 ASSESSMENT:\n`;
-                summary += `   API Functionality: ${v3Works ? '✅ WORKING' : '❌ NOT WORKING'}\n`;
-                summary += `   Security Model: ${securityMaintained ? '✅ MAINTAINED' : '🚨 COMPROMISED'}\n`;
-                summary += `   Ready for Production: ${v3Works && securityMaintained ? '✅ YES' : '❌ NO'}`;
+                summary += `🎯 PAYEE TEST ASSESSMENT:\n`;
+                summary += `   Vault Creation: ${vaultWorked ? '✅ WORKING' : '❌ FAILED'}\n`;
+                summary += `   Payee Disbursement: ${captureWorked ? '✅ WORKING' : '❌ FAILED'}\n`;
+                
+                if (vaultWorked && captureWorked) {
+                    summary += `   Result: ✅ You own the vault_id and payee disbursement works\n`;
+                    summary += `   💡 This confirms the payee field provides reliable fund routing\n`;
+                } else if (vaultWorked && !captureWorked) {
+                    summary += `   Result: ⚠️ Vault works but payee disbursement failed\n`;
+                } else {
+                    summary += `   Result: ❌ Issues detected - check vault ownership\n`;
+                }
             }
             
-            const summaryType = hasVaultV3Results ? 'success' : 'warning';
+            const summaryType = hasResults ? 'success' : 'warning';
             showResults('summary-results', summary, summaryType);
         }
     </script>

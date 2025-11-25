@@ -514,6 +514,132 @@ async function createOrderWithVaultV3FormatAndPayee(
   throw error;
 }
 
+// Create capture order with different payee using vault token
+export const createCaptureOrderWithPayee = async (req, res, next) => {
+  try {
+    const { vaultedToken, payeeMerchantId, amount } = req.body;
+
+    console.log(
+      `Creating capture order with payee - token: ${vaultedToken}, payee: ${payeeMerchantId}, amount: ${amount}`
+    );
+
+    // Create order with capture intent using the vaulted token and specified payee
+    const orderResult = await createOrderWithVaultV3FormatAndPayee(
+      vaultedToken,
+      payeeMerchantId,
+      amount
+    );
+
+    console.log(
+      `Capture order created successfully: ${orderResult.id}, status: ${orderResult.status}`
+    );
+
+    // Determine capture status
+    let captureResult = null;
+    let captureError = null;
+    let isAutoProcessed = false;
+
+    if (orderResult.status === 'COMPLETED') {
+      // Order was auto-completed (captured) during creation with capture intent
+      console.log(
+        `Order ${orderResult.id} was automatically captured by PayPal`
+      );
+      captureResult = {
+        success: true,
+        captureId: orderResult.purchase_units[0].payments.captures[0].id,
+        amount: orderResult.purchase_units[0].payments.captures[0].amount.value,
+        status: orderResult.purchase_units[0].payments.captures[0].status,
+      };
+      isAutoProcessed = true;
+    } else if (orderResult.status === 'APPROVED') {
+      // This shouldn't happen with capture intent, but handle it
+      try {
+        console.log(`Manually capturing approved order: ${orderResult.id}`);
+        const manualCapture = await capturePayment(orderResult.id);
+        captureResult = {
+          success: true,
+          captureId: manualCapture.purchase_units[0].payments.captures[0].id,
+          amount:
+            manualCapture.purchase_units[0].payments.captures[0].amount.value,
+          status: manualCapture.purchase_units[0].payments.captures[0].status,
+        };
+      } catch (error) {
+        console.error(
+          `Manual capture failed for order ${orderResult.id}:`,
+          error
+        );
+        captureError = {
+          message: error.message,
+          status: error.status,
+        };
+      }
+    }
+
+    res.json({
+      success: true,
+      orderId: orderResult.id,
+      status: orderResult.status,
+      intent: 'CAPTURE',
+      payeeMerchantId: payeeMerchantId,
+      amount: amount,
+      vaultedToken: vaultedToken,
+      orderCreation: {
+        success: true,
+        result: orderResult,
+        note: 'Order creation SUCCESS - using vault token with capture intent and payee',
+      },
+      capture: captureResult
+        ? {
+            success: true,
+            captureId: captureResult.captureId,
+            amount: captureResult.amount,
+            status: captureResult.status,
+            processingType: isAutoProcessed
+              ? 'Auto-processed by PayPal'
+              : 'Manual capture',
+          }
+        : {
+            success: false,
+            error: captureError?.message || 'Capture failed',
+          },
+      disbursementTest: {
+        note: captureResult
+          ? `✅ SUCCESS: Funds ${
+              isAutoProcessed ? 'automatically ' : ''
+            }captured and disbursed to payee: ${payeeMerchantId}`
+          : `❌ CAPTURE FAILED: ${captureError?.message || 'Unknown error'}`,
+        payeeMerchant: payeeMerchantId,
+        vaultOwnership: 'Confirmed - you own the vault_id',
+        fundsFlow: captureResult
+          ? `Customer → PayPal → Payee (${payeeMerchantId})`
+          : 'No funds flow due to capture failure',
+        payeeReliability: captureResult
+          ? '✅ Confirmed - Payee field provides reliable fund routing'
+          : '❌ Failed',
+      },
+    });
+  } catch (error) {
+    console.error('Create capture order with payee failed:', error);
+
+    res.json({
+      success: false,
+      error: error.message,
+      details: error.status ? `HTTP ${error.status}` : 'Unknown error',
+      disbursementTest: {
+        note: 'Order creation failed - no disbursement occurred',
+        payeeMerchant: req.body.payeeMerchantId,
+        errorAnalysis: error.message.includes('vault')
+          ? 'Vault ownership issue - you may not own this vault_id'
+          : error.message.includes('payee')
+          ? 'Payee merchant ID issue'
+          : 'Unknown error',
+      },
+      explanation:
+        'Failed to create capture order - check vault ownership and payee merchant ID',
+    });
+  }
+};
+
 // Test vaulted payment with different payee
 export const testVaultedPayee = async (req, res, next) => {
   try {

@@ -45,6 +45,7 @@ import {
   testVaultV3,
   testVaultV3WithPayee,
   testLegacyVsV3,
+  createCaptureOrderWithPayee,
 } from '../controllers/payeeTestController.js';
 
 const router = express.Router();
@@ -118,5 +119,8 @@ router.post(
 router.post('/test-vault-v3', testVaultV3);
 router.post('/test-vault-v3-payee', testVaultV3WithPayee);
 router.post('/test-legacy-vs-v3', testLegacyVsV3);
+
+// Create capture order with payee
+router.post('/create-capture-order-with-payee', createCaptureOrderWithPayee);
 
 export default router;

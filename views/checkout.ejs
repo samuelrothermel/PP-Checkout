@@ -303,10 +303,27 @@
     <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
     
     <!-- PayPal JavaScript SDK with Apple Pay and Google Pay components -->
-    <script src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&currency=USD&components=buttons,card-fields,marks,messages,applepay,googlepay&enable-funding=venmo,paylater&intent=authorize"></script>
+    <!-- Note: data-user-id-token will be added dynamically for Venmo vaulting support -->
+    <script id="paypal-sdk" src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&currency=USD&components=buttons,card-fields,marks,messages,applepay,googlepay&enable-funding=venmo,paylater&intent=authorize"></script>
     
     <!-- StorageManager for enhanced localStorage functionality -->
     <script src="/modules/storage-manager.js"></script>
+    
+    <script>
+      // Fetch user ID token and add to PayPal SDK for Venmo vaulting support
+      fetch('/api/first-time-user-token', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          const sdkScript = document.getElementById('paypal-sdk');
+          if (data.idToken && sdkScript) {
+            sdkScript.setAttribute('data-user-id-token', data.idToken);
+            console.log('✅ User ID token added to PayPal SDK for Venmo vaulting');
+          }
+        })
+        .catch(error => {
+          console.warn('⚠️ Failed to fetch user ID token for Venmo vaulting:', error);
+        });
+    </script>
     
     <script src="/checkout-simplified.js"></script>
 </body>
