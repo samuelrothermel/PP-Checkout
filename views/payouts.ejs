@@ -144,7 +144,7 @@
   </div>
 
   <script>
-    const clientId = '<%= clientId %>';
+    window.clientId = '<%= clientId %>';
   </script>
   <script src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&components=buttons&enable-funding=venmo&disable-funding=card,paylater"></script>
   <script src="/payouts.js"></script>
