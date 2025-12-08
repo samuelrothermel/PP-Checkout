@@ -10,6 +10,17 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 
+// Debug: Check if CLIENT_ID is loaded
+console.log('=== ENVIRONMENT CHECK ===');
+console.log(
+  'CLIENT_ID:',
+  process.env.CLIENT_ID
+    ? `${process.env.CLIENT_ID.substring(0, 20)}...`
+    : 'NOT LOADED'
+);
+console.log('BASE_URL:', process.env.BASE_URL);
+console.log('========================');
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
