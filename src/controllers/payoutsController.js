@@ -1,26 +1,9 @@
-import { CLIENT_ID } from '../config/constants.js';
 import {
   createPayout,
   getPayoutDetails,
   getPayoutItemDetails,
   getUserInfo,
 } from '../services/payoutsApi.js';
-
-// Render the payouts page
-export const renderPayouts = async (req, res, next) => {
-  try {
-    const clientId = process.env.CLIENT_ID;
-    console.log('Raw process.env.CLIENT_ID:', process.env.CLIENT_ID);
-    console.log('Imported CLIENT_ID from constants:', CLIENT_ID);
-    console.log(
-      'Rendering payouts page with clientId:',
-      clientId ? `${clientId.substring(0, 10)}...` : 'UNDEFINED'
-    );
-    res.render('payouts', { clientId: clientId || 'CLIENT_ID_NOT_SET' });
-  } catch (err) {
-    next(err);
-  }
-};
 
 // Create a payout
 export const createPayoutBatch = async (req, res, next) => {

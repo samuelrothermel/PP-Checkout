@@ -12,8 +12,8 @@ import {
   renderPayeeTest,
   renderOrders,
   renderVault,
+  renderPayouts,
 } from '../controllers/pageController.js';
-import { renderPayouts } from '../controllers/payoutsController.js';
 
 const router = express.Router();
 

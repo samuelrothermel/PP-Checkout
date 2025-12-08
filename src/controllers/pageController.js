@@ -23,3 +23,4 @@ export const renderWebhookTesting = renderPage('webhook-testing');
 export const renderPayeeTest = renderPage('payee-test');
 export const renderOrders = renderPage('orders');
 export const renderVault = renderPage('vault');
+export const renderPayouts = renderPage('payouts');
