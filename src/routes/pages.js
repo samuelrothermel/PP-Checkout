@@ -13,6 +13,7 @@ import {
   renderOrders,
   renderVault,
 } from '../controllers/pageController.js';
+import { renderPayouts } from '../controllers/payoutsController.js';
 
 const router = express.Router();
 
@@ -35,8 +36,12 @@ router.get('/webhook-testing', renderWebhookTesting);
 router.get('/payee-test', renderPayeeTest);
 router.get('/orders', renderOrders);
 router.get('/vault', renderVault);
+router.get('/payouts', renderPayouts);
 router.get('/returning-payer', (req, res) => {
   res.render('returning-payer', { clientId: process.env.CLIENT_ID });
+});
+router.get('/api/payouts/oauth/callback', (req, res) => {
+  res.render('paypal-oauth-callback');
 });
 
 export default router;

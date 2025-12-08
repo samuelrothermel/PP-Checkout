@@ -47,6 +47,14 @@ import {
   testLegacyVsV3,
   createCaptureOrderWithPayee,
 } from '../controllers/payeeTestController.js';
+import {
+  createPayoutBatch,
+  getPayout,
+  getPayoutItem,
+  handleOAuthCallback,
+  getPayPalUserInfo,
+  getOAuthConfig,
+} from '../controllers/payoutsController.js';
 
 const router = express.Router();
 
@@ -122,5 +130,12 @@ router.post('/test-legacy-vs-v3', testLegacyVsV3);
 
 // Create capture order with payee
 router.post('/create-capture-order-with-payee', createCaptureOrderWithPayee);
+
+// Payouts API routes
+router.post('/payouts/create', createPayoutBatch);
+router.get('/payouts/:payoutBatchId', getPayout);
+router.get('/payouts/items/:payoutItemId', getPayoutItem);
+router.post('/payouts/user-info', getPayPalUserInfo);
+router.get('/payouts/oauth/config', getOAuthConfig);
 
 export default router;

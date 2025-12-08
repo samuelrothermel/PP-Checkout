@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayPal Login - Processing...</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: #f7f7f7;
+    }
+    .loading-container {
+      text-align: center;
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #0070ba;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    h2 {
+      color: #333;
+      margin: 0 0 10px 0;
+    }
+    p {
+      color: #666;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-container">
+    <div class="spinner"></div>
+    <h2>Processing Login...</h2>
+    <p>Please wait while we complete your authentication.</p>
+  </div>
+  
+  <script>
+    // Get the authorization code from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const error = urlParams.get('error');
+    
+    if (error) {
+      document.querySelector('.loading-container').innerHTML = `
+        <h2>Login Failed</h2>
+        <p>There was an error during login: ${error}</p>
+        <p>You can close this window.</p>
+      `;
+    } else if (code && window.opener) {
+      // Send the code to the parent window
+      window.opener.postMessage({ code: code }, window.location.origin);
+      
+      // Show success message
+      document.querySelector('.loading-container').innerHTML = `
+        <h2>✓ Login Successful</h2>
+        <p>You can close this window.</p>
+      `;
+      
+      // Auto-close after a short delay
+      setTimeout(() => {
+        window.close();
+      }, 1500);
+    } else {
+      document.querySelector('.loading-container').innerHTML = `
+        <h2>Invalid Request</h2>
+        <p>No authorization code received.</p>
+        <p>You can close this window.</p>
+      `;
+    }
+  </script>
+</body>
+</html>
