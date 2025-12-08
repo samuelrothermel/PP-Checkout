@@ -3,7 +3,13 @@ import { CLIENT_ID } from '../config/constants.js';
 // Helper function to handle page rendering with clientId
 const renderPage = view => async (req, res, next) => {
   try {
-    res.render(view, { clientId: CLIENT_ID });
+    // Use process.env directly to ensure we get the value
+    const clientId = process.env.CLIENT_ID;
+    console.log(
+      `Rendering ${view} with CLIENT_ID:`,
+      clientId ? `${clientId.substring(0, 15)}...` : 'UNDEFINED'
+    );
+    res.render(view, { clientId: clientId });
   } catch (err) {
     next(err);
   }
