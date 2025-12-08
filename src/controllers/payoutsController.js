@@ -18,7 +18,7 @@ export const createPayoutBatch = async (req, res, next) => {
         email_message,
       },
       items: recipients.map(recipient => ({
-        recipient_type: 'EMAIL',
+        recipient_type: 'PAYPAL_ID',
         amount: {
           value: recipient.amount,
           currency: 'USD',

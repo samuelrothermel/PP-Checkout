@@ -203,11 +203,10 @@ function autofillRecipient() {
     return;
   }
 
-  const firstRecipient = document.querySelector('.recipient-email');
+  const firstRecipient = document.querySelector('.recipient-paypal-id');
   if (firstRecipient) {
-    const email = currentUser.email || currentUser.emails?.[0]?.value;
     const payerId = currentUser.payer_id || currentUser.user_id;
-    firstRecipient.value = email || payerId || '';
+    firstRecipient.value = payerId || '';
   }
 }
 
@@ -225,8 +224,8 @@ function addRecipient() {
   newRecipient.className = 'recipient-item';
   newRecipient.innerHTML = `
     <div class="form-group">
-      <label>Recipient Email or PayPal ID:</label>
-      <input type="text" class="recipient-email" placeholder="recipient@example.com or PayPal ID">
+      <label>Recipient PayPal ID:</label>
+      <input type="text" class="recipient-paypal-id" placeholder="PayPal ID (payer_id)">
     </div>
     <div class="form-group">
       <label>Amount (USD):</label>
@@ -265,17 +264,19 @@ async function createPayout() {
   const recipients = [];
 
   for (const item of recipientItems) {
-    const email = item.querySelector('.recipient-email').value;
+    const paypalId = item.querySelector('.recipient-paypal-id').value;
     const amount = item.querySelector('.recipient-amount').value;
     const note = item.querySelector('.recipient-note').value;
 
-    if (!email || !amount) {
-      alert('Please fill in all required recipient fields (email and amount)');
+    if (!paypalId || !amount) {
+      alert(
+        'Please fill in all required recipient fields (PayPal ID and amount)'
+      );
       return;
     }
 
     recipients.push({
-      receiver: email,
+      receiver: paypalId,
       amount: amount,
       note: note || 'Thank you!',
       sender_item_id: `item_${Date.now()}_${recipients.length}`,
