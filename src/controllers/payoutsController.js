@@ -9,7 +9,14 @@ import {
 // Render the payouts page
 export const renderPayouts = async (req, res, next) => {
   try {
-    res.render('payouts', { clientId: CLIENT_ID });
+    const clientId = process.env.CLIENT_ID;
+    console.log('Raw process.env.CLIENT_ID:', process.env.CLIENT_ID);
+    console.log('Imported CLIENT_ID from constants:', CLIENT_ID);
+    console.log(
+      'Rendering payouts page with clientId:',
+      clientId ? `${clientId.substring(0, 10)}...` : 'UNDEFINED'
+    );
+    res.render('payouts', { clientId: clientId || 'CLIENT_ID_NOT_SET' });
   } catch (err) {
     next(err);
   }

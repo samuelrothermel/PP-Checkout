@@ -10,3 +10,8 @@ export const CALLBACK_URL =
 console.log('Callback URL:', CALLBACK_URL);
 console.log('Webhook URL:', WEBHOOK_URL);
 console.log('Webhook ID:', WEBHOOK_ID);
+console.log(
+  'CLIENT_ID:',
+  CLIENT_ID ? `${CLIENT_ID.substring(0, 10)}...` : 'NOT SET'
+);
+console.log('BASE_URL:', BASE_URL);
