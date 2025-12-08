@@ -10,13 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
 async function checkOAuthConfig() {
   try {
     showLoading('Checking configuration...');
-    
+
     const response = await fetch('/api/payouts/oauth/config');
     const config = await response.json();
-    
+
     const configSection = document.getElementById('config-section');
     const configDetails = document.getElementById('config-details');
-    
+
     configDetails.innerHTML = `
       <div class="config-info">
         <h3>Current Configuration</h3>
@@ -29,7 +29,9 @@ async function checkOAuthConfig() {
         <div class="config-item">
           <strong>Required Scopes:</strong>
           <ul>
-            ${config.requiredScopes.map(scope => `<li><code>${scope}</code></li>`).join('')}
+            ${config.requiredScopes
+              .map(scope => `<li><code>${scope}</code></li>`)
+              .join('')}
           </ul>
         </div>
         <div class="alert alert-info">
@@ -41,14 +43,16 @@ async function checkOAuthConfig() {
             <li>Go to <a href="https://developer.paypal.com/dashboard" target="_blank">PayPal Developer Dashboard</a></li>
             <li>Select your app</li>
             <li>Enable "Log In with PayPal" under Features</li>
-            <li>Click "Advanced options" and add this exact Return URL: <code>${config.redirectUri}</code></li>
+            <li>Click "Advanced options" and add this exact Return URL: <code>${
+              config.redirectUri
+            }</code></li>
             <li>Enable all the scopes listed above</li>
             <li>Save and wait a few minutes for changes to take effect</li>
           </ol>
         </div>
       </div>
     `;
-    
+
     configSection.style.display = 'block';
     configSection.scrollIntoView({ behavior: 'smooth' });
     hideLoading();

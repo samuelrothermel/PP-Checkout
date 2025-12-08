@@ -108,16 +108,17 @@ export const getPayPalUserInfo = async (req, res, next) => {
 // Diagnostic endpoint to check OAuth configuration
 export const getOAuthConfig = async (req, res) => {
   const { CLIENT_ID, BASE_URL } = process.env;
-  
+
   res.json({
     clientId: CLIENT_ID ? `${CLIENT_ID.substring(0, 10)}...` : 'NOT SET',
     redirectUri: `${BASE_URL}/api/payouts/oauth/callback`,
     requiredScopes: [
       'openid',
-      'profile', 
+      'profile',
       'email',
-      'https://uri.paypal.com/services/paypalattributes'
+      'https://uri.paypal.com/services/paypalattributes',
     ],
-    instructions: 'Make sure this redirect URI is configured exactly in your PayPal App settings under "Log In with PayPal" → "Return URL"'
+    instructions:
+      'Make sure this redirect URI is configured exactly in your PayPal App settings under "Log In with PayPal" → "Return URL"',
   });
 };

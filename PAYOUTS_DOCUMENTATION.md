@@ -42,6 +42,7 @@ Before using this integration, ensure you have:
 ### Required Settings in PayPal Developer Dashboard
 
 #### Step 1: Enable Payouts
+
 1. **Go to your PayPal App Settings** at [developer.paypal.com/dashboard](https://developer.paypal.com/dashboard)
 2. Select your app (or create a new one)
 3. Navigate to **"App Settings" → "Features"**
@@ -49,16 +50,19 @@ Before using this integration, ensure you have:
 5. Accept the Payouts Terms & Conditions
 
 #### Step 2: Configure Login with PayPal (Critical!)
+
 1. In **"App Settings" → "Features"**
 2. Enable **"Log In with PayPal"**
 3. Click **"Advanced options"** under Log In with PayPal
 4. Under **"Return URL"**, add your redirect URI:
+
    - For local development: `http://localhost:8888/api/payouts/oauth/callback`
    - For production: `https://your-domain.com/api/payouts/oauth/callback`
    - **IMPORTANT**: The URL must match EXACTLY (including protocol, port, and path)
    - **NOTE**: If you're using Railway or another hosting service, use your deployment URL
 
 5. Ensure these **scopes** are enabled:
+
    - ✅ `openid`
    - ✅ `profile`
    - ✅ `email`
@@ -67,6 +71,7 @@ Before using this integration, ensure you have:
 6. Click **"Save"**
 
 #### Step 3: Get Your Credentials
+
 1. Copy your **Client ID** (shown at the top of the app settings)
 2. Click **"Show"** under **Secret** to reveal your App Secret
 3. Add these to your `.env` file:
@@ -79,6 +84,7 @@ Before using this integration, ensure you have:
 #### Common Configuration Issues
 
 **"Invalid client_id or redirect_uri" Error:**
+
 - ✅ Verify the redirect URI in PayPal Dashboard matches your BASE_URL exactly
 - ✅ Check that the protocol (http/https) matches
 - ✅ Ensure the port number is included if not default (80/443)
@@ -87,11 +93,13 @@ Before using this integration, ensure you have:
 - ✅ After changing redirect URIs, wait a few minutes for changes to propagate
 
 **Example Redirect URI Configurations:**
+
 - Local: `http://localhost:8888/api/payouts/oauth/callback`
 - Railway: `https://yourapp.up.railway.app/api/payouts/oauth/callback`
 - Custom domain: `https://yourdomain.com/api/payouts/oauth/callback`
 
 ### App Capabilities Required
+
 - ✅ **Payouts** - To send money to recipients
 - ✅ **Log In with PayPal** - To authenticate users and get their PayPal ID
 

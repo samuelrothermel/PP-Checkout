@@ -73,7 +73,7 @@ export const exchangeCodeForToken = async code => {
 
   // The redirect_uri must match exactly what was used in the authorization request
   const redirectUri = `${BASE_URL}/api/payouts/oauth/callback`;
-  
+
   console.log('Exchanging code for token...');
   console.log('Redirect URI:', redirectUri);
 
